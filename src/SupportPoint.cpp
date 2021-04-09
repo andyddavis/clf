@@ -2,4 +2,4 @@
 
 using namespace clf;
 
-SupportPoint::SupportPoint() {}
+SupportPoint::SupportPoint(Eigen::VectorXd const& x) : x(x) {}

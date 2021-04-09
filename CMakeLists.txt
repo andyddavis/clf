@@ -25,7 +25,9 @@ set(CMAKE_CXX_COMPILER ${MUQ_CXX_COMPILER})
 include_directories(${MUQ_INCLUDE_DIRS} ${Trilinos_INCLUDE_DIRS} ${GTEST_INCLUDE_DIR} .)
 
 set(CLF_SOURCE
-  src/SupportPoint.cpp
+    src/BasisFunctions.cpp
+
+    src/SupportPoint.cpp
 )
 
 add_library(CLF SHARED ${CLF_SOURCE})
