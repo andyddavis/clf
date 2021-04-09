@@ -24,9 +24,19 @@ set(CMAKE_CXX_COMPILER ${MUQ_CXX_COMPILER})
 
 include_directories(${MUQ_INCLUDE_DIRS} ${Trilinos_INCLUDE_DIRS} ${GTEST_INCLUDE_DIR} .)
 
+set(CLF_SOURCE
+  src/SupportPoint.cpp
+)
+
+add_library(CLF SHARED ${CLF_SOURCE})
+target_link_libraries(CLF ${MUQ_LIBRARIES} ${MUQ_LINK_LIBRARIES} ${Trilinos_LIBRARIES} ${GTEST_LIBRARIES})
+
 set(TEST_SOURCE
     tests/_run-tests.cpp
+
+    tests/SupportPointTests.cpp
 )
 
 add_executable(run-tests ${TEST_SOURCE})
-target_link_libraries(run-tests ${MUQ_LIBRARIES} ${MUQ_LINK_LIBRARIES} ${Trilinos_LIBRARIES} ${GTEST_LIBRARIES})
+target_link_libraries(run-tests CLF ${MUQ_LIBRARIES} ${MUQ_LINK_LIBRARIES} ${Trilinos_LIBRARIES} ${GTEST_LIBRARIES})
+add_dependencies(run-tests CLF)
