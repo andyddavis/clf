@@ -7,12 +7,20 @@
 
 namespace clf {
 
-/// The local function associated with a support point \f$x\f$.
+/// The local function \f$\ell\f$ associated with a support point \f$x\f$.
 /**
+Let \f$x \in \Omega \subseteq \mathbb{R}^{d}\f$ be a support point with an associated local function \f$\ell: \Omega \mapsto \mathbb{R}^{m}\f$. Suppose that we are building an approximation of the function \f$u:\Omega \mapsto \mathbb{R}^{m}\f$. Although \f$\ell\f$ is well-defined in the entire domain, we expect there is a smooth monotonic function \f$W: \Omega \mapsto \mathbb{R}^{+}\f$ with \f$W(0) \leq \epsilon\f$ and \f$W(r) \rightarrow \infty\f$ as \f$r \rightarrow \infty\f$ such that \f$\| \ell(y) - u(x) \|^2 \leq W(\|y-x\|^2)\f$. Therefore, we primarily care about the local function \f$\ell\f$ in a ball \f$\mathcal{B}_{\delta}(x)\f$ centered at \f$x\f$ with radius \f$\delta\f$.
+
+Define the local coordinate \f$\hat{x}(y) = (y-x)/\delta\f$ (parameterized by \f$\delta\f$) and the basis functions
+\f{equation*}{
+    \phi(y) = [\phi_1(\hat{x}(y)),\, \phi_2(\hat{x}(y)),\, ...,\, \phi_q(\hat{x}(y))]^{\top}.
+\f}
+
 <B>Configuration Parameters:</B>
 Parameter Key | Type | Default Value | Description |
 ------------- | ------------- | ------------- | ------------- |
 "OutputDimension"   | <tt>std::size_t</tt> | <tt>1</tt> | The output dimension of the support point. |
+"InitialRadius"   | <tt>double</tt> | <tt>1.0</tt> | The initial value of the \f$\delta\f$ parameter. |
 */
 class SupportPoint : public muq::Modeling::ModPiece {
 public:
@@ -37,6 +45,34 @@ public:
   */
   std::size_t OutputDimension() const;
 
+  /// The radius of the ball the defines where the local function is relatively accurate
+  /**
+  \return The radius of the ball the defines where the local function is relatively accurate
+  */
+  double Radius() const;
+
+  /// The radius of the ball the defines where the local function is relatively accurate
+  /**
+  \return The radius of the ball the defines where the local function is relatively accurate
+  */
+  double& Radius();
+
+  /// Transform into the local coordinate
+  /**
+  Given the global coordinate \f$y \in \Omega\f$ compute \f$\hat{x}(y) = (y-x)/\delta\f$.
+  @param[in] y The global coordinate \f$y \in \Omega\f$
+  \return The local coordinate \f$\hat{x}(y) = (y-x)/\delta\f$
+  */
+  Eigen::VectorXd LocalCoordinate(Eigen::VectorXd const& y) const;
+
+/// Transform into the global coordinate
+  /**
+  Given the local coordinate \f$\hat{x} \in \mathbb{R}^{d}\f$ compute \f$y = \delta \hat{x} + x\f$.
+  @param[in] y The local coordinate \f$\hat{x} \in \mathbb{R}^{d}\f$
+  \return The global coordinate \f$y = \delta \hat{x} + x\f$
+  */
+  Eigen::VectorXd GlobalCoordinate(Eigen::VectorXd const& xhat) const;
+
   /// The location of the support point \f$x\f$.
   const Eigen::VectorXd x;
 
@@ -48,6 +84,12 @@ private:
   @param[in] inputs There is only one input and it is the evaluation point
   */
   virtual void EvaluateImpl(muq::Modeling::ref_vector<Eigen::VectorXd> const& input) override;
+
+  /// The parameter \f$\delta\f$ that defines the radius for which we expect this local function to be relatively accurate
+  /**
+  The default value is \f$\delta=1\f$. This parameter defines the local coordinate transformation \f$\hat{x}(y) = (y-x)/\delta\f$.
+  */
+  double delta;
 };
 
 } // namespace clf

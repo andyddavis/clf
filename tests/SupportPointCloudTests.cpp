@@ -11,7 +11,7 @@ using namespace clf;
 
 class SupportPointCloudTests : public::testing::Test {
 protected:
-  /// Set up information to test the sample representation
+  /// Set up information to test the support point cloud
   virtual void SetUp() override {
     ptSupportPoints.put("OutputDimension", outdim);
   }
