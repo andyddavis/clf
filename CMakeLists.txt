@@ -28,6 +28,11 @@ set(CLF_SOURCE
     src/BasisFunctions.cpp
 
     src/SupportPoint.cpp
+
+    src/SupportPointCloud.cpp
+    src/SupportPointCloudExceptions.cpp
+
+    src/CoupledLocalFunction.cpp
 )
 
 add_library(CLF SHARED ${CLF_SOURCE})
@@ -37,6 +42,8 @@ set(TEST_SOURCE
     tests/_run-tests.cpp
 
     tests/SupportPointTests.cpp
+
+    tests/SupportPointCloudTests.cpp
 )
 
 add_executable(run-tests ${TEST_SOURCE})
