@@ -2,6 +2,7 @@
 
 namespace clf {
 
+/// The local function associated with a support point \f$x\f$.
 class SupportPoint {
 public:
 
