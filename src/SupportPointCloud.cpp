@@ -14,10 +14,10 @@ SupportPointCloud::SupportPointCloud(std::vector<std::shared_ptr<SupportPoint> >
 void SupportPointCloud::CheckSupportPoints() const {
   for( std::size_t i=1; i<supportPoints.size(); ++i ) {
     // check the input dimension
-    if( supportPoints[i-1]->InputDimension()!=supportPoints[i]->InputDimension() ) { throw SupportPointCloudDimensionExcpetion(SupportPointCloudDimensionExcpetion::Type::INPUT, i-1, i); }
+    if( supportPoints[i-1]->InputDimension()!=supportPoints[i]->InputDimension() ) { throw SupportPointCloudDimensionException(SupportPointCloudDimensionException::Type::INPUT, i-1, i); }
 
     // check the output dimension
-    if( supportPoints[i-1]->OutputDimension()!=supportPoints[i]->OutputDimension() ) { throw SupportPointCloudDimensionExcpetion(SupportPointCloudDimensionExcpetion::Type::OUTPUT, i-1, i); }
+    if( supportPoints[i-1]->OutputDimension()!=supportPoints[i]->OutputDimension() ) { throw SupportPointCloudDimensionException(SupportPointCloudDimensionException::Type::OUTPUT, i-1, i); }
   }
 }
 

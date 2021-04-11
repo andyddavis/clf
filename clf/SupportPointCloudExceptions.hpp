@@ -7,7 +7,7 @@
 namespace clf {
 
 /// Make sure the support points have the correct input/output dimension
-class SupportPointCloudDimensionExcpetion : virtual public std::exception {
+class SupportPointCloudDimensionException : virtual public std::exception {
 public:
 
   /// Is the input or output dimension mismatching?
@@ -24,9 +24,9 @@ public:
   @param[in] ind1 The index of the first support point
   @param[in] ind2 The index of the second support point
   */
-  SupportPointCloudDimensionExcpetion(Type const& type, std::size_t const ind1, std::size_t const ind2);
+  SupportPointCloudDimensionException(Type const& type, std::size_t const ind1, std::size_t const ind2);
 
-  virtual ~SupportPointCloudDimensionExcpetion() = default;
+  virtual ~SupportPointCloudDimensionException() = default;
 
   /// The error message that gets printed when this exception is thrown
   virtual const char* what() const noexcept;

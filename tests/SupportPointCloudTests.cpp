@@ -62,8 +62,8 @@ TEST(SupportPointCloudErrorTests, InputDimensionCheck) {
   try {
     pt::ptree ptSupportPointCloud;
     SupportPointCloud cloud(supportPoints, ptSupportPointCloud);
-  } catch( SupportPointCloudDimensionExcpetion const& exc ) {
-    EXPECT_EQ(exc.type, SupportPointCloudDimensionExcpetion::Type::INPUT);
+  } catch( SupportPointCloudDimensionException const& exc ) {
+    EXPECT_EQ(exc.type, SupportPointCloudDimensionException::Type::INPUT);
     EXPECT_NE(exc.ind1, exc.ind2);
     EXPECT_NE(supportPoints[exc.ind1]->InputDimension(), supportPoints[exc.ind2]->InputDimension());
   }
@@ -83,8 +83,8 @@ TEST(SupportPointCloudErrorTests, OutputDimensionCheck) {
   try {
     pt::ptree ptSupportPointCloud;
     SupportPointCloud cloud(supportPoints, ptSupportPointCloud);
-  } catch( SupportPointCloudDimensionExcpetion const& exc ) {
-    EXPECT_EQ(exc.type, SupportPointCloudDimensionExcpetion::Type::OUTPUT);
+  } catch( SupportPointCloudDimensionException const& exc ) {
+    EXPECT_EQ(exc.type, SupportPointCloudDimensionException::Type::OUTPUT);
     EXPECT_NE(exc.ind1, exc.ind2);
     EXPECT_NE(supportPoints[exc.ind1]->OutputDimension(), supportPoints[exc.ind2]->OutputDimension());
   }
