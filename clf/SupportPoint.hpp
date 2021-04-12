@@ -68,7 +68,7 @@ public:
   */
   Eigen::VectorXd LocalCoordinate(Eigen::VectorXd const& y) const;
 
-/// Transform into the global coordinate
+  /// Transform into the global coordinate
   /**
   Given the local coordinate \f$\hat{x} \in \mathbb{R}^{d}\f$ compute \f$y = \delta \hat{x} + x\f$.
   @param[in] y The local coordinate \f$\hat{x} \in \mathbb{R}^{d}\f$
@@ -78,6 +78,12 @@ public:
 
   /// The location of the support point \f$x\f$.
   const Eigen::VectorXd x;
+
+  /// The basis that defines this support point
+  /**
+  Evaluating this basis defines the vector \f$\phi(y) = [\phi_1(\hat{x}(y)),\, \phi_2(\hat{x}(y)),\, ...,\, \phi_q(\hat{x}(y))]^{\top}\f$.
+  */
+  std::shared_ptr<BasisFunctions> basis;
 
 private:
 
@@ -94,9 +100,6 @@ private:
   @param[in] inputs There is only one input and it is the evaluation point
   */
   virtual void EvaluateImpl(muq::Modeling::ref_vector<Eigen::VectorXd> const& input) override;
-
-  /// The basis that defines this support point
-  std::shared_ptr<BasisFunctions> basis;
 
   /// The parameter \f$\delta\f$ that defines the radius for which we expect this local function to be relatively accurate
   /**

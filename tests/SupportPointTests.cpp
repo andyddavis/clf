@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "clf/UtilityFunctions.hpp"
+#include "clf/PolynomialBasis.hpp"
 #include "clf/SupportPoint.hpp"
 
 namespace pt = boost::property_tree;
@@ -24,7 +25,7 @@ protected:
   }
 
   /// The input dimension
-  const std::size_t indim = 8;
+  const std::size_t indim = 4;
 
   /// The output dimension
   const std::size_t outdim = 4;
@@ -60,16 +61,19 @@ TEST_F(SupportPointTests, LocalCoordinateTransformation) {
 }
 
 TEST_F(SupportPointTests, TotalOrderPolynomials) {
-
-  // the order of the polynomial basis
-  const std::size_t order = 5;
-  pt.put("Order", order);
-
-  EXPECT_TRUE(false);
+  // the order of the total order polynomial basis
+  const std::size_t order = 3;
 
   // create the support point
   pt.put("BasisFunctions.Type", "TotalOrderPolynomials");
+  pt.put("BasisFunctions.Order", order);
   point = std::make_shared<SupportPoint>(x, pt);
+  EXPECT_TRUE(point->basis);
+  EXPECT_TRUE(std::dynamic_pointer_cast<PolynomialBasis>(point->basis));
+  // the formula for the expected number of basis functions: (d+p)!/((p+1)! (d-1)!), in this case the answer is 35 so we hard code it
+  EXPECT_EQ(point->basis->NumBasisFunctions(), 35);
+
+  EXPECT_TRUE(false);
 }
 
 TEST(SupportPointExceptionHandlingTests, InvalidBasisCheck) {
