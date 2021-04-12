@@ -35,7 +35,7 @@ protected:
   Eigen::VectorXd x;
 
   /// The basis that we are using for this test
-  std::shared_ptr<BasisFunctions> basis;
+  //std::shared_ptr<BasisFunctions> basis;
 
   /// The support point
   std::shared_ptr<SupportPoint> point;
@@ -44,7 +44,7 @@ protected:
 TEST_F(SupportPointTests, LocalCoordinateTransformation) {
   // create the support point
   point = std::make_shared<SupportPoint>(x, pt);
-  
+
   // the default delta is 1.0
   EXPECT_DOUBLE_EQ(point->Radius(), 1.0);
 
