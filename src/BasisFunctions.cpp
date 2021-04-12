@@ -3,9 +3,9 @@
 namespace pt = boost::property_tree;
 using namespace clf;
 
-BasisFunctions::BasisFunctions(pt::ptree const& pt) {}
+BasisFunctions::BasisFunctions(std::shared_ptr<muq::Utilities::MultiIndexSet> const& multis, pt::ptree const& pt) : multis(multis) {}
 
-std::shared_ptr<BasisFunctions> BasisFunctions::Construct(pt::ptree const& pt) {
+std::shared_ptr<BasisFunctions> BasisFunctions::Construct(std::shared_ptr<muq::Utilities::MultiIndexSet> const& multis, pt::ptree const& pt) {
   // get the name of the basis function
   std::string basisName = pt.get<std::string>("Type");
 
@@ -16,7 +16,7 @@ std::shared_ptr<BasisFunctions> BasisFunctions::Construct(pt::ptree const& pt) {
   if( iter==GetBasisFunctionsMap()->end() ) { throw BasisFunctionsNameConstuctionException(basisName); }
 
   // call the constructor
-  return iter->second(pt);
+  return iter->second(multis, pt);
 }
 
 std::shared_ptr<BasisFunctions::BasisFunctionsMap> BasisFunctions::GetBasisFunctionsMap() {
@@ -27,4 +27,19 @@ std::shared_ptr<BasisFunctions::BasisFunctionsMap> BasisFunctions::GetBasisFunct
   if( !map ) {  map = std::make_shared<BasisFunctionsMap>(); }
 
   return map;
+}
+
+std::size_t BasisFunctions::NumBasisFunctions() const { return multis->Size(); }
+
+double BasisFunctions::EvaluateBasisFunction(std::size_t const ind, Eigen::VectorXd const& x) const {
+  assert(ind<multis->Size());
+
+  // get the multi-index
+  const Eigen::RowVectorXi iota = multis->at(ind)->GetVector();
+  assert(x.size()==iota.size());
+
+  // evaluate the product of basis functions
+  double basisEval = 1.0;
+  for( std::size_t i=0; i<x.size(); ++i ) { basisEval *= ScalarBasisFunction(iota(i), x(i)); }
+  return basisEval;
 }

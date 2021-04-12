@@ -24,10 +24,14 @@ where we have implicitly defined a one-to-one mapping between the index \f$i\f$ 
 */
 class BasisFunctions {
 public:
-  BasisFunctions(boost::property_tree::ptree const& pt);
+  /**
+  @param[in] multis The multi-index set---each multi-index corresponds to a basis function
+  @param[in] pt The options for the basis functions
+  */
+  BasisFunctions(std::shared_ptr<muq::Utilities::MultiIndexSet> const& multis, boost::property_tree::ptree const& pt);
 
   /// A constructor type for BasisFunctions, calling this type of function creates a BasisFunctions based on the options in the <tt>ptree</tt>.
-  typedef std::function<std::shared_ptr<BasisFunctions>(boost::property_tree::ptree)> BasisFunctionsConstructor;
+  typedef std::function<std::shared_ptr<BasisFunctions>(std::shared_ptr<muq::Utilities::MultiIndexSet> const&, boost::property_tree::ptree const&)> BasisFunctionsConstructor;
 
   /// A map from the basis function name (a child of BasisFunctions) to the constructor that creates it
   typedef std::map<std::string, BasisFunctionsConstructor> BasisFunctionsMap;
@@ -41,13 +45,47 @@ public:
   /// Construct a basis function given different options
   /**
   The type of basis function to create should be stored in a string labeled <tt>"Type"</tt> in the <tt>ptree</tt>
+  @param[in] multis The multi-index set---each multi-index corresponds to a basis function
   @param[in] pt Options for the basis function
   \return The basis function
   */
-  static std::shared_ptr<BasisFunctions> Construct(boost::property_tree::ptree const& pt);
+  static std::shared_ptr<BasisFunctions> Construct(std::shared_ptr<muq::Utilities::MultiIndexSet> const& multis, boost::property_tree::ptree const& pt);
 
   virtual ~BasisFunctions() = default;
+
+  /// Evaluate the \f$i^{th}\f$ basis function
+  /**
+  Let \f$\iota(i)\f$ be the corresponding multi-index. The basis function is
+  \f{equation*}{
+  \phi^{(i(\iota))}(x) = \prod_{j=1}^{d} l_{i_j}(x_j),
+  \f}
+  where \f$l_{i}\f$ are BasisFunctions::ScalarBasisFunction evaluations.
+  @param[in] ind The index of the basis function we are evaluating
+  @param[in] x The point where we are evaluating the basis function
+  \return The basis function evaluation
+  */
+  double EvaluateBasisFunction(std::size_t const ind, Eigen::VectorXd const& x) const;
+
+  /// The number of basis functions
+  /**
+  \return The number of basis functions
+  */
+  std::size_t NumBasisFunctions() const;
+
+protected:
+
+  /// Evaluate the scalar basis function \f$l_i: \mathbb{R} \mapsto \mathbb{R}\f$.
+  /**
+  The basis function is defined by the product of these scalar functions. This must be implemented by a child.
+  @param[in] ind The index of the \f$i^{th}\f$ scalar basis function
+  @param[in] x The point where we are evaluating the scalar basis function
+  \return The scalar basis function evaluation
+  */
+  virtual double ScalarBasisFunction(std::size_t const ind, double const x) const = 0;
+
 private:
+  /// The multi-index set---each multi-index corresponds to a basis function
+  std::shared_ptr<muq::Utilities::MultiIndexSet> multis;
 };
 
 } // namespace clf

@@ -3,15 +3,23 @@
 #include "clf/BasisFunctions.hpp"
 
 namespace pt = boost::property_tree;
+using namespace muq::Utilities;
 using namespace clf;
 
 TEST(BasisFunctionsTests, Construction) {
+  // the input dimension
+  const std::size_t dim = 5;
+
+  // the multi-index set
+  auto multis = std::make_shared<MultiIndexSet>(dim);
+
+  // an invalid basis function name to test exception handling
   const std::string name = "ALongInvalidBasisNameThatNoOneShouldUseBecauseItIsForTesting";
   pt::ptree pt;
   pt.put("Type", name);
 
   try {
-    auto sincosBasis = BasisFunctions::Construct(pt);
+    auto sincosBasis = BasisFunctions::Construct(multis, pt);
   } catch( BasisFunctionsNameConstuctionException const& exc ) {
     EXPECT_EQ(exc.basisName, name);
   }
