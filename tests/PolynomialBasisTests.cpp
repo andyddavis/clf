@@ -87,3 +87,16 @@ TEST_F(PolynomialBasisTests, PhysicistHermiteEvaluation) {
 TEST_F(PolynomialBasisTests, MonomialEvaluation) {
   basisName = "Monomial";
 }
+
+TEST(TotalOrderPolynomialBasisTests, Construction) {
+  const std::size_t dim = 1, order = 5;
+
+  pt::ptree pt;
+  pt.put("InputDimension", dim);
+  pt.put("Order", order);
+
+  auto basis = PolynomialBasis::TotalOrderPolynomialBasis(pt);
+  EXPECT_TRUE(basis);
+
+  EXPECT_EQ(basis->NumBasisFunctions(), 1+order);
+}

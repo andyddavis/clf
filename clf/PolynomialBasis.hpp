@@ -28,6 +28,19 @@ public:
   */
   PolynomialBasis(std::shared_ptr<muq::Utilities::MultiIndexSet> const& multis, boost::property_tree::ptree const& pt);
 
+  /// Construct a total-order basis
+  /**
+  For a multi-index \f$\iota\f$ define \f$\vert \iota \vert = \sum_{i=1}^{d} i_d\f$. This function constructs a polynomials basis using all of the multi-indices such that \f$\vert \iota \vert \leq p\f$, where the order \f$p\f$ is a user-supplied parameter.
+
+  <B>Configuration Parameters (in addition to the usual parameters for a PolynomialBasis):</B>
+  Parameter Key | Type | Default Value | Description |
+  ------------- | ------------- | ------------- | ------------- |
+  "InputDimension"   | <tt>std::size_t</tt> | --- | The input dimension for the basis functions (the dimension \f$d\f$). |
+  "Order"   | <tt>std::size_t</tt> | <tt>2</tt> | The order of the multi-indices (the parameter \f$p\f$). |
+  @param[in] pt Options for the basis construction
+  */
+  static std::shared_ptr<PolynomialBasis> TotalOrderPolynomialBasis(boost::property_tree::ptree const& pt);
+
   virtual ~PolynomialBasis() = default;
 
 protected:
