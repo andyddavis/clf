@@ -6,6 +6,7 @@
 
 #include <boost/property_tree/ptree.hpp>
 
+#include <MUQ/Utilities/RegisterClassName.h>
 #include <MUQ/Utilities/MultiIndices/MultiIndexSet.h>
 
 #include "clf/BasisFunctionsExceptions.hpp"

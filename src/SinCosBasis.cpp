@@ -1,11 +1,12 @@
 #include "clf/SinCosBasis.hpp"
 
 namespace pt = boost::property_tree;
+using namespace muq::Utilities;
 using namespace clf;
 
 CLF_REGISTER_BASIS_FUNCTION(SinCosBasis)
 
-SinCosBasis::SinCosBasis(std::shared_ptr<muq::Utilities::MultiIndexSet> const& multis, pt::ptree const& pt) : BasisFunctions(multis, pt) {}
+SinCosBasis::SinCosBasis(std::shared_ptr<MultiIndexSet> const& multis, pt::ptree const& pt) : BasisFunctions(multis, pt) {}
 
 double SinCosBasis::ScalarBasisFunction(std::size_t const ind, double const x) const {
   // constant basis

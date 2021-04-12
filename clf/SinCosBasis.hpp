@@ -1,8 +1,6 @@
 #ifndef SINCOSBASIS_HPP_
 #define SINCOSBASIS_HPP_
 
-#include <MUQ/Utilities/RegisterClassName.h>
-
 #include "clf/BasisFunctions.hpp"
 
 namespace clf {

@@ -28,6 +28,7 @@ set(CLF_SOURCE
     src/BasisFunctionsExceptions.cpp
     src/BasisFunctions.cpp
     src/SinCosBasis.cpp
+    src/PolynomialBasis.cpp
 
     src/SupportPoint.cpp
 
@@ -45,6 +46,7 @@ set(TEST_SOURCE
 
     tests/BasisFunctionsTests.cpp
     tests/SinCosBasisTests.cpp
+    tests/PolynomialBasisTests.cpp
 
     tests/SupportPointTests.cpp
 
