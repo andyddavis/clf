@@ -1,13 +1,12 @@
 #ifndef SUPPORTPOINTCLOUDEXCEPTIONS_HPP_
 #define SUPPORTPOINTCLOUDEXCEPTIONS_HPP_
 
-#include <exception>
-#include <string>
+#include "clf/CLFException.hpp"
 
 namespace clf {
 
 /// Make sure the support points have the correct input/output dimension
-class SupportPointCloudDimensionException : virtual public std::exception {
+class SupportPointCloudDimensionException : virtual public CLFException {
 public:
 
   /// Is the input or output dimension mismatching?
@@ -28,9 +27,6 @@ public:
 
   virtual ~SupportPointCloudDimensionException() = default;
 
-  /// The error message that gets printed when this exception is thrown
-  virtual const char* what() const noexcept;
-
   /// Is the input or output dimenstion mismatched?
   const Type type;
 
@@ -41,9 +37,6 @@ public:
   std::size_t const ind2;
 
 private:
-
-  /// The printed error message when this exception is thrown
-  std::string message = "UNKNOWN ERROR";
 };
 
 } // namespace clf

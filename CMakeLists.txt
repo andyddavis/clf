@@ -25,12 +25,17 @@ set(CMAKE_CXX_COMPILER ${MUQ_CXX_COMPILER})
 include_directories(${MUQ_INCLUDE_DIRS} ${Trilinos_INCLUDE_DIRS} ${GTEST_INCLUDE_DIR} .)
 
 set(CLF_SOURCE
+    src/CLFException.cpp
+
+    src/UtilityFunctions.cpp
+
     src/BasisFunctionsExceptions.cpp
     src/BasisFunctions.cpp
     src/SinCosBasis.cpp
     src/PolynomialBasis.cpp
 
     src/SupportPoint.cpp
+    src/SupportPointExceptions.cpp
 
     src/SupportPointCloud.cpp
     src/SupportPointCloudExceptions.cpp

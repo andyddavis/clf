@@ -5,6 +5,9 @@
 
 #include <MUQ/Modeling/ModPiece.h>
 
+#include "clf/SupportPointExceptions.hpp"
+#include "clf/BasisFunctions.hpp"
+
 namespace clf {
 
 /// The local function \f$\ell\f$ associated with a support point \f$x\f$.
@@ -78,12 +81,22 @@ public:
 
 private:
 
+  /// Create the basis functions from the given options
+  /**
+  @param[in] indim The input dimension for the support point
+  @param[in] pt The options for the basis functions
+  */
+  static std::shared_ptr<BasisFunctions> CreateBasisFunctions(std::size_t const indim, boost::property_tree::ptree pt);
+
   /// Evaluate the local function \f$\ell\f$ associated with this support point
   /**
   Fills in the <tt>outputs</tt> vector attached to <tt>this</tt> SupportPoint (inherited from <tt>muq::Modeling::ModPiece</tt>). This is a vector of length <tt>1</tt> that stores the local function evaluation.
   @param[in] inputs There is only one input and it is the evaluation point
   */
   virtual void EvaluateImpl(muq::Modeling::ref_vector<Eigen::VectorXd> const& input) override;
+
+  /// The basis that defines this support point
+  std::shared_ptr<BasisFunctions> basis;
 
   /// The parameter \f$\delta\f$ that defines the radius for which we expect this local function to be relatively accurate
   /**

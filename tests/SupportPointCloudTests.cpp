@@ -14,6 +14,7 @@ protected:
   /// Set up information to test the support point cloud
   virtual void SetUp() override {
     ptSupportPoints.put("OutputDimension", outdim);
+    ptSupportPoints.put("BasisFunctions.Type", "TotalOrderPolynomials");
   }
 
   /// Make sure everything is what we expect
@@ -55,6 +56,7 @@ TEST(SupportPointCloudErrorTests, InputDimensionCheck) {
 
   // create two points with different input sizes
   pt::ptree ptSupportPoints;
+  ptSupportPoints.put("BasisFunctions.Type", "TotalOrderPolynomials");
   supportPoints[0] = std::make_shared<SupportPoint>(Eigen::VectorXd::Random(3), ptSupportPoints);
   supportPoints[1] = std::make_shared<SupportPoint>(Eigen::VectorXd::Random(5), ptSupportPoints);
 
@@ -74,6 +76,7 @@ TEST(SupportPointCloudErrorTests, OutputDimensionCheck) {
 
   // create two points with different input sizes
   pt::ptree ptSupportPoints;
+  ptSupportPoints.put("BasisFunctions.Type", "TotalOrderPolynomials");
   ptSupportPoints.put("OutputDimension", 2);
   supportPoints[0] = std::make_shared<SupportPoint>(Eigen::VectorXd::Random(5), ptSupportPoints);
   ptSupportPoints.put("OutputDimension", 8);

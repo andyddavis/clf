@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include "clf/UtilityFunctions.hpp"
 #include "clf/SupportPoint.hpp"
 
 namespace pt = boost::property_tree;
@@ -34,15 +35,13 @@ protected:
   /// The location of the support point
   Eigen::VectorXd x;
 
-  /// The basis that we are using for this test
-  //std::shared_ptr<BasisFunctions> basis;
-
   /// The support point
   std::shared_ptr<SupportPoint> point;
 };
 
 TEST_F(SupportPointTests, LocalCoordinateTransformation) {
   // create the support point
+  pt.put("BasisFunctions.Type", "TotalOrderPolynomials");
   point = std::make_shared<SupportPoint>(x, pt);
 
   // the default delta is 1.0
@@ -60,12 +59,33 @@ TEST_F(SupportPointTests, LocalCoordinateTransformation) {
   EXPECT_NEAR((point->GlobalCoordinate(yhat) - y).norm(), 0.0, 1.0e-10);
 }
 
-TEST_F(SupportPointTests, SupportPointEvaluation) {
+TEST_F(SupportPointTests, TotalOrderPolynomials) {
+
   // the order of the polynomial basis
   const std::size_t order = 5;
-
-  pt.put("InputDimension", indim);
   pt.put("Order", order);
 
   EXPECT_TRUE(false);
+
+  // create the support point
+  pt.put("BasisFunctions.Type", "TotalOrderPolynomials");
+  point = std::make_shared<SupportPoint>(x, pt);
+}
+
+TEST(SupportPointExceptionHandlingTests, InvalidBasisCheck) {
+  // choose a random location
+  const Eigen::VectorXd x = Eigen::VectorXd::Random(9);
+
+  const std::string basisName = "ReallyLongUniqueInvalidBasisNameThatShouldOnlyBeUsedForTesting";
+
+  // options for the support point
+  pt::ptree pt;
+  pt.put("BasisFunctions.Type", basisName);
+
+  // create the support point
+  try {
+    auto point = std::make_shared<SupportPoint>(x, pt);
+  } catch( SupportPointBasisException const& exc ) {
+    EXPECT_EQ(exc.basisType, UtilityFunctions::ToUpper(basisName));
+  }
 }
