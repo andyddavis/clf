@@ -56,3 +56,7 @@ TEST_F(SupportPointTests, LocalCoordinateTransformation) {
   EXPECT_NEAR(((y-point->x)/newdelta - yhat).norm(), 0.0, 1.0e-10);
   EXPECT_NEAR((point->GlobalCoordinate(yhat) - y).norm(), 0.0, 1.0e-10);
 }
+
+TEST_F(SupportPointTests, SupportPointEvaluation) {
+  EXPECT_TRUE(false);
+}
