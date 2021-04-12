@@ -10,6 +10,8 @@ protected:
   /// Set up information to test the support point
   virtual void SetUp() override {
     pt.put("OutputDimension", outdim);
+    pt.put("InputDimension", indim);
+    pt.put("Order", order);
 
     // choose a random location
     x = Eigen::VectorXd::Random(indim);
@@ -30,6 +32,9 @@ protected:
 
   /// The output dimension
   const std::size_t outdim = 4;
+
+  /// The order of the polynomial basis
+  const std::size_t order = 5;
 
   /// Options for the support point
   pt::ptree pt;
