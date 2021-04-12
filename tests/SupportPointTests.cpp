@@ -10,14 +10,9 @@ protected:
   /// Set up information to test the support point
   virtual void SetUp() override {
     pt.put("OutputDimension", outdim);
-    pt.put("InputDimension", indim);
-    pt.put("Order", order);
 
     // choose a random location
     x = Eigen::VectorXd::Random(indim);
-
-    // create the support point
-    point = std::make_shared<SupportPoint>(x, pt);
   }
 
   /// Make sure everything is what we expect
@@ -33,20 +28,23 @@ protected:
   /// The output dimension
   const std::size_t outdim = 4;
 
-  /// The order of the polynomial basis
-  const std::size_t order = 5;
-
   /// Options for the support point
   pt::ptree pt;
 
   /// The location of the support point
   Eigen::VectorXd x;
 
+  /// The basis that we are using for this test
+  std::shared_ptr<BasisFunctions> basis;
+
   /// The support point
   std::shared_ptr<SupportPoint> point;
 };
 
 TEST_F(SupportPointTests, LocalCoordinateTransformation) {
+  // create the support point
+  point = std::make_shared<SupportPoint>(x, pt);
+  
   // the default delta is 1.0
   EXPECT_DOUBLE_EQ(point->Radius(), 1.0);
 
@@ -63,5 +61,11 @@ TEST_F(SupportPointTests, LocalCoordinateTransformation) {
 }
 
 TEST_F(SupportPointTests, SupportPointEvaluation) {
+  // the order of the polynomial basis
+  const std::size_t order = 5;
+
+  pt.put("InputDimension", indim);
+  pt.put("Order", order);
+
   EXPECT_TRUE(false);
 }
