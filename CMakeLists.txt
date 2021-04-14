@@ -132,3 +132,20 @@ if( NOT CLF_BUILD_FROM_PIP )
         add_dependencies(run-tests GTEST)
     endif()
 endif()
+
+###############################################
+# Build the documentation (doxygen)
+###############################################
+
+# add a target to generate API documentation with Doxygen
+find_package(Doxygen)
+if( DOXYGEN_FOUND AND NOT CLF_BUILD_FROM_PIP )
+	message(STATUS "To build documentation, run 'make doc'")
+
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/documentation/clf.doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/clf.doxyfile @ONLY)
+    add_custom_target(doc
+        ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/clf.doxyfile
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Generating API documentation with Doxygen" VERBATIM
+    )
+endif(DOXYGEN_FOUND)
