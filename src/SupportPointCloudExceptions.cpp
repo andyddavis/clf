@@ -1,5 +1,7 @@
 #include "clf/SupportPointCloudExceptions.hpp"
 
+#include "clf/SupportPointCloud.hpp"
+
 using namespace clf;
 
 SupportPointCloudDimensionException::SupportPointCloudDimensionException(Type const& type, std::size_t const ind1, std::size_t const ind2) :
