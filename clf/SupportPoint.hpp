@@ -26,6 +26,7 @@ Parameter Key | Type | Default Value | Description |
 "OutputDimension"   | <tt>std::size_t</tt> | <tt>1</tt> | The output dimension of the support point. |
 "InitialRadius"   | <tt>double</tt> | <tt>1.0</tt> | The initial value of the \f$\delta\f$ parameter. |
 "BasisFunctions"   | <tt>std::string</tt> |--- | The options to make the basis functions for each output, separated by commas (see SupportPoint::CreateBasisFunctions) |
+"NumNeighbors"   | <tt>std::string</tt> | <tt>""</tt> | A comma-seperated list of the number of nearest neighbors to use to compute the coefficients for each output (if empty, use the number required to interpolate plus one) |
 */
 class SupportPoint : public muq::Modeling::ModPiece {
 public:
@@ -89,7 +90,21 @@ public:
   */
   const std::vector<std::shared_ptr<const BasisFunctions> > bases;
 
+  /// The number of nearest neighbors used to compute the coefficients for each output
+  /**
+  The \f$j^{th}\f$ entry corresponds to the number of nearest neighbors for the \f$j^{th}\f$ output
+  */
+  const std::vector<std::size_t> numNeighbors;
+
 private:
+
+  /// Determine the number of nearest nieghbors for each output
+  /**
+  @param[in] bases The bases used for each output
+  @param[in] pt The options for the support point
+  \return The number of nearest neighbors used to compute the coefficients for each output
+  */
+  static std::vector<std::size_t> DetermineNumNeighbors(std::vector<std::shared_ptr<const BasisFunctions> > const& bases, boost::property_tree::ptree const& pt);
 
   /// Create the basis functions from the given options
   /**

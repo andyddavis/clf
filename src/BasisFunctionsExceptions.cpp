@@ -8,5 +8,5 @@ BasisFunctionsNameConstuctionException::BasisFunctionsNameConstuctionException(s
   message = "ERROR: Could not find basis functions \"" + basisName + "\".  Available options are:\n";
   auto map = BasisFunctions::GetBasisFunctionsMap();
   for( auto it=map->begin(); it!=map->end(); ++it ) { message += it->first + "\n"; }
-  message += "(clf::BasisFunctionsNameConstuctionException).";
+  message += "(clf::exceptions::BasisFunctionsNameConstuctionException).";
 }

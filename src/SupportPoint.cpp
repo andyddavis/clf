@@ -12,10 +12,23 @@ SupportPoint::SupportPoint(Eigen::VectorXd const& x, pt::ptree const& pt) :
 ModPiece(Eigen::VectorXi::Constant(1, x.size()), Eigen::VectorXi::Constant(1, pt.get<std::size_t>("OutputDimension", 1))),
 x(x),
 bases(CreateBasisFunctions(x.size(), outputSizes(0), pt)),
+numNeighbors(DetermineNumNeighbors(bases, pt)),
 delta(pt.get<double>("InitialRadius", 1.0))
 {
   assert(bases.size()==outputSizes(0));
   for( const auto& it : bases ) { assert(it); }
+}
+
+std::vector<std::size_t> SupportPoint::DetermineNumNeighbors(std::vector<std::shared_ptr<const BasisFunctions> > const& bases, pt::ptree const& pt) {
+  const std::size_t defaultNumNeighs = pt.get<std::size_t>("NumNeighbors", std::numeric_limits<std::size_t>::max());
+
+  std::vector<std::size_t> numNeighs(bases.size());
+  for( std::size_t d=0; d<bases.size(); ++d ) {
+    numNeighs[d] = pt.get<std::size_t>("NumNeighbors-"+std::to_string(d),  (defaultNumNeighs<std::numeric_limits<std::size_t>::max()? defaultNumNeighs : bases[d]->NumBasisFunctions()+1));
+    if( numNeighs[d]<bases[d]->NumBasisFunctions() ) { throw exceptions::SupportPointWrongNumberOfNearestNeighbors(d, bases[d]->NumBasisFunctions(), numNeighs[d]); }
+  }
+
+  return numNeighs;
 }
 
 std::vector<std::shared_ptr<const BasisFunctions> > SupportPoint::CreateBasisFunctions(std::size_t const indim, std::size_t const outdim, pt::ptree pt) {

@@ -22,7 +22,7 @@ public:
 protected:
 
   /// The printed error message when this exception is thrown
-  std::string message = "CLF ERROR: UNKNOWN";
+  std::string message = "CLF ERROR: UNKNOWN (clf::exceptions::CLFException)";
 
 private:
 };

@@ -18,6 +18,7 @@ class TestSupportPoint(unittest.TestCase):
         ptOptions = dict()
         ptOptions["BasisFunctions"] = "Basis"
         ptOptions["Basis"] = basisOptions
+        ptOptions["NumNeighbors"] = 40
 
         # create the point
         point = clf.SupportPoint(x, ptOptions)
@@ -30,3 +31,4 @@ class TestSupportPoint(unittest.TestCase):
         # make sure the basis was created
         self.assertEqual(len(point.bases), 1)
         self.assertEqual(point.bases[0].NumBasisFunctions(), 35)
+        self.assertEqual(point.numNeighbors[0], 40)

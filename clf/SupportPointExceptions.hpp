@@ -8,6 +8,30 @@
 namespace clf {
 namespace exceptions {
 
+/// The support point does not use enough nearest neighbors to interpolate
+class SupportPointWrongNumberOfNearestNeighbors : virtual public CLFException {
+public:
+
+  /**
+  @param[in] output The output dimension that did not have enough nearest neighbors
+  @param[in] required The number of neighbors required to interpolate
+  @param[in] supplied The number of neighbors that the support point tried to use
+  */
+  SupportPointWrongNumberOfNearestNeighbors(std::size_t const output, std::size_t const required, std::size_t const supplied);
+
+  virtual ~SupportPointWrongNumberOfNearestNeighbors() = default;
+
+  /// The output dimension that did not have enough nearest neighbors
+  const std::size_t output;
+
+  /// The number of neighbors required to interpolate
+  const std::size_t required;
+
+  /// The number of neighbors that the support point tried to use
+  const std::size_t supplied;
+private:
+};
+
 /// The support point does not construct the right number of bases
 class SupportPointWrongNumberOfBasesConstructed : virtual public CLFException {
 public:

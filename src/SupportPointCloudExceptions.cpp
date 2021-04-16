@@ -9,8 +9,8 @@ CLFException(),
 type(type), ind1(ind1), ind2(ind2)
 {
   if( type==Type::INPUT ) {
-    message = "ERROR: SupportPointCloud was given two support points (SupportPoint type) with different input dimensions (clf::SupportPointCloudDimensionException).";
+    message = "ERROR: SupportPointCloud was given two support points (SupportPoint type) with different input dimensions (clf::exceptions::SupportPointCloudDimensionException).";
   } else if( type==Type::OUTPUT ) {
-    message = "ERROR: SupportPointCloud was given two support points (SupportPoint type) with different output dimensions (clf::SupportPointCloudDimensionException).";
+    message = "ERROR: SupportPointCloud was given two support points (SupportPoint type) with different output dimensions (clf::exceptions::SupportPointCloudDimensionException).";
   }
 }
