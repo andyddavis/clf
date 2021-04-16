@@ -76,6 +76,15 @@ public:
   */
   std::size_t OutputDimension() const;
 
+  /// Find the \f$k\f$ nearest neighbors
+  /**
+  @param[in] point We want to find the nearest neighbors of this point
+  @param[in] k We want to find this many nearest neighbors
+  @param[out] neighInd The indices of the nearest neighbors
+  @param[out] neighDist The squared distances from the input point to its nearest neighbors
+  */
+  void FindNearestNeighbors(Eigen::VectorXd const& point, std::size_t const k, std::vector<std::size_t>& neighInd, std::vector<double>& neighDist) const;
+
 private:
 
   /// Make sure the support points all have the same input/output dimension

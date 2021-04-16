@@ -46,3 +46,14 @@ std::size_t SupportPointCloud::OutputDimension() const {
   assert(supportPoints.size()>0);
   return supportPoints[0]->OutputDimension();
 }
+
+void SupportPointCloud::FindNearestNeighbors(Eigen::VectorXd const& point, std::size_t const k, std::vector<std::size_t>& neighInd, std::vector<double>& neighDist) const {
+  assert(k<=supportPoints.size());
+
+  // resize the input vecotrs
+  neighInd.resize(k); neighDist.resize(k);
+
+  // find the nearest neighbors
+  const std::size_t nfound = kdtree->knnSearch(point.data(), k, neighInd.data(), neighDist.data());
+  assert(nfound==k);
+}
