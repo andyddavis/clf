@@ -1,6 +1,8 @@
 #ifndef SUPPORTPOINTEXCEPTIONS_HPP_
 #define SUPPORTPOINTEXCEPTIONS_HPP_
 
+#include <vector>
+
 #include "clf/CLFException.hpp"
 
 namespace clf {
@@ -18,7 +20,10 @@ public:
 
   /// The (invalid) basis that the support point tried to create
   const std::string basisType;
-  
+
+  /// The basis types that a support point can construct
+  static const std::vector<std::string> options;
+
 private:
 
 };

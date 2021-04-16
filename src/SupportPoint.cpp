@@ -2,6 +2,7 @@
 
 #include "clf/UtilityFunctions.hpp"
 #include "clf/PolynomialBasis.hpp"
+#include "clf/SinCosBasis.hpp"
 
 namespace pt = boost::property_tree;
 using namespace muq::Modeling;
@@ -17,11 +18,17 @@ delta(pt.get<double>("InitialRadius", 1.0))
 }
 
 std::shared_ptr<BasisFunctions> SupportPoint::CreateBasisFunctions(std::size_t const indim, pt::ptree pt) {
+  // find the time we are trying to create and make sure it is a valid option
   const std::string type = UtilityFunctions::ToUpper(pt.get<std::string>("Type"));
+  if( std::find(SupportPointBasisException::options.begin(), SupportPointBasisException::options.end(), type)==SupportPointBasisException::options.end() ) { throw SupportPointBasisException(type); }
 
+  // create the basis and return it
   if( type=="TOTALORDERPOLYNOMIALS" ) {
     pt.put("InputDimension", indim);
     return PolynomialBasis::TotalOrderBasis(pt);
+  } else if( type=="TOTALORDERSINCOS" ) {
+    pt.put("InputDimension", indim);
+    return SinCosBasis::TotalOrderBasis(pt);
   }
 
   // invalid basis type, throw and exception

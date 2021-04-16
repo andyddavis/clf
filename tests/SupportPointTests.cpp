@@ -2,6 +2,7 @@
 
 #include "clf/UtilityFunctions.hpp"
 #include "clf/PolynomialBasis.hpp"
+#include "clf/SinCosBasis.hpp"
 #include "clf/SupportPoint.hpp"
 
 namespace pt = boost::property_tree;
@@ -28,7 +29,7 @@ protected:
   const std::size_t indim = 4;
 
   /// The output dimension
-  const std::size_t outdim = 4;
+  const std::size_t outdim = 3;
 
   /// Options for the support point
   pt::ptree pt;
@@ -70,10 +71,22 @@ TEST_F(SupportPointTests, TotalOrderPolynomials) {
   point = std::make_shared<SupportPoint>(x, pt);
   EXPECT_TRUE(point->basis);
   EXPECT_TRUE(std::dynamic_pointer_cast<PolynomialBasis>(point->basis));
-  // the formula for the expected number of basis functions: (d+p)!/((p+1)! (d-1)!), in this case the answer is 35 so we hard code it
+  // the formula for the expected number of basis functions: [dimension]+[order] choose [dimension], in this case the answer is 35 so we hard code it
   EXPECT_EQ(point->basis->NumBasisFunctions(), 35);
+}
 
-  EXPECT_TRUE(false);
+TEST_F(SupportPointTests, TotalOrderSineCosine) {
+  // the order of the total order sine/cosine basis
+  const std::size_t order = 2;
+
+  // create the support point
+  pt.put("BasisFunctions.Type", "TotalOrderSinCos");
+  pt.put("BasisFunctions.Order", order);
+  point = std::make_shared<SupportPoint>(x, pt);
+  EXPECT_TRUE(point->basis);
+  EXPECT_TRUE(std::dynamic_pointer_cast<SinCosBasis>(point->basis));
+  // the formula for the expected number of basis functions: [dimension]+[2*order] choose [dimension], in this case the answer is 70 so we hard code it
+  EXPECT_EQ(point->basis->NumBasisFunctions(), 70);
 }
 
 TEST(SupportPointExceptionHandlingTests, InvalidBasisCheck) {
