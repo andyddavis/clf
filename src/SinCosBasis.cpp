@@ -1,5 +1,7 @@
 #include "clf/SinCosBasis.hpp"
 
+#include <MUQ/Utilities/MultiIndices/MultiIndexFactory.h>
+
 namespace pt = boost::property_tree;
 using namespace muq::Utilities;
 using namespace clf;
@@ -17,4 +19,10 @@ double SinCosBasis::ScalarBasisFunction(std::size_t const ind, double const x) c
 
   // sine basis (odd numbers)
   return std::sin(M_PI*((ind+1)/2)*x);
+}
+
+std::shared_ptr<SinCosBasis> SinCosBasis::TotalOrderBasis(boost::property_tree::ptree const& pt) {
+  std::shared_ptr<MultiIndexSet> multis = MultiIndexFactory::CreateTotalOrder(pt.get<std::size_t>("InputDimension"), 2*pt.get<std::size_t>("Order", 1));
+
+  return std::make_shared<SinCosBasis>(multis, pt);
 }

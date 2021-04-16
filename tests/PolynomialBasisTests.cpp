@@ -48,8 +48,12 @@ protected:
 
     auto poly = IndexedScalarBasis::Construct(basisName);
 
-    // evaluate the sin/cos basis function
+    // evaluate the polynomial basis functions
+    const Eigen::VectorXd phi = basis->EvaluateBasisFunctions(x);
     for( std::size_t i=0; i<dim; ++i ) {
+      EXPECT_DOUBLE_EQ(phi(2*(i+1)-1), poly->BasisEvaluate(1, x(i)));
+      EXPECT_DOUBLE_EQ(phi(2*(i+1)), poly->BasisEvaluate(2, x(i)));
+
       EXPECT_DOUBLE_EQ(basis->EvaluateBasisFunction(2*(i+1)-1, x), poly->BasisEvaluate(1, x(i)));
       EXPECT_DOUBLE_EQ(basis->EvaluateBasisFunction(2*(i+1), x), poly->BasisEvaluate(2, x(i)));
     }
@@ -95,7 +99,7 @@ TEST(TotalOrderPolynomialBasisTests, Construction) {
   pt.put("InputDimension", dim);
   pt.put("Order", order);
 
-  auto basis = PolynomialBasis::TotalOrderPolynomialBasis(pt);
+  auto basis = PolynomialBasis::TotalOrderBasis(pt);
   EXPECT_TRUE(basis);
 
   EXPECT_EQ(basis->NumBasisFunctions(), 1+order);

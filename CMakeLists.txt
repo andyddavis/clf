@@ -88,6 +88,8 @@ if( CLF_BUILD_FROM_PIP )
 
         python/Module.cpp
 
+        python/BasisFunctions.cpp
+
         python/SupportPoint.cpp
     )
 endif()

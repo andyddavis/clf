@@ -31,6 +31,12 @@ std::shared_ptr<BasisFunctions::BasisFunctionsMap> BasisFunctions::GetBasisFunct
 
 std::size_t BasisFunctions::NumBasisFunctions() const { return multis->Size(); }
 
+Eigen::VectorXd BasisFunctions::EvaluateBasisFunctions(Eigen::VectorXd const& x) const {
+  Eigen::VectorXd phi(multis->Size());
+  for( std::size_t i=0; i<phi.size(); ++i ) { phi(i) = EvaluateBasisFunction(i, x); }
+  return phi;
+}
+
 double BasisFunctions::EvaluateBasisFunction(std::size_t const ind, Eigen::VectorXd const& x) const {
   assert(ind<multis->Size());
 

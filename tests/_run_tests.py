@@ -5,6 +5,7 @@ import sys
 sys.path.insert(0, './tests')
 
 # import the tests
+from BasisFunctionsTests import *
 from SupportPointTests import *
 
 class TestCLFInstall(unittest.TestCase):

@@ -21,7 +21,7 @@ std::shared_ptr<BasisFunctions> SupportPoint::CreateBasisFunctions(std::size_t c
 
   if( type=="TOTALORDERPOLYNOMIALS" ) {
     pt.put("InputDimension", indim);
-    return PolynomialBasis::TotalOrderPolynomialBasis(pt);
+    return PolynomialBasis::TotalOrderBasis(pt);
   }
 
   // invalid basis type, throw and exception

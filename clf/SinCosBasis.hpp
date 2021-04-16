@@ -32,6 +32,21 @@ public:
 
   virtual ~SinCosBasis() = default;
 
+  /// Construct a total-order sine/cosine basis
+  /**
+  For a multi-index \f$\iota\f$ define \f$\vert \iota \vert = \sum_{i=1}^{d} i_d\f$. This function constructs a polynomials basis using all of the multi-indices such that \f$\vert \iota \vert \leq 2 p\f$, where the order \f$p\f$ is a user-supplied parameter.
+
+  Note we use all of the multi-indices whose order is bounded by \f$2 p\f$ so that we include all of the sine and cosine terms.
+
+  <B>Configuration Parameters (in addition to the usual parameters for a PolynomialBasis):</B>
+  Parameter Key | Type | Default Value | Description |
+  ------------- | ------------- | ------------- | ------------- |
+  "InputDimension"   | <tt>std::size_t</tt> | --- | The input dimension for the basis functions (the dimension \f$d\f$). |
+  "Order"   | <tt>std::size_t</tt> | <tt>1</tt> | The order of the multi-indices (the parameter \f$p\f$). |
+  @param[in] pt Options for the basis construction
+  */
+  static std::shared_ptr<SinCosBasis> TotalOrderBasis(boost::property_tree::ptree const& pt);
+
 protected:
 
   /// Evaluate the scalar basis function \f$l_i: \mathbb{R} \mapsto \mathbb{R}\f$.

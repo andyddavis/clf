@@ -45,8 +45,25 @@ TEST(SinCosBasisTests, Evaluation) {
   EXPECT_DOUBLE_EQ(basis->EvaluateBasisFunction(0, x), 1.0);
 
   // evaluate the sin/cos basis function
+  const Eigen::VectorXd phi = basis->EvaluateBasisFunctions(x);
   for( std::size_t i=0; i<dim; ++i ) {
+    EXPECT_DOUBLE_EQ(phi(2*(i+1)-1), std::sin(M_PI*x(i)));
+    EXPECT_DOUBLE_EQ(phi(2*(i+1)), std::cos(M_PI*x(i)));
+
     EXPECT_DOUBLE_EQ(basis->EvaluateBasisFunction(2*(i+1)-1, x), std::sin(M_PI*x(i)));
     EXPECT_DOUBLE_EQ(basis->EvaluateBasisFunction(2*(i+1), x), std::cos(M_PI*x(i)));
   }
+}
+
+TEST(TotalOrderSineCosineBasisTests, Construction) {
+  const std::size_t dim = 1, order = 5;
+
+  pt::ptree pt;
+  pt.put("InputDimension", dim);
+  pt.put("Order", order);
+
+  auto basis = SinCosBasis::TotalOrderBasis(pt);
+  EXPECT_TRUE(basis);
+
+  EXPECT_EQ(basis->NumBasisFunctions(), 1+2*order);
 }

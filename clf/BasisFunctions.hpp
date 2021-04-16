@@ -54,6 +54,14 @@ public:
 
   virtual ~BasisFunctions() = default;
 
+  /// Evaluate the basis functions
+  /**
+  The vector of basis functions is \f$\phi(x) = [\phi_1(x),\, \phi_2(x),\, ...,\, \phi_q(x)]\f$.
+  @param[in] x The point where we are evaluating the basis function
+  \return The vector of basis function evaluations
+  */
+  Eigen::VectorXd EvaluateBasisFunctions(Eigen::VectorXd const& x) const;
+
   /// Evaluate the \f$i^{th}\f$ basis function
   /**
   Let \f$\iota(i)\f$ be the corresponding multi-index. The basis function is

@@ -13,7 +13,7 @@ PolynomialBasis::PolynomialBasis(std::shared_ptr<MultiIndexSet> const& multis, p
   poly = IndexedScalarBasis::Construct(pt.get<std::string>("ScalarBasis", "Legendre"));
 }
 
-std::shared_ptr<PolynomialBasis> PolynomialBasis::TotalOrderPolynomialBasis(pt::ptree const& pt) {
+std::shared_ptr<PolynomialBasis> PolynomialBasis::TotalOrderBasis(pt::ptree const& pt) {
   std::shared_ptr<MultiIndexSet> multis = MultiIndexFactory::CreateTotalOrder(pt.get<std::size_t>("InputDimension"), pt.get<std::size_t>("Order", 2));
 
   return std::make_shared<PolynomialBasis>(multis, pt);
