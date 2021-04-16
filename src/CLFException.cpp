@@ -1,6 +1,6 @@
 #include "clf/CLFException.hpp"
 
-using namespace clf;
+using namespace clf::exceptions;
 
 CLFException::CLFException() : std::exception() {}
 

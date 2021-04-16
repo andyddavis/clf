@@ -2,7 +2,7 @@
 
 #include "clf/SupportPointCloud.hpp"
 
-using namespace clf;
+using namespace clf::exceptions;
 
 SupportPointCloudDimensionException::SupportPointCloudDimensionException(Type const& type, std::size_t const ind1, std::size_t const ind2) :
 CLFException(),

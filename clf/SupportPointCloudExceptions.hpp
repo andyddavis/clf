@@ -4,6 +4,7 @@
 #include "clf/CLFException.hpp"
 
 namespace clf {
+namespace exceptions {
 
 /// Make sure the support points have the correct input/output dimension
 class SupportPointCloudDimensionException : virtual public CLFException {
@@ -39,6 +40,7 @@ public:
 private:
 };
 
+} // namespace exceptions
 } // namespace clf
 
 #endif

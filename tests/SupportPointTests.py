@@ -16,7 +16,8 @@ class TestSupportPoint(unittest.TestCase):
 
         # options for the support point
         ptOptions = dict()
-        ptOptions["BasisFunctions"] = basisOptions
+        ptOptions["BasisFunctions"] = "Basis"
+        ptOptions["Basis"] = basisOptions
 
         # create the point
         point = clf.SupportPoint(x, ptOptions)
@@ -27,4 +28,5 @@ class TestSupportPoint(unittest.TestCase):
             self.assertAlmostEqual(point.x[i], x[i], places=10)
 
         # make sure the basis was created
-        self.assertEqual(point.basis.NumBasisFunctions(), 35)
+        self.assertEqual(len(point.bases), 1)
+        self.assertEqual(point.bases[0].NumBasisFunctions(), 35)

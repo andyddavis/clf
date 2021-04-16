@@ -2,7 +2,7 @@
 
 #include "clf/BasisFunctions.hpp"
 
-using namespace clf;
+using namespace clf::exceptions;
 
 BasisFunctionsNameConstuctionException::BasisFunctionsNameConstuctionException(std::string const& basisName) : CLFException(), basisName(basisName) {
   message = "ERROR: Could not find basis functions \"" + basisName + "\".  Available options are:\n";

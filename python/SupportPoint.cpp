@@ -14,5 +14,5 @@ void clf::python::SupportPointWrapper(pybind11::module& mod) {
   py::class_<SupportPoint, std::shared_ptr<SupportPoint> > suppPt(mod, "SupportPoint");
   suppPt.def(py::init( [] (Eigen::VectorXd const& x, py::dict const& d) { return new SupportPoint(x, ConvertDictToPtree(d)); }));
   suppPt.def_readonly("x", &SupportPoint::x);
-  suppPt.def_readonly("basis", &SupportPoint::basis);
+  suppPt.def_readonly("bases", &SupportPoint::bases);
 }

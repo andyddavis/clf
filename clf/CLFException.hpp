@@ -5,6 +5,7 @@
 #include <string>
 
 namespace clf {
+namespace exceptions {
 
 /// A generic exception for the coupled local function library
 class CLFException  : virtual public std::exception {
@@ -26,6 +27,7 @@ protected:
 private:
 };
 
+} // namespace exceptions
 } // namespace clf
 
 #endif

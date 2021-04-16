@@ -14,7 +14,11 @@ protected:
   /// Set up information to test the support point cloud
   virtual void SetUp() override {
     ptSupportPoints.put("OutputDimension", outdim);
-    ptSupportPoints.put("BasisFunctions.Type", "TotalOrderPolynomials");
+    ptSupportPoints.put("BasisFunctions", "Basis1, Basis2, Basis3, Basis4");
+    ptSupportPoints.put("Basis1.Type", "TotalOrderPolynomials");
+    ptSupportPoints.put("Basis2.Type", "TotalOrderPolynomials");
+    ptSupportPoints.put("Basis3.Type", "TotalOrderPolynomials");
+    ptSupportPoints.put("Basis4.Type", "TotalOrderPolynomials");
   }
 
   /// Make sure everything is what we expect
@@ -56,7 +60,8 @@ TEST(SupportPointCloudErrorTests, InputDimensionCheck) {
 
   // create two points with different input sizes
   pt::ptree ptSupportPoints;
-  ptSupportPoints.put("BasisFunctions.Type", "TotalOrderPolynomials");
+  ptSupportPoints.put("BasisFunctions", "Basis");
+  ptSupportPoints.put("Basis.Type", "TotalOrderPolynomials");
   supportPoints[0] = std::make_shared<SupportPoint>(Eigen::VectorXd::Random(3), ptSupportPoints);
   supportPoints[1] = std::make_shared<SupportPoint>(Eigen::VectorXd::Random(5), ptSupportPoints);
 
@@ -64,8 +69,8 @@ TEST(SupportPointCloudErrorTests, InputDimensionCheck) {
   try {
     pt::ptree ptSupportPointCloud;
     SupportPointCloud cloud(supportPoints, ptSupportPointCloud);
-  } catch( SupportPointCloudDimensionException const& exc ) {
-    EXPECT_EQ(exc.type, SupportPointCloudDimensionException::Type::INPUT);
+  } catch( exceptions::SupportPointCloudDimensionException const& exc ) {
+    EXPECT_EQ(exc.type, exceptions::SupportPointCloudDimensionException::Type::INPUT);
     EXPECT_NE(exc.ind1, exc.ind2);
     EXPECT_NE(supportPoints[exc.ind1]->InputDimension(), supportPoints[exc.ind2]->InputDimension());
   }
@@ -76,18 +81,29 @@ TEST(SupportPointCloudErrorTests, OutputDimensionCheck) {
 
   // create two points with different input sizes
   pt::ptree ptSupportPoints;
-  ptSupportPoints.put("BasisFunctions.Type", "TotalOrderPolynomials");
   ptSupportPoints.put("OutputDimension", 2);
+  ptSupportPoints.put("BasisFunctions", "Basis1, Basis2");
+  ptSupportPoints.put("Basis1.Type", "TotalOrderPolynomials");
+  ptSupportPoints.put("Basis2.Type", "TotalOrderPolynomials");
   supportPoints[0] = std::make_shared<SupportPoint>(Eigen::VectorXd::Random(5), ptSupportPoints);
   ptSupportPoints.put("OutputDimension", 8);
+  ptSupportPoints.put("BasisFunctions", "Basis1, Basis2, Basis3, Basis4, Basis5, Basis6, Basis7, Basis8");
+  ptSupportPoints.put("Basis1.Type", "TotalOrderPolynomials");
+  ptSupportPoints.put("Basis2.Type", "TotalOrderPolynomials");
+  ptSupportPoints.put("Basis3.Type", "TotalOrderPolynomials");
+  ptSupportPoints.put("Basis4.Type", "TotalOrderPolynomials");
+  ptSupportPoints.put("Basis5.Type", "TotalOrderPolynomials");
+  ptSupportPoints.put("Basis6.Type", "TotalOrderPolynomials");
+  ptSupportPoints.put("Basis7.Type", "TotalOrderPolynomials");
+  ptSupportPoints.put("Basis8.Type", "TotalOrderPolynomials");
   supportPoints[1] = std::make_shared<SupportPoint>(Eigen::VectorXd::Random(5), ptSupportPoints);
 
   // try to create a support point cloud
   try {
     pt::ptree ptSupportPointCloud;
     SupportPointCloud cloud(supportPoints, ptSupportPointCloud);
-  } catch( SupportPointCloudDimensionException const& exc ) {
-    EXPECT_EQ(exc.type, SupportPointCloudDimensionException::Type::OUTPUT);
+  } catch( exceptions::SupportPointCloudDimensionException const& exc ) {
+    EXPECT_EQ(exc.type, exceptions::SupportPointCloudDimensionException::Type::OUTPUT);
     EXPECT_NE(exc.ind1, exc.ind2);
     EXPECT_NE(supportPoints[exc.ind1]->OutputDimension(), supportPoints[exc.ind2]->OutputDimension());
   }

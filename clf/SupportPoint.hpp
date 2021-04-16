@@ -14,16 +14,18 @@ namespace clf {
 /**
 Let \f$x \in \Omega \subseteq \mathbb{R}^{d}\f$ be a support point with an associated local function \f$\ell: \Omega \mapsto \mathbb{R}^{m}\f$. Suppose that we are building an approximation of the function \f$u:\Omega \mapsto \mathbb{R}^{m}\f$. Although \f$\ell\f$ is well-defined in the entire domain, we expect there is a smooth monotonic function \f$W: \Omega \mapsto \mathbb{R}^{+}\f$ with \f$W(0) \leq \epsilon\f$ and \f$W(r) \rightarrow \infty\f$ as \f$r \rightarrow \infty\f$ such that \f$\| \ell(y) - u(x) \|^2 \leq W(\|y-x\|^2)\f$. Therefore, we primarily care about the local function \f$\ell\f$ in a ball \f$\mathcal{B}_{\delta}(x)\f$ centered at \f$x\f$ with radius \f$\delta\f$.
 
-Define the local coordinate \f$\hat{x}(y) = (y-x)/\delta\f$ (parameterized by \f$\delta\f$) and the basis functions
+Define the local coordinate \f$\hat{x}(y) = (y-x)/\delta\f$ (parameterized by \f$\delta\f$) and the basis functions for the \f$j^{th}\f$ output
 \f{equation*}{
-    \phi(y) = [\phi_1(\hat{x}(y)),\, \phi_2(\hat{x}(y)),\, ...,\, \phi_q(\hat{x}(y))]^{\top}.
+    \phi_j(y) = [\phi_1(\hat{x}(y)),\, \phi_2(\hat{x}(y)),\, ...,\, \phi_{q_j}(\hat{x}(y))]^{\top}.
 \f}
+The \f$j^{th}\f$ output of the local function is defined by coordinates \f$p_j \in \mathbb{R}^{q_j}\f$ such that \f$\ell(y) = \phi_j(y)^{\top} p\f$.
 
 <B>Configuration Parameters:</B>
 Parameter Key | Type | Default Value | Description |
 ------------- | ------------- | ------------- | ------------- |
 "OutputDimension"   | <tt>std::size_t</tt> | <tt>1</tt> | The output dimension of the support point. |
 "InitialRadius"   | <tt>double</tt> | <tt>1.0</tt> | The initial value of the \f$\delta\f$ parameter. |
+"BasisFunctions"   | <tt>std::string</tt> |--- | The options to make the basis functions for each output, separated by commas (see SupportPoint::CreateBasisFunctions) |
 */
 class SupportPoint : public muq::Modeling::ModPiece {
 public:
@@ -79,20 +81,32 @@ public:
   /// The location of the support point \f$x\f$.
   const Eigen::VectorXd x;
 
-  /// The basis that defines this support point
+  /// The bases that defines this support point
   /**
-  Evaluating this basis defines the vector \f$\phi(y) = [\phi_1(\hat{x}(y)),\, \phi_2(\hat{x}(y)),\, ...,\, \phi_q(\hat{x}(y))]^{\top}\f$.
+  Each entry corresponds to one of the outputs. This vector has the same length as the number of outputs.
+
+  Evaluating the \f$j^{th}\f$ entry defines the vector \f$\phi_j(y) = [\phi^{(0)}(\hat{x}(y)),\, \phi^{(1)}(\hat{x}(y)),\, ...,\, \phi^{(q_j)}(\hat{x}(y))]^{\top}\f$.
   */
-  std::shared_ptr<BasisFunctions> basis;
+  const std::vector<std::shared_ptr<const BasisFunctions> > bases;
 
 private:
 
   /// Create the basis functions from the given options
   /**
   @param[in] indim The input dimension for the support point
+  @param[in] outdim The output dimension for the support point
   @param[in] pt The options for the basis functions
+  \return The bases used for each output
   */
-  static std::shared_ptr<BasisFunctions> CreateBasisFunctions(std::size_t const indim, boost::property_tree::ptree pt);
+  static std::vector<std::shared_ptr<const BasisFunctions> > CreateBasisFunctions(std::size_t const indim, std::size_t const outdim, boost::property_tree::ptree pt);
+
+  /// Create the basis functions from the given options
+  /**
+  @param[in] indim The input dimension for the support point
+  @param[in] pt The options for the basis functions
+  \return The basis created given the options
+  */
+  static std::shared_ptr<const BasisFunctions> CreateBasisFunctions(std::size_t const indim, boost::property_tree::ptree pt);
 
   /// Evaluate the local function \f$\ell\f$ associated with this support point
   /**

@@ -13,7 +13,7 @@ std::shared_ptr<BasisFunctions> BasisFunctions::Construct(std::shared_ptr<muq::U
   auto iter = GetBasisFunctionsMap()->find(basisName);
 
   // if not, throw an error
-  if( iter==GetBasisFunctionsMap()->end() ) { throw BasisFunctionsNameConstuctionException(basisName); }
+  if( iter==GetBasisFunctionsMap()->end() ) { throw exceptions::BasisFunctionsNameConstuctionException(basisName); }
 
   // call the constructor
   return iter->second(multis, pt);

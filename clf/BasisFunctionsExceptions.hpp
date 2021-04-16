@@ -4,6 +4,7 @@
 #include "clf/CLFException.hpp"
 
 namespace clf {
+namespace exceptions {
 
 /// Make sure the basis that we tried to construct is a valid basis option
 class BasisFunctionsNameConstuctionException : virtual public CLFException {
@@ -22,6 +23,7 @@ public:
 private:
 };
 
+} // namespace exceptions
 } // namespace clf
 
 #endif
