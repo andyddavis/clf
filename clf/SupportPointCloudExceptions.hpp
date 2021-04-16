@@ -6,6 +6,45 @@
 namespace clf {
 namespace exceptions {
 
+/// The graph connected the points in a support point cloud is not connected
+class SupportPointCloudNotConnected : virtual public CLFException {
+public:
+  /**
+  @param[in] outnum The output associated with the unconnected graph
+  */
+  SupportPointCloudNotConnected(std::size_t const outnum);
+
+  virtual ~SupportPointCloudNotConnected() = default;
+
+  /// The output associated with the unconnected graph
+  const std::size_t outnum;
+  
+private:
+};
+
+/// There are not enough support points in the cloud
+/**
+One of the support point requires more nearest neighbors than are available.
+*/
+class SupportPointCloudNotEnoughPointsException : virtual public CLFException {
+public:
+  /**
+  @param[in] numPoints The number of support points in the cloud
+  @param[in] required The required number of nearest neighbors
+  */
+  SupportPointCloudNotEnoughPointsException(std::size_t const numPoints, std::size_t const required);
+
+  virtual ~SupportPointCloudNotEnoughPointsException() = default;
+
+  /// The number of support points in the cloud
+  const std::size_t numPoints;
+
+  /// The required number of nearest neighbors
+  const std::size_t required;
+
+private:
+};
+
 /// Make sure the support points have the correct input/output dimension
 class SupportPointCloudDimensionException : virtual public CLFException {
 public:

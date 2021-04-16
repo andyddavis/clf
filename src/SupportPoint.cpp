@@ -98,6 +98,30 @@ Eigen::VectorXd SupportPoint::GlobalCoordinate(Eigen::VectorXd const& xhat) cons
   return delta*xhat + x;
 }
 
+void SupportPoint::SetNearestNeighbors(std::vector<std::size_t> const& neighInd, std::vector<double> const& neighDist) {
+  assert(neighInd.size()==neighDist.size());
+  assert(neighInd.size()==*std::max_element(numNeighbors.begin(), numNeighbors.end()));
+
+  // sort the nearest neighbors (so j=0 is always this support point)
+  std::vector<std::size_t> indices(neighInd.size());
+  for( std::size_t i=0; i<indices.size(); ++i ) { indices[i] = i; }
+  std::sort(indices.begin(), indices.end(), [neighDist](std::size_t const i, std::size_t const j) { return neighDist[i]<neighDist[j]; } );
+  assert(neighDist[indices[0]]<1.0e-12); // the first neighbor should itself
+
+  squaredNeighborDistances.resize(indices.size());
+  globalNeighorIndices.resize(indices.size());
+  for( std::size_t i=0; i<indices.size(); ++i ) {
+    squaredNeighborDistances[i] = neighDist[indices[i]];
+    globalNeighorIndices[i] = neighInd[indices[i]];
+  }
+}
+
+std::vector<std::size_t> SupportPoint::GlobalNeighborIndices(std::size_t const outdim) const {
+  assert(outdim<numNeighbors.size());
+  assert(numNeighbors[outdim]<=globalNeighorIndices.size());
+  return std::vector<std::size_t>(globalNeighorIndices.begin(), globalNeighorIndices.begin()+numNeighbors[outdim]);
+}
+
 void SupportPoint::EvaluateImpl(ref_vector<Eigen::VectorXd> const& input) {
 
   assert(false);

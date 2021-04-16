@@ -79,6 +79,20 @@ public:
   */
   Eigen::VectorXd GlobalCoordinate(Eigen::VectorXd const& xhat) const;
 
+  /// Set the nearest neighbors
+  /**
+  @param[in] neighInd The global indices (in a clf::SupportPointCloud) of the nearest neighbors
+  @param[in] neighDist The squared distances (Euclidean inner product) between the support point and its \f$j^{th}\f$ nearest neighbor
+  */
+  void SetNearestNeighbors(std::vector<std::size_t> const& neighInd, std::vector<double> const& neighDist);
+
+  /// Get the global indices of this support points nearest neighbors
+  /**
+  @param[in] outdim The global indicies of the nearest neighbors for this output dimension (defaults to zero)
+  \return The global indices of this support points nearest neighbors
+  */
+  std::vector<std::size_t> GlobalNeighborIndices(std::size_t const outdim = 0) const;
+
   /// The location of the support point \f$x\f$.
   const Eigen::VectorXd x;
 
@@ -135,6 +149,12 @@ private:
   The default value is \f$\delta=1\f$. This parameter defines the local coordinate transformation \f$\hat{x}(y) = (y-x)/\delta\f$.
   */
   double delta;
+
+  /// The squared distances (Euclidean inner product) between the support point and its \f$j^{th}\f$ nearest neighbor
+  std::vector<double> squaredNeighborDistances;
+
+  /// The global indices (in a clf::SupportPointCloud) of the nearest neighbors
+  std::vector<std::size_t> globalNeighorIndices;
 };
 
 } // namespace clf

@@ -153,3 +153,49 @@ TEST(SupportPointCloudErrorTests, OutputDimensionCheck) {
     EXPECT_NE(supportPoints[exc.ind1]->OutputDimension(), supportPoints[exc.ind2]->OutputDimension());
   }
 }
+
+TEST(SupportPointCloudErrorTests, NotEnoughPoints) {
+  std::vector<std::shared_ptr<SupportPoint> > supportPoints(2);
+
+  // create two points with different input sizes
+  pt::ptree ptSupportPoints;
+  ptSupportPoints.put("BasisFunctions", "Basis");
+  ptSupportPoints.put("Basis.Type", "TotalOrderPolynomials");
+  ptSupportPoints.put("NumNeighbors", 10);
+  supportPoints[0] = std::make_shared<SupportPoint>(Eigen::VectorXd::Random(3), ptSupportPoints);
+  supportPoints[1] = std::make_shared<SupportPoint>(Eigen::VectorXd::Random(3), ptSupportPoints);
+
+  // try to create a support point cloud
+  try {
+    pt::ptree ptSupportPointCloud;
+    SupportPointCloud cloud(supportPoints, ptSupportPointCloud);
+  } catch( exceptions::SupportPointCloudNotEnoughPointsException const& exc ) {
+    EXPECT_EQ(exc.numPoints, supportPoints.size());
+    EXPECT_EQ(exc.required, 10);
+  }
+}
+
+TEST(SupportPointCloudErrorTests, NotConnected) {
+  std::vector<std::shared_ptr<SupportPoint> > supportPoints(4);
+
+  // create two points with different input sizes
+  pt::ptree ptSupportPoints;
+  ptSupportPoints.put("BasisFunctions", "Basis");
+  ptSupportPoints.put("Basis.Type", "TotalOrderPolynomials");
+  ptSupportPoints.put("Basis.Order", 0);
+  ptSupportPoints.put("NumNeighbors", 2);
+  supportPoints[0] = std::make_shared<SupportPoint>(Eigen::VectorXd::Random(3), ptSupportPoints);
+  supportPoints[1] = std::make_shared<SupportPoint>(Eigen::VectorXd::Random(3), ptSupportPoints);
+
+  supportPoints[2] = std::make_shared<SupportPoint>(Eigen::VectorXd::Constant(3, 100.0)+Eigen::VectorXd::Random(3), ptSupportPoints);
+  supportPoints[3] = std::make_shared<SupportPoint>(Eigen::VectorXd::Constant(3, 100.0)+Eigen::VectorXd::Random(3), ptSupportPoints);
+
+  // try to create a support point cloud
+  try {
+    pt::ptree ptSupportPointCloud;
+    ptSupportPointCloud.put("RequireConnectedGraphs", true);
+    SupportPointCloud cloud(supportPoints, ptSupportPointCloud);
+  } catch( exceptions::SupportPointCloudNotConnected const& exc ) {
+    EXPECT_EQ(exc.outnum, 0);
+  }
+}

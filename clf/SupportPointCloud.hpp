@@ -14,6 +14,7 @@ namespace clf {
 Parameter Key | Type | Default Value | Description |
 ------------- | ------------- | ------------- | ------------- |
 "MaxLeaf"   | <tt>std::size_t</tt> | <tt>10</tt> | The max leaf parameter for constructing the \f$k\f$-\f$d\f$ tree. |
+"RequireConnectedGraphs"   | <tt>bool</tt> | <tt>false</tt> | <tt>true</tt>: The graphs associated with each output must be connected, <tt>false</tt>: The graphs associated with each output need not be connected |
 */
 class SupportPointCloud {
 public:
@@ -96,6 +97,22 @@ private:
   */
   void BuildKDTree(std::size_t const maxLeaf);
 
+  /// Find the required nearest neighbors for each support point
+  void FindNearestNeighbors() const;
+
+  /// Check to make sure the graph is connected
+  /**
+  \return <tt>true</tt>: The graph is connected, <tt>false</tt>: The graph is not connected
+  */
+  bool CheckConnected(std::size_t const outdim) const;
+
+  /// Check to make sure the graph is connected
+  /**
+  @param[in] ind The current index as we transverse the graph
+  @param[in] visited A vector of points on the graph, <tt>true</tt> if we have visited that node already, <tt>false</tt> if not
+  */
+  void CheckConnected(std::size_t const outdim, std::size_t const ind, std::vector<bool>& visited) const;
+
   /// The \f$i^{th}\f$ entry is the support point associated with \f$x^{(i)}\f$
   const std::vector<std::shared_ptr<SupportPoint> > supportPoints;
 
@@ -104,6 +121,9 @@ private:
 
   /// The \f$k\f$-\f$d\f$ tree used to compute nearest neighbors to any point \f$x\f$
   std::shared_ptr<NanoflannKDTree> kdtree;
+
+  /// Require that the graph associated with each output is connected
+  const bool requireConnectedGraphs;
 };
 
 } // namespace clf
