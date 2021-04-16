@@ -6,4 +6,5 @@ namespace py = pybind11;
 PYBIND11_MODULE(CoupledLocalFunctions, module) {
   clf::python::BasisFunctionsWrapper(module);
   clf::python::SupportPointWrapper(module);
+  clf::python::SupportPointCloudWrapper(module);
 }

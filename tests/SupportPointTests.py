@@ -25,7 +25,7 @@ class TestSupportPoint(unittest.TestCase):
         # make sure the point is in the right place
         self.assertEqual(len(point.x), len(x))
         for i in range(len(x)):
-            self.assertAlmostEqual(point.x[i], x[i], places=10)
+            self.assertAlmostEqual(point.x[i], x[i], places=12)
 
         # make sure the basis was created
         self.assertEqual(len(point.bases), 1)

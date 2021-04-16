@@ -91,6 +91,8 @@ if( CLF_BUILD_FROM_PIP )
         python/BasisFunctions.cpp
 
         python/SupportPoint.cpp
+
+        python/SupportPointCloud.cpp
     )
 endif()
 
