@@ -79,6 +79,9 @@ public:
   */
   std::vector<std::size_t> GlobalNeighborIndices(std::size_t const outdim = 0) const;
 
+  /// Minimize the uncoupled cost function for this support point
+  void MinimizeUncoupledCost();
+
   /// The location of the support point \f$x\f$.
   const Eigen::VectorXd x;
 

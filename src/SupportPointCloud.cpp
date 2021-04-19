@@ -104,3 +104,7 @@ void SupportPointCloud::FindNearestNeighbors(Eigen::VectorXd const& point, std::
   const std::size_t nfound = kdtree->knnSearch(point.data(), k, neighInd.data(), neighDist.data());
   assert(nfound==k);
 }
+
+std::vector<std::shared_ptr<SupportPoint> >::const_iterator SupportPointCloud::Begin() const { return supportPoints.begin(); }
+
+std::vector<std::shared_ptr<SupportPoint> >::const_iterator SupportPointCloud::End() const { return supportPoints.end(); }

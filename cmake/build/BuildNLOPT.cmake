@@ -1,0 +1,32 @@
+include(ExternalProject)
+
+ExternalProject_Add(
+  NLOPT
+    PREFIX ${CLF_EXTERNAL_INSTALL_DIR}/nlopt/
+    GIT_REPOSITORY https://github.com/stevengj/nlopt.git
+    LOG_DOWNLOAD OFF
+    LOG_UPDATE OFF
+    LOG_PATCH OFF
+    LOG_CONFIGURE OFF
+    LOG_BUILD OFF
+    LOG_INSTALL OFF
+    LOG_TEST OFF
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CLF_EXTERNAL_INSTALL_DIR}/nlopt
+    -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+    -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+    -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
+    BUILD_COMMAND make -j5
+    INSTALL_COMMAND make -j5 install
+)
+
+set(CLF_NLOPT_DIR
+  "${CLF_EXTERNAL_INSTALL_DIR}/nlopt"
+)
+
+set(NLOPT_INCLUDE_DIR
+  "${CLF_EXTERNAL_INSTALL_DIR}/nlopt/include"
+)
+
+set(NLOPT_LIBRARY
+  "${CLF_EXTERNAL_INSTALL_DIR}/nlopt/lib/${library_prefix}nlopt${shared_library_suffix}"
+)

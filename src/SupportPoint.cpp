@@ -117,3 +117,7 @@ std::vector<std::size_t> SupportPoint::GlobalNeighborIndices(std::size_t const o
   assert(numNeighbors[outdim]<=globalNeighorIndices.size());
   return std::vector<std::size_t>(globalNeighorIndices.begin(), globalNeighorIndices.begin()+numNeighbors[outdim]);
 }
+
+void SupportPoint::MinimizeUncoupledCost() {
+  std::cout << "Minimize uncoupled cost" << std::endl;
+}

@@ -86,6 +86,12 @@ public:
   */
   void FindNearestNeighbors(Eigen::VectorXd const& point, std::size_t const k, std::vector<std::size_t>& neighInd, std::vector<double>& neighDist) const;
 
+  /// An iterator to the first support point
+  std::vector<std::shared_ptr<SupportPoint> >::const_iterator Begin() const;
+
+  /// An iterator to the last support point
+  std::vector<std::shared_ptr<SupportPoint> >::const_iterator End() const;
+  
 private:
 
   /// Make sure the support points all have the same input/output dimension

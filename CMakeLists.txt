@@ -81,7 +81,7 @@ set(CLF_SOURCE
     src/SupportPointCloudExceptions.cpp
     src/SupportPointCloud.cpp
 
-    src/CoupledLocalFunction.cpp
+    src/LocalFunction.cpp
 )
 
 # if we are building for python, include the pybind11
@@ -132,6 +132,8 @@ if( NOT CLF_BUILD_FROM_PIP )
         tests/SupportPointTests.cpp
 
         tests/SupportPointCloudTests.cpp
+
+        tests/LocalFunctionTests.cpp
     )
 
     include_directories(${GTEST_INCLUDE_DIR})
