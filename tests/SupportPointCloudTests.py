@@ -11,6 +11,12 @@ class TestSupportPointCloud(unittest.TestCase):
         basisOptions["Type"] = "TotalOrderPolynomials"
         basisOptions["Order"] = 3
 
+        # options for the model
+        modelOptions = dict()
+        modelOptions['InputDimension'] = 2
+        modelOptions['OutputDimension'] = 1
+        model = clf.Model(modelOptions)
+
         # options for the support point
         ptOptions = dict()
         ptOptions["BasisFunctions"] = "Basis"
@@ -21,7 +27,7 @@ class TestSupportPointCloud(unittest.TestCase):
         points = [None]*npoints
         for i in range(npoints):
             # create the point
-            points[i] = clf.SupportPoint(np.random.rand(2), ptOptions)
+            points[i] = clf.SupportPoint(np.random.rand(2), model, ptOptions)
 
         # make the point cloud
         cloudOptions = dict()

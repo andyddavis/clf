@@ -8,11 +8,23 @@
 namespace pt = boost::property_tree;
 using namespace clf;
 
+class ExampleModelForSupportPointTests : public Model {
+public:
+
+  inline ExampleModelForSupportPointTests(pt::ptree const& pt) : Model(pt) {}
+
+  virtual ~ExampleModelForSupportPointTests() = default;
+private:
+};
+
 class SupportPointTests : public::testing::Test {
 protected:
   /// Set up information to test the support point
   virtual void SetUp() override {
-    pt.put("OutputDimension", outdim);
+    pt::ptree modelOptions;
+    modelOptions.put("InputDimension", indim);
+    modelOptions.put("OutputDimension", outdim);
+    model = std::make_shared<ExampleModelForSupportPointTests>(modelOptions);
 
     // choose a random location
     x = Eigen::VectorXd::Random(indim);
@@ -21,8 +33,8 @@ protected:
   /// Make sure everything is what we expect
   virtual void TearDown() override {
     EXPECT_NEAR((point->x-x).norm(), 0.0, 1.0e-12);
-    EXPECT_EQ(point->InputDimension(), indim);
-    EXPECT_EQ(point->OutputDimension(), outdim);
+    EXPECT_EQ(point->model->inputDimension, indim);
+    EXPECT_EQ(point->model->outputDimension, outdim);
   }
 
   /// The input dimension
@@ -37,6 +49,9 @@ protected:
   /// The location of the support point
   Eigen::VectorXd x;
 
+  /// The model for the support point
+  std::shared_ptr<Model> model;
+
   /// The support point
   std::shared_ptr<SupportPoint> point;
 };
@@ -47,7 +62,7 @@ TEST_F(SupportPointTests, LocalCoordinateTransformation) {
   pt.put("Basis1.Type", "TotalOrderPolynomials");
   pt.put("Basis2.Type", "TotalOrderPolynomials");
   pt.put("Basis3.Type", "TotalOrderPolynomials");
-  point = std::make_shared<SupportPoint>(x, pt);
+  point = std::make_shared<SupportPoint>(x, model, pt);
 
   // the default delta is 1.0
   EXPECT_DOUBLE_EQ(point->Radius(), 1.0);
@@ -76,7 +91,7 @@ TEST_F(SupportPointTests, TotalOrderPolynomials) {
   pt.put("Basis2.Order", order);
   pt.put("Basis3.Type", "TotalOrderPolynomials");
   pt.put("Basis3.Order", order);
-  point = std::make_shared<SupportPoint>(x, pt);
+  point = std::make_shared<SupportPoint>(x, model, pt);
   EXPECT_EQ(point->bases.size(), outdim);
   EXPECT_EQ(point->numNeighbors.size(), outdim);
   for( std::size_t i=0; i<outdim; ++i ) {
@@ -100,7 +115,7 @@ TEST_F(SupportPointTests, TotalOrderSineCosine) {
   pt.put("Basis2.Order", order);
   pt.put("Basis3.Type", "TotalOrderSinCos");
   pt.put("Basis3.Order", order);
-  point = std::make_shared<SupportPoint>(x, pt);
+  point = std::make_shared<SupportPoint>(x, model, pt);
   EXPECT_EQ(point->bases.size(), outdim);
   EXPECT_EQ(point->numNeighbors.size(), outdim);
   for( std::size_t i=0; i<outdim; ++i ) {
@@ -124,7 +139,7 @@ TEST_F(SupportPointTests, MixedBasisTypes) {
   pt.put("Basis2.Order", orderPoly);
   pt.put("Basis3.Type", "TotalOrderSinCos");
   pt.put("Basis3.Order", orderSinCos);
-  point = std::make_shared<SupportPoint>(x, pt);
+  point = std::make_shared<SupportPoint>(x, model, pt);
   EXPECT_EQ(point->bases.size(), outdim);
   EXPECT_EQ(point->numNeighbors.size(), outdim);
   for( std::size_t i=0; i<outdim; ++i ) {
@@ -154,7 +169,7 @@ TEST_F(SupportPointTests, CustomNearestNeighborsWithDefault) {
   pt.put("Basis3.Type", "TotalOrderSinCos");
   pt.put("NumNeighbors", 85);
   pt.put("NumNeighbors-2", 73);
-  point = std::make_shared<SupportPoint>(x, pt);
+  point = std::make_shared<SupportPoint>(x, model, pt);
   EXPECT_EQ(point->numNeighbors.size(), outdim);
   EXPECT_EQ(point->numNeighbors[0], 85);
   EXPECT_EQ(point->numNeighbors[1], 85);
@@ -173,7 +188,7 @@ TEST_F(SupportPointTests, CustomNearestNeighbors) {
   pt.put("NumNeighbors-0", 85);
   pt.put("NumNeighbors-1", 45);
   pt.put("NumNeighbors-2", 73);
-  point = std::make_shared<SupportPoint>(x, pt);
+  point = std::make_shared<SupportPoint>(x, model, pt);
   EXPECT_EQ(point->numNeighbors.size(), outdim);
   EXPECT_EQ(point->numNeighbors[0], 85);
   EXPECT_EQ(point->numNeighbors[1], 45);
@@ -183,6 +198,11 @@ TEST_F(SupportPointTests, CustomNearestNeighbors) {
 TEST(SupportPointExceptionHandlingTests, WrongNumberOfNearestNeighbors) {
   // the input and output dimensions
   const std::size_t indim = 4, outdim = 1;
+
+  pt::ptree modelOptions;
+  modelOptions.put("InputDimension", indim);
+  modelOptions.put("OutputDimension", outdim);
+  auto model = std::make_shared<ExampleModelForSupportPointTests>(modelOptions);
 
   // options for the support point
   pt::ptree pt;
@@ -196,7 +216,7 @@ TEST(SupportPointExceptionHandlingTests, WrongNumberOfNearestNeighbors) {
 
   // not enough bases
   try {
-    auto point = std::make_shared<SupportPoint>(x, pt);
+    auto point = std::make_shared<SupportPoint>(x, model, pt);
   } catch( exceptions::SupportPointWrongNumberOfNearestNeighbors const& exc ) {
     EXPECT_EQ(exc.output, 0);
     EXPECT_EQ(exc.required, 15);
@@ -208,6 +228,11 @@ TEST(SupportPointExceptionHandlingTests, WrongNumberOfBases) {
   // the input and output dimensions
   const std::size_t indim = 4, outdim = 3;
 
+  pt::ptree modelOptions;
+  modelOptions.put("InputDimension", indim);
+  modelOptions.put("OutputDimension", outdim);
+  auto model = std::make_shared<ExampleModelForSupportPointTests>(modelOptions);
+
   // options for the support point
   pt::ptree pt;
   pt.put("OutputDimension", outdim);
@@ -218,7 +243,7 @@ TEST(SupportPointExceptionHandlingTests, WrongNumberOfBases) {
   // not enough bases
   try {
     pt.put("BasisFunctions", "Basis1, Basis2");
-    auto point = std::make_shared<SupportPoint>(x, pt);
+    auto point = std::make_shared<SupportPoint>(x, model, pt);
   } catch( exceptions::SupportPointWrongNumberOfBasesConstructed const& exc ) {
     EXPECT_EQ(exc.outdim, outdim);
     EXPECT_NE(exc.givendim, outdim);
@@ -228,7 +253,7 @@ TEST(SupportPointExceptionHandlingTests, WrongNumberOfBases) {
   // too many bases
   try {
     pt.put("BasisFunctions", "Basis1, Basis2, Basis3, Basis4");
-    auto point = std::make_shared<SupportPoint>(x, pt);
+    auto point = std::make_shared<SupportPoint>(x, model, pt);
   } catch( exceptions::SupportPointWrongNumberOfBasesConstructed const& exc ) {
     EXPECT_EQ(exc.outdim, outdim);
     EXPECT_NE(exc.givendim, outdim);
@@ -238,7 +263,7 @@ TEST(SupportPointExceptionHandlingTests, WrongNumberOfBases) {
   // leading comma
   try {
     pt.put("BasisFunctions", " , Basis1, Basis2");
-    auto point = std::make_shared<SupportPoint>(x, pt);
+    auto point = std::make_shared<SupportPoint>(x, model, pt);
   } catch( exceptions::SupportPointWrongNumberOfBasesConstructed const& exc ) {
     EXPECT_EQ(exc.outdim, outdim);
     EXPECT_NE(exc.givendim, outdim);
@@ -248,7 +273,7 @@ TEST(SupportPointExceptionHandlingTests, WrongNumberOfBases) {
   // trailing comma
   try {
     pt.put("BasisFunctions", "Basis1, Basis2, ");
-    auto point = std::make_shared<SupportPoint>(x, pt);
+    auto point = std::make_shared<SupportPoint>(x, model, pt);
   } catch( exceptions::SupportPointWrongNumberOfBasesConstructed const& exc ) {
     EXPECT_EQ(exc.outdim, outdim);
     EXPECT_NE(exc.givendim, outdim);
@@ -257,6 +282,11 @@ TEST(SupportPointExceptionHandlingTests, WrongNumberOfBases) {
 }
 
 TEST(SupportPointExceptionHandlingTests, InvalidBasisCheck) {
+  pt::ptree modelOptions;
+  modelOptions.put("InputDimension", 1);
+  modelOptions.put("OutputDimension", 1);
+  auto model = std::make_shared<ExampleModelForSupportPointTests>(modelOptions);
+
   // choose a random location
   const Eigen::VectorXd x = Eigen::VectorXd::Random(9);
 
@@ -269,7 +299,7 @@ TEST(SupportPointExceptionHandlingTests, InvalidBasisCheck) {
 
   // create the support point
   try {
-    auto point = std::make_shared<SupportPoint>(x, pt);
+    auto point = std::make_shared<SupportPoint>(x, model, pt);
   } catch( exceptions::SupportPointInvalidBasisException const& exc ) {
     EXPECT_EQ(exc.basisType, UtilityFunctions::ToUpper(basisName));
   }

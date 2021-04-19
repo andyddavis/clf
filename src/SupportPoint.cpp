@@ -8,14 +8,14 @@ namespace pt = boost::property_tree;
 using namespace muq::Modeling;
 using namespace clf;
 
-SupportPoint::SupportPoint(Eigen::VectorXd const& x, pt::ptree const& pt) :
-ModPiece(Eigen::VectorXi::Constant(1, x.size()), Eigen::VectorXi::Constant(1, pt.get<std::size_t>("OutputDimension", 1))),
+SupportPoint::SupportPoint(Eigen::VectorXd const& x, std::shared_ptr<const Model> const& model, pt::ptree const& pt) :
 x(x),
-bases(CreateBasisFunctions(x.size(), outputSizes(0), pt)),
+model(model),
+bases(CreateBasisFunctions(model->inputDimension, model->outputDimension, pt)),
 numNeighbors(DetermineNumNeighbors(bases, pt)),
 delta(pt.get<double>("InitialRadius", 1.0))
 {
-  assert(bases.size()==outputSizes(0));
+  assert(bases.size()==model->outputDimension);
   for( const auto& it : bases ) { assert(it); }
 }
 
@@ -80,10 +80,6 @@ std::shared_ptr<const BasisFunctions> SupportPoint::CreateBasisFunctions(std::si
   return nullptr;
 }
 
-std::size_t SupportPoint::InputDimension() const { return inputSizes(0); }
-
-std::size_t SupportPoint::OutputDimension() const { return outputSizes(0); }
-
 double SupportPoint::Radius() const { return delta; }
 
 double& SupportPoint::Radius() { return delta; }
@@ -120,9 +116,4 @@ std::vector<std::size_t> SupportPoint::GlobalNeighborIndices(std::size_t const o
   assert(outdim<numNeighbors.size());
   assert(numNeighbors[outdim]<=globalNeighorIndices.size());
   return std::vector<std::size_t>(globalNeighorIndices.begin(), globalNeighorIndices.begin()+numNeighbors[outdim]);
-}
-
-void SupportPoint::EvaluateImpl(ref_vector<Eigen::VectorXd> const& input) {
-
-  assert(false);
 }

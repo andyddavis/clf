@@ -61,10 +61,10 @@ void SupportPointCloud::CheckConnected(std::size_t const outdim, std::size_t con
 void SupportPointCloud::CheckSupportPoints() const {
   for( std::size_t i=1; i<supportPoints.size(); ++i ) {
     // check the input dimension
-    if( supportPoints[i-1]->InputDimension()!=supportPoints[i]->InputDimension() ) { throw exceptions::SupportPointCloudDimensionException(exceptions::SupportPointCloudDimensionException::Type::INPUT, i-1, i); }
+    if( supportPoints[i-1]->model->inputDimension!=supportPoints[i]->model->inputDimension ) { throw exceptions::SupportPointCloudDimensionException(exceptions::SupportPointCloudDimensionException::Type::INPUT, i-1, i); }
 
     // check the output dimension
-    if( supportPoints[i-1]->OutputDimension()!=supportPoints[i]->OutputDimension() ) { throw exceptions::SupportPointCloudDimensionException(exceptions::SupportPointCloudDimensionException::Type::OUTPUT, i-1, i); }
+    if( supportPoints[i-1]->model->outputDimension!=supportPoints[i]->model->outputDimension ) { throw exceptions::SupportPointCloudDimensionException(exceptions::SupportPointCloudDimensionException::Type::OUTPUT, i-1, i); }
   }
 }
 
@@ -86,12 +86,12 @@ double SupportPointCloud::kdtree_get_pt(std::size_t const p, std::size_t const i
 
 std::size_t SupportPointCloud::InputDimension() const {
   assert(supportPoints.size()>0);
-  return supportPoints[0]->InputDimension();
+  return supportPoints[0]->model->inputDimension;
 }
 
 std::size_t SupportPointCloud::OutputDimension() const {
   assert(supportPoints.size()>0);
-  return supportPoints[0]->OutputDimension();
+  return supportPoints[0]->model->outputDimension;
 }
 
 void SupportPointCloud::FindNearestNeighbors(Eigen::VectorXd const& point, std::size_t const k, std::vector<std::size_t>& neighInd, std::vector<double>& neighDist) const {

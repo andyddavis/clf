@@ -1,8 +1,6 @@
 #ifndef COUPLEDLOCALFUNCTION_HPP_
 #define COUPLEDLOCALFUNCTION_HPP_
 
-#include <MUQ/Modeling/ModPiece.h>
-
 #include "clf/SupportPointCloud.hpp"
 
 namespace clf {

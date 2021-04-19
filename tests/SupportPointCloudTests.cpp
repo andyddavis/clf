@@ -9,11 +9,24 @@ namespace pt = boost::property_tree;
 using namespace muq::Modeling;
 using namespace clf;
 
+class ExampleModelForSupportPointCloudTests : public Model {
+public:
+
+  inline ExampleModelForSupportPointCloudTests(pt::ptree const& pt) : Model(pt) {}
+
+  virtual ~ExampleModelForSupportPointCloudTests() = default;
+private:
+};
+
 class SupportPointCloudTests : public::testing::Test {
 protected:
   /// Set up information to test the support point cloud
   virtual void SetUp() override {
-    ptSupportPoints.put("OutputDimension", outdim);
+    pt::ptree modelOptions;
+    modelOptions.put("InputDimension", indim);
+    modelOptions.put("OutputDimension", outdim);
+    model = std::make_shared<ExampleModelForSupportPointCloudTests>(modelOptions);
+
     ptSupportPoints.put("BasisFunctions", "Basis1, Basis2, Basis3, Basis4");
     ptSupportPoints.put("Basis1.Type", "TotalOrderPolynomials");
     ptSupportPoints.put("Basis2.Type", "TotalOrderPolynomials");
@@ -44,6 +57,9 @@ protected:
   /// Options for the support point cloud
   pt::ptree ptSupportPointCloud;
 
+  /// The model for the support point
+  std::shared_ptr<Model> model;
+
   /// The support point cloud
   std::shared_ptr<SupportPointCloud> cloud;
 };
@@ -52,7 +68,7 @@ TEST_F(SupportPointCloudTests, Construction) {
   // create a bunch of random support points
   std::vector<std::shared_ptr<SupportPoint> > supportPoints(n);
   auto dist = std::make_shared<Gaussian>(indim)->AsVariable();
-  for( std::size_t i=0; i<n; ++i ) { supportPoints[i] = std::make_shared<SupportPoint>(dist->Sample(), ptSupportPoints); }
+  for( std::size_t i=0; i<n; ++i ) { supportPoints[i] = std::make_shared<SupportPoint>(dist->Sample(), model, ptSupportPoints); }
 
   // create the support point cloud
   cloud = std::make_shared<SupportPointCloud>(supportPoints, ptSupportPointCloud);
@@ -62,7 +78,7 @@ TEST_F(SupportPointCloudTests, NearestNeighborSearch) {
   // create a bunch of random support points
   std::vector<std::shared_ptr<SupportPoint> > supportPoints(n);
   auto dist = std::make_shared<Gaussian>(indim)->AsVariable();
-  for( std::size_t i=0; i<n; ++i ) { supportPoints[i] = std::make_shared<SupportPoint>(dist->Sample(), ptSupportPoints); }
+  for( std::size_t i=0; i<n; ++i ) { supportPoints[i] = std::make_shared<SupportPoint>(dist->Sample(), model, ptSupportPoints); }
 
   // create the support point cloud
   cloud = std::make_shared<SupportPointCloud>(supportPoints, ptSupportPointCloud);
@@ -101,14 +117,21 @@ TEST_F(SupportPointCloudTests, NearestNeighborSearch) {
 }
 
 TEST(SupportPointCloudErrorTests, InputDimensionCheck) {
+  pt::ptree modelOptions;
+  modelOptions.put("InputDimension", 3);
+  modelOptions.put("OutputDimension", 1);
+  auto model1 = std::make_shared<ExampleModelForSupportPointCloudTests>(modelOptions);
+  modelOptions.put("InputDimension", 5);
+  auto model2 = std::make_shared<ExampleModelForSupportPointCloudTests>(modelOptions);
+
   std::vector<std::shared_ptr<SupportPoint> > supportPoints(2);
 
   // create two points with different input sizes
   pt::ptree ptSupportPoints;
   ptSupportPoints.put("BasisFunctions", "Basis");
   ptSupportPoints.put("Basis.Type", "TotalOrderPolynomials");
-  supportPoints[0] = std::make_shared<SupportPoint>(Eigen::VectorXd::Random(3), ptSupportPoints);
-  supportPoints[1] = std::make_shared<SupportPoint>(Eigen::VectorXd::Random(5), ptSupportPoints);
+  supportPoints[0] = std::make_shared<SupportPoint>(Eigen::VectorXd::Random(3), model1, ptSupportPoints);
+  supportPoints[1] = std::make_shared<SupportPoint>(Eigen::VectorXd::Random(5), model2, ptSupportPoints);
 
   // try to create a support point cloud
   try {
@@ -117,21 +140,26 @@ TEST(SupportPointCloudErrorTests, InputDimensionCheck) {
   } catch( exceptions::SupportPointCloudDimensionException const& exc ) {
     EXPECT_EQ(exc.type, exceptions::SupportPointCloudDimensionException::Type::INPUT);
     EXPECT_NE(exc.ind1, exc.ind2);
-    EXPECT_NE(supportPoints[exc.ind1]->InputDimension(), supportPoints[exc.ind2]->InputDimension());
+    EXPECT_NE(supportPoints[exc.ind1]->model->inputDimension, supportPoints[exc.ind2]->model->inputDimension);
   }
 }
 
 TEST(SupportPointCloudErrorTests, OutputDimensionCheck) {
+  pt::ptree modelOptions;
+  modelOptions.put("InputDimension", 5);
+  modelOptions.put("OutputDimension", 2);
+  auto model1 = std::make_shared<ExampleModelForSupportPointCloudTests>(modelOptions);
+  modelOptions.put("OutputDimension", 8);
+  auto model2 = std::make_shared<ExampleModelForSupportPointCloudTests>(modelOptions);
+
   std::vector<std::shared_ptr<SupportPoint> > supportPoints(2);
 
   // create two points with different input sizes
   pt::ptree ptSupportPoints;
-  ptSupportPoints.put("OutputDimension", 2);
   ptSupportPoints.put("BasisFunctions", "Basis1, Basis2");
   ptSupportPoints.put("Basis1.Type", "TotalOrderPolynomials");
   ptSupportPoints.put("Basis2.Type", "TotalOrderPolynomials");
-  supportPoints[0] = std::make_shared<SupportPoint>(Eigen::VectorXd::Random(5), ptSupportPoints);
-  ptSupportPoints.put("OutputDimension", 8);
+  supportPoints[0] = std::make_shared<SupportPoint>(Eigen::VectorXd::Random(5), model1, ptSupportPoints);
   ptSupportPoints.put("BasisFunctions", "Basis1, Basis2, Basis3, Basis4, Basis5, Basis6, Basis7, Basis8");
   ptSupportPoints.put("Basis1.Type", "TotalOrderPolynomials");
   ptSupportPoints.put("Basis2.Type", "TotalOrderPolynomials");
@@ -141,7 +169,7 @@ TEST(SupportPointCloudErrorTests, OutputDimensionCheck) {
   ptSupportPoints.put("Basis6.Type", "TotalOrderPolynomials");
   ptSupportPoints.put("Basis7.Type", "TotalOrderPolynomials");
   ptSupportPoints.put("Basis8.Type", "TotalOrderPolynomials");
-  supportPoints[1] = std::make_shared<SupportPoint>(Eigen::VectorXd::Random(5), ptSupportPoints);
+  supportPoints[1] = std::make_shared<SupportPoint>(Eigen::VectorXd::Random(5), model2, ptSupportPoints);
 
   // try to create a support point cloud
   try {
@@ -150,11 +178,16 @@ TEST(SupportPointCloudErrorTests, OutputDimensionCheck) {
   } catch( exceptions::SupportPointCloudDimensionException const& exc ) {
     EXPECT_EQ(exc.type, exceptions::SupportPointCloudDimensionException::Type::OUTPUT);
     EXPECT_NE(exc.ind1, exc.ind2);
-    EXPECT_NE(supportPoints[exc.ind1]->OutputDimension(), supportPoints[exc.ind2]->OutputDimension());
+    EXPECT_NE(supportPoints[exc.ind1]->model->outputDimension, supportPoints[exc.ind2]->model->outputDimension);
   }
 }
 
 TEST(SupportPointCloudErrorTests, NotEnoughPoints) {
+  pt::ptree modelOptions;
+  modelOptions.put("InputDimension", 3);
+  modelOptions.put("OutputDimension", 4);
+  auto model = std::make_shared<ExampleModelForSupportPointCloudTests>(modelOptions);
+
   std::vector<std::shared_ptr<SupportPoint> > supportPoints(2);
 
   // create two points with different input sizes
@@ -162,8 +195,8 @@ TEST(SupportPointCloudErrorTests, NotEnoughPoints) {
   ptSupportPoints.put("BasisFunctions", "Basis");
   ptSupportPoints.put("Basis.Type", "TotalOrderPolynomials");
   ptSupportPoints.put("NumNeighbors", 10);
-  supportPoints[0] = std::make_shared<SupportPoint>(Eigen::VectorXd::Random(3), ptSupportPoints);
-  supportPoints[1] = std::make_shared<SupportPoint>(Eigen::VectorXd::Random(3), ptSupportPoints);
+  supportPoints[0] = std::make_shared<SupportPoint>(Eigen::VectorXd::Random(3), model, ptSupportPoints);
+  supportPoints[1] = std::make_shared<SupportPoint>(Eigen::VectorXd::Random(3), model, ptSupportPoints);
 
   // try to create a support point cloud
   try {
@@ -176,6 +209,11 @@ TEST(SupportPointCloudErrorTests, NotEnoughPoints) {
 }
 
 TEST(SupportPointCloudErrorTests, NotConnected) {
+  pt::ptree modelOptions;
+  modelOptions.put("InputDimension", 3);
+  modelOptions.put("OutputDimension", 4);
+  auto model = std::make_shared<ExampleModelForSupportPointCloudTests>(modelOptions);
+
   std::vector<std::shared_ptr<SupportPoint> > supportPoints(4);
 
   // create two points with different input sizes
@@ -184,11 +222,11 @@ TEST(SupportPointCloudErrorTests, NotConnected) {
   ptSupportPoints.put("Basis.Type", "TotalOrderPolynomials");
   ptSupportPoints.put("Basis.Order", 0);
   ptSupportPoints.put("NumNeighbors", 2);
-  supportPoints[0] = std::make_shared<SupportPoint>(Eigen::VectorXd::Random(3), ptSupportPoints);
-  supportPoints[1] = std::make_shared<SupportPoint>(Eigen::VectorXd::Random(3), ptSupportPoints);
+  supportPoints[0] = std::make_shared<SupportPoint>(Eigen::VectorXd::Random(3), model, ptSupportPoints);
+  supportPoints[1] = std::make_shared<SupportPoint>(Eigen::VectorXd::Random(3), model, ptSupportPoints);
 
-  supportPoints[2] = std::make_shared<SupportPoint>(Eigen::VectorXd::Constant(3, 100.0)+Eigen::VectorXd::Random(3), ptSupportPoints);
-  supportPoints[3] = std::make_shared<SupportPoint>(Eigen::VectorXd::Constant(3, 100.0)+Eigen::VectorXd::Random(3), ptSupportPoints);
+  supportPoints[2] = std::make_shared<SupportPoint>(Eigen::VectorXd::Constant(3, 100.0)+Eigen::VectorXd::Random(3), model, ptSupportPoints);
+  supportPoints[3] = std::make_shared<SupportPoint>(Eigen::VectorXd::Constant(3, 100.0)+Eigen::VectorXd::Random(3), model, ptSupportPoints);
 
   // try to create a support point cloud
   try {

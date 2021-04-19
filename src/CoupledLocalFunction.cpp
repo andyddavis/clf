@@ -2,4 +2,4 @@
 
 using namespace clf;
 
-CoupledLocalFunction::CoupledLocalFunction(std::shared_ptr<SupportPointCloud> const& cloud) : cloud(cloud) {}
+CoupledLocalFunction::CoupledLocalFunction(std::shared_ptr<SupportPointCloud> const& cloud) {}

@@ -12,6 +12,12 @@ namespace python {
 */
 void BasisFunctionsWrapper(pybind11::module& mod);
 
+/// Implement the python interface for the clf::Model class
+/**
+@param[in] mod The module that holds the python interface
+*/
+void ModelWrapper(pybind11::module& mod);
+
 /// Implement the python interface for the clf::SupportPoint class
 /**
 @param[in] mod The module that holds the python interface

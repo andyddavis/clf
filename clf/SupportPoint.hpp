@@ -1,12 +1,9 @@
 #ifndef SUPPORTPOINT_HPP_
 #define SUPPORTPOINT_HPP_
 
-#include <boost/property_tree/ptree.hpp>
-
-#include <MUQ/Modeling/ModPiece.h>
-
-#include "clf/SupportPointExceptions.hpp"
 #include "clf/BasisFunctions.hpp"
+#include "clf/Model.hpp"
+#include "clf/SupportPointExceptions.hpp"
 
 namespace clf {
 
@@ -28,28 +25,17 @@ Parameter Key | Type | Default Value | Description |
 "BasisFunctions"   | <tt>std::string</tt> |--- | The options to make the basis functions for each output, separated by commas (see SupportPoint::CreateBasisFunctions) |
 "NumNeighbors"   | <tt>std::string</tt> | <tt>""</tt> | A comma-seperated list of the number of nearest neighbors to use to compute the coefficients for each output (if empty, use the number required to interpolate plus one) |
 */
-class SupportPoint : public muq::Modeling::ModPiece {
+class SupportPoint {
 public:
 
   /**
   @param[in] x The location of the support point \f$x\f$
+  @param[in] model The model that defines the "data" at this support point
   @param[in] pt The options for the support point
   */
-  SupportPoint(Eigen::VectorXd const& x, boost::property_tree::ptree const& pt);
+  SupportPoint(Eigen::VectorXd const& x, std::shared_ptr<const Model> const& model, boost::property_tree::ptree const& pt);
 
   virtual ~SupportPoint() = default;
-
-  /// The input dimension \f$d\f$
-  /**
-  \return The input dimension \f$d\f$
-  */
-  std::size_t InputDimension() const;
-
-  /// The output dimension \f$m\f$
-  /**
-  \return The output dimension \f$m\f$
-  */
-  std::size_t OutputDimension() const;
 
   /// The radius of the ball the defines where the local function is relatively accurate
   /**
@@ -96,6 +82,9 @@ public:
   /// The location of the support point \f$x\f$.
   const Eigen::VectorXd x;
 
+  /// The model that defines the data/observations at this support point
+  const std::shared_ptr<const Model> model;
+
   /// The bases that defines this support point
   /**
   Each entry corresponds to one of the outputs. This vector has the same length as the number of outputs.
@@ -109,7 +98,6 @@ public:
   The \f$j^{th}\f$ entry corresponds to the number of nearest neighbors for the \f$j^{th}\f$ output
   */
   const std::vector<std::size_t> numNeighbors;
-
 private:
 
   /// Determine the number of nearest nieghbors for each output
@@ -136,13 +124,6 @@ private:
   \return The basis created given the options
   */
   static std::shared_ptr<const BasisFunctions> CreateBasisFunctions(std::size_t const indim, boost::property_tree::ptree pt);
-
-  /// Evaluate the local function \f$\ell\f$ associated with this support point
-  /**
-  Fills in the <tt>outputs</tt> vector attached to <tt>this</tt> SupportPoint (inherited from <tt>muq::Modeling::ModPiece</tt>). This is a vector of length <tt>1</tt> that stores the local function evaluation.
-  @param[in] inputs There is only one input and it is the evaluation point
-  */
-  virtual void EvaluateImpl(muq::Modeling::ref_vector<Eigen::VectorXd> const& input) override;
 
   /// The parameter \f$\delta\f$ that defines the radius for which we expect this local function to be relatively accurate
   /**

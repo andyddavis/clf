@@ -72,6 +72,8 @@ set(CLF_SOURCE
     src/SinCosBasis.cpp
     src/PolynomialBasis.cpp
 
+    src/Model.cpp
+
     src/SupportPoint.cpp
     src/SupportPointExceptions.cpp
 
@@ -89,6 +91,8 @@ if( CLF_BUILD_FROM_PIP )
         python/Module.cpp
 
         python/BasisFunctions.cpp
+
+        python/Model.cpp
 
         python/SupportPoint.cpp
 

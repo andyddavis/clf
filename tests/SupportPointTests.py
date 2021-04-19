@@ -2,6 +2,8 @@ import unittest
 
 import numpy as np
 
+from jax import grad
+
 import CoupledLocalFunctions as clf
 
 class TestSupportPoint(unittest.TestCase):
@@ -14,6 +16,11 @@ class TestSupportPoint(unittest.TestCase):
         basisOptions["Type"] = "TotalOrderPolynomials"
         basisOptions["Order"] = 3
 
+        # options for the model
+        modelOptions = dict()
+        modelOptions['InputDimension'] = len(x)
+        model = clf.Model(modelOptions)
+
         # options for the support point
         ptOptions = dict()
         ptOptions["BasisFunctions"] = "Basis"
@@ -21,7 +28,7 @@ class TestSupportPoint(unittest.TestCase):
         ptOptions["NumNeighbors"] = 40
 
         # create the point
-        point = clf.SupportPoint(x, ptOptions)
+        point = clf.SupportPoint(x, model, ptOptions)
 
         # make sure the point is in the right place
         self.assertEqual(len(point.x), len(x))
@@ -32,3 +39,5 @@ class TestSupportPoint(unittest.TestCase):
         self.assertEqual(len(point.bases), 1)
         self.assertEqual(point.bases[0].NumBasisFunctions(), 35)
         self.assertEqual(point.numNeighbors[0], 40)
+        self.assertEqual(point.model.inputDimension, len(x))
+        self.assertEqual(point.model.outputDimension, 1)
