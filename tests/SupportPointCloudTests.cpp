@@ -185,7 +185,6 @@ TEST(SupportPointCloudErrorTests, OutputDimensionCheck) {
 TEST(SupportPointCloudErrorTests, NotEnoughPoints) {
   pt::ptree modelOptions;
   modelOptions.put("InputDimension", 3);
-  modelOptions.put("OutputDimension", 4);
   auto model = std::make_shared<ExampleModelForSupportPointCloudTests>(modelOptions);
 
   std::vector<std::shared_ptr<SupportPoint> > supportPoints(2);
@@ -211,7 +210,6 @@ TEST(SupportPointCloudErrorTests, NotEnoughPoints) {
 TEST(SupportPointCloudErrorTests, NotConnected) {
   pt::ptree modelOptions;
   modelOptions.put("InputDimension", 3);
-  modelOptions.put("OutputDimension", 4);
   auto model = std::make_shared<ExampleModelForSupportPointCloudTests>(modelOptions);
 
   std::vector<std::shared_ptr<SupportPoint> > supportPoints(4);

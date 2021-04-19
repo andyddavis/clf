@@ -72,10 +72,11 @@ set(CLF_SOURCE
     src/SinCosBasis.cpp
     src/PolynomialBasis.cpp
 
+    src/ModelExceptions.cpp
     src/Model.cpp
 
-    src/SupportPoint.cpp
     src/SupportPointExceptions.cpp
+    src/SupportPoint.cpp
 
     src/SupportPointCloudExceptions.cpp
     src/SupportPointCloud.cpp
@@ -125,6 +126,8 @@ if( NOT CLF_BUILD_FROM_PIP )
         tests/BasisFunctionsTests.cpp
         tests/SinCosBasisTests.cpp
         tests/PolynomialBasisTests.cpp
+
+        tests/ModelTests.cpp
 
         tests/SupportPointTests.cpp
 
