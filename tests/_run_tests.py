@@ -6,6 +6,7 @@ sys.path.insert(0, './tests')
 
 # import the tests
 from BasisFunctionsTests import *
+from ModelTests import *
 from SupportPointTests import *
 from SupportPointCloudTests import *
 

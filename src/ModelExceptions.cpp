@@ -2,6 +2,24 @@
 
 using namespace clf::exceptions;
 
+ModelHasWrongInputOutputDimensions::ModelHasWrongInputOutputDimensions(Type const& type, Function const& func, std::size_t const givendim, std::size_t const dim) : CLFException(), type(type), func(func), givendim(givendim), dim(dim) {
+  if( func==Function::RHS ) {
+    if( type==Type::INPUT ) {
+      if( dim==1 ) {
+        message = "ERROR: clf::Model::RightHandSide was called with a " + std::to_string(givendim) + "-dimensional vector but requires " + std::to_string(dim) + " dimension.";
+      } else {
+        message = "ERROR: clf::Model::RightHandSide was called with a " + std::to_string(givendim) + "-dimensional vector but requires " + std::to_string(dim) + " dimensions.";
+      }
+    } else {
+      if( dim==1 ) {
+        message = "ERROR: clf::Model::RightHandSide returned a " + std::to_string(givendim) + "-dimensional vector but required " + std::to_string(dim) + " dimension.";
+      } else {
+        message = "ERROR: clf::Model::RightHandSide returned a " + std::to_string(givendim) + "-dimensional vector but required " + std::to_string(dim) + " dimensions.";
+      }
+    }
+  }
+}
+
 ModelHasNotImplementedRHS::ModelHasNotImplementedRHS(Type const& type) : CLFException(), type(type) {
   message = "ERROR: clf::Model has not implemented the right hand side function";
   if( type==Type::VECTOR ) {

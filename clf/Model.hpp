@@ -1,6 +1,8 @@
 #ifndef MODEL_HPP_
 #define MODEL_HPP_
 
+#include <iostream>
+
 #include <boost/property_tree/ptree.hpp>
 
 #include <Eigen/Core>
@@ -53,7 +55,7 @@ protected:
   @param[in] x The point \f$x \in \Omega \f$
   \return The evaluation of \f$f(x)\f$
   */
-  virtual Eigen::VectorXd RightHandSideImpl(Eigen::VectorXd const& x) const;
+  virtual Eigen::VectorXd RightHandSideVectorImpl(Eigen::VectorXd const& x) const;
 
   /// Implement the right hand side function \f$f\f$
   /**
@@ -61,7 +63,7 @@ protected:
   @param[in] outind Return this component of the evaluation of \f$f\f$
   \return The component of \f$f(x)\f$ corresponding to <tt>outind</tt>
   */
-  virtual double RightHandSideImpl(Eigen::VectorXd const& x, std::size_t const outind) const;
+  virtual double RightHandSideComponentImpl(Eigen::VectorXd const& x, std::size_t const outind) const;
 
 private:
 };

@@ -11,6 +11,7 @@ using namespace muq::Utilities;
 using namespace clf;
 
 namespace clf {
+namespace python {
 /// A support point cloud for the python wrapper
 class PySupportPointCloud : public SupportPointCloud {
 public:
@@ -37,6 +38,7 @@ public:
 
 private:
 };
+} // namespace python
 } // namespace clf
 
 void clf::python::SupportPointCloudWrapper(pybind11::module& mod) {
