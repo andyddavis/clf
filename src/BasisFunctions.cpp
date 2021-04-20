@@ -33,11 +33,11 @@ std::size_t BasisFunctions::NumBasisFunctions() const { return multis->Size(); }
 
 Eigen::VectorXd BasisFunctions::EvaluateBasisFunctions(Eigen::VectorXd const& x) const {
   Eigen::VectorXd phi(multis->Size());
-  for( std::size_t i=0; i<phi.size(); ++i ) { phi(i) = EvaluateBasisFunction(i, x); }
+  for( std::size_t i=0; i<phi.size(); ++i ) { phi(i) = EvaluateBasisFunction(x, i); }
   return phi;
 }
 
-double BasisFunctions::EvaluateBasisFunction(std::size_t const ind, Eigen::VectorXd const& x) const {
+double BasisFunctions::EvaluateBasisFunction(Eigen::VectorXd const& x, std::size_t const ind) const {
   assert(ind<multis->Size());
 
   // get the multi-index
@@ -46,6 +46,44 @@ double BasisFunctions::EvaluateBasisFunction(std::size_t const ind, Eigen::Vecto
 
   // evaluate the product of basis functions
   double basisEval = 1.0;
-  for( std::size_t i=0; i<x.size(); ++i ) { basisEval *= ScalarBasisFunction(iota(i), x(i)); }
+  for( std::size_t i=0; i<x.size(); ++i ) {
+    if( std::abs(basisEval)<1.0e-14 ) { return 0.0; }
+    basisEval *= ScalarBasisFunction(x(i), iota(i));
+  }
+  return basisEval;
+}
+
+Eigen::MatrixXd BasisFunctions::EvaluateBasisFunctionDerivatives(Eigen::VectorXd const& x, std::size_t const k) const {
+  Eigen::MatrixXd phi(multis->GetMultiLength(), multis->Size());
+  for( std::size_t i=0; i<multis->GetMultiLength(); ++i ) { phi.row(i) = EvaluateBasisFunctionDerivatives(x, i, k); }
+  return phi;
+}
+
+Eigen::VectorXd BasisFunctions::EvaluateBasisFunctionDerivatives(Eigen::VectorXd const& x, std::size_t const p, std::size_t const k) const {
+  Eigen::VectorXd phi(multis->Size());
+  for( std::size_t i=0; i<phi.size(); ++i ) { phi(i) = EvaluateBasisFunctionDerivative(x, i, p, k); }
+  return phi;
+}
+
+double BasisFunctions::EvaluateBasisFunctionDerivative(Eigen::VectorXd const& x, std::size_t const ind, std::size_t const p, std::size_t const k) const {
+  assert(multis);
+  assert(ind<multis->Size());
+  assert(p<x.size());
+
+  // get the multi-index
+  assert(multis->at(ind));
+  const Eigen::RowVectorXi iota = multis->at(ind)->GetVector();
+  assert(x.size()==iota.size());
+
+  // evaluate the product of basis functions
+  double basisEval = 1.0;
+  for( std::size_t i=0; i<x.size(); ++i ) {
+    if( std::abs(basisEval)<1.0e-14 ) { return 0.0; }
+    if( i==p ) {
+      basisEval *= ScalarBasisFunctionDerivative(x(i), iota(i), k);
+    } else {
+      basisEval *= ScalarBasisFunction(x(i), iota(i));
+    }
+  }
   return basisEval;
 }

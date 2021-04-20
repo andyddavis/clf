@@ -69,11 +69,53 @@ public:
   \phi^{(i(\iota))}(x) = \prod_{j=1}^{d} l_{i_j}(x_j),
   \f}
   where \f$l_{i}\f$ are BasisFunctions::ScalarBasisFunction evaluations.
-  @param[in] ind The index of the basis function we are evaluating
   @param[in] x The point where we are evaluating the basis function
+  @param[in] ind The index of the basis function we are evaluating
   \return The basis function evaluation
   */
-  double EvaluateBasisFunction(std::size_t const ind, Eigen::VectorXd const& x) const;
+  double EvaluateBasisFunction(Eigen::VectorXd const& x, std::size_t const ind) const;
+
+  /// Evaluate the vector of \f$k^{th}\f$ derivatives of the basis functions with respect to the \f$p^{th}\f$ input
+  /**
+  Let \f$\iota(i)\f$ be the corresponding multi-index. The vector of basis function derivatives is \f$\frac{d^k \phi(x)}{d x_p^{k}} = [\frac{d^k \phi^{(1)}(x)}{d x_p^{k}},\, \frac{d^k \phi^{(2)}(x)}{d x_p^{k}},\, ...,\, \frac{d^k \phi^{(q)}(x)}{d x_p^{k}}]\f$.
+  @param[in] x The point where we are evaluating the basis function
+  @param[in] p We are computing the derivative with respect to the \f$p^{th}\f$ input
+  @param[in] k We are computing the \f$k^{th}\f$ derivative
+  \return The basis function derivatives
+  */
+  Eigen::VectorXd EvaluateBasisFunctionDerivatives(Eigen::VectorXd const& x, std::size_t const p, std::size_t const k) const;
+
+  /// Evaluate the matrix of \f$k^{th}\f$ derivatives of the basis functions with respect to the inputs
+  /**
+  Let \f$\iota(i)\f$ be the corresponding multi-index. The matrix of basis function derivatives is
+  \f{equation*}{
+     \mathcal{D}^{(k)} \phi(x) = \left[
+     \begin{array}{cccc}
+     \frac{d^k \phi^{(1)}(x)}{d x_1^{k}} & \frac{d^k \phi^{(2)}(x)}{d x_1^{k}} & ..., & \frac{d^k \phi^{(q)}(x)}{d x_1^{k}} \\
+     ... & ... & ... & ... \\
+     \frac{d^k \phi^{(1)}(x)}{d x_d^{k}}, & \frac{d^k \phi^{(2)}(x)}{d x_d^{k}}, & ..., & \frac{d^k \phi^{(q)}(x)}{d x_d^{k}} \\
+     \end{array} \right]
+  \f}
+  @param[in] x The point where we are evaluating the basis function
+  @param[in] k We are computing the \f$k^{th}\f$ derivative
+  \return The basis function derivatives
+  */
+  Eigen::MatrixXd EvaluateBasisFunctionDerivatives(Eigen::VectorXd const& x, std::size_t const k) const;
+
+  /// Evaluate the \f$k^{th}\f$ derivative of the \f$i^{th}\f$ basis function with respect to the \f$p^{th}\f$ input
+  /**
+  Let \f$\iota(i)\f$ be the corresponding multi-index. The basis function derivative is
+  \f{equation*}{
+  \frac{d^k \phi^{(i(\iota))}(x)}{d x_p^{k}} = \frac{d^k l_{i_p}(x_p)}{d x_p^{k}} \prod_{j=1, j \neq k}^{d} l_{i_j}(x_j),
+  \f}
+  where \f$l_{i}\f$ are BasisFunctions::ScalarBasisFunction evaluations.
+  @param[in] x The point where we are evaluating the basis function
+  @param[in] ind The index of the basis function we are evaluating
+  @param[in] p We are computing the derivative with respect to the \f$p^{th}\f$ input
+  @param[in] k We are computing the \f$k^{th}\f$ derivative
+  \return The basis function evaluation
+  */
+  double EvaluateBasisFunctionDerivative(Eigen::VectorXd const& x, std::size_t const ind, std::size_t const p, std::size_t const k) const;
 
   /// The number of basis functions
   /**
@@ -86,11 +128,21 @@ protected:
   /// Evaluate the scalar basis function \f$l_i: \mathbb{R} \mapsto \mathbb{R}\f$.
   /**
   The basis function is defined by the product of these scalar functions. This must be implemented by a child.
-  @param[in] ind The index of the \f$i^{th}\f$ scalar basis function
   @param[in] x The point where we are evaluating the scalar basis function
+  @param[in] ind The index of the \f$i^{th}\f$ scalar basis function
   \return The scalar basis function evaluation
   */
-  virtual double ScalarBasisFunction(std::size_t const ind, double const x) const = 0;
+  virtual double ScalarBasisFunction(double const x, std::size_t const ind) const = 0;
+
+  /// Evaluate the \f$k^{th}\f$ derivative of the scalar basis function \f$\frac{d^k l_i}{d x^{k}}\f$.
+  /**
+  This must be implemented by a child.
+  @param[in] x The point where we are evaluating the scalar basis function
+  @param[in] ind The index of the \f$i^{th}\f$ scalar basis function
+  @param[in] k We want the \f$k^{th}\f$ derivative
+  \return The scalar basis function evaluation
+  */
+  virtual double ScalarBasisFunctionDerivative(double const x, std::size_t const ind, std::size_t const k) const = 0;
 
 private:
   /// The multi-index set---each multi-index corresponds to a basis function

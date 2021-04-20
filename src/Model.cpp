@@ -8,6 +8,10 @@ inputDimension(pt.get<std::size_t>("InputDimension", 1)),
 outputDimension(pt.get<std::size_t>("OutputDimension", 1))
 {}
 
+Eigen::VectorXd Model::Operator(Eigen::VectorXd const& x) const {
+  return Eigen::VectorXd();
+}
+
 Eigen::VectorXd Model::RightHandSide(Eigen::VectorXd const& x) const {
   if( x.size()!=inputDimension) { throw exceptions::ModelHasWrongInputOutputDimensions(exceptions::ModelHasWrongInputOutputDimensions::Type::INPUT, exceptions::ModelHasWrongInputOutputDimensions::Function::RHS, x.size(), inputDimension); }
   Eigen::VectorXd rhs;

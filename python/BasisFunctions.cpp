@@ -15,8 +15,8 @@ using namespace clf;
 void clf::python::BasisFunctionsWrapper(pybind11::module& mod) {
   py::class_<BasisFunctions, std::shared_ptr<BasisFunctions> > basis(mod, "BasisFunctions");
   basis.def("NumBasisFunctions", &BasisFunctions::NumBasisFunctions);
-  basis.def("EvaluateBasisFunction", &BasisFunctions::EvaluateBasisFunction);
   basis.def("EvaluateBasisFunctions", &BasisFunctions::EvaluateBasisFunctions);
+  basis.def("EvaluateBasisFunction", &BasisFunctions::EvaluateBasisFunction);
 
   py::class_<PolynomialBasis, BasisFunctions, std::shared_ptr<PolynomialBasis> > poly(mod, "PolynomialBasis");
   poly.def_static("TotalOrderBasis", [](py::dict const& d) { return PolynomialBasis::TotalOrderBasis(ConvertDictToPtree(d)); });

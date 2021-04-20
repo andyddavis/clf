@@ -19,7 +19,7 @@ TEST(BasisFunctionsTests, Construction) {
   pt.put("Type", name);
 
   try {
-    auto sincosBasis = BasisFunctions::Construct(multis, pt);
+    auto basis = BasisFunctions::Construct(multis, pt);
   } catch( exceptions::BasisFunctionsNameConstuctionException const& exc ) {
     EXPECT_EQ(exc.basisName, name);
   }

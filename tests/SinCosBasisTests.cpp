@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 
+#include <cstdlib>
+
 #include "clf/SinCosBasis.hpp"
 
 namespace pt = boost::property_tree;
@@ -42,16 +44,34 @@ TEST(SinCosBasisTests, Evaluation) {
   const Eigen::VectorXd x = Eigen::VectorXd::Random(dim);
 
   // evaluate the constant basis function
-  EXPECT_DOUBLE_EQ(basis->EvaluateBasisFunction(0, x), 1.0);
+  EXPECT_DOUBLE_EQ(basis->EvaluateBasisFunction(x, 0), 1.0);
+  for( std::size_t d=0; d<dim; ++d ) { EXPECT_DOUBLE_EQ(basis->EvaluateBasisFunctionDerivative(x, 0, d, std::rand()), 0.0); }
 
   // evaluate the sin/cos basis function
   const Eigen::VectorXd phi = basis->EvaluateBasisFunctions(x);
+  const Eigen::MatrixXd dphidxk = basis->EvaluateBasisFunctionDerivatives(x, 10);
+  EXPECT_EQ(phi.size(), 2*dim+1);
+  EXPECT_EQ(dphidxk.rows(), x.size());
+  EXPECT_EQ(dphidxk.cols(), 2*dim+1);
+  EXPECT_NEAR(dphidxk.col(0).norm(), 0.0, 1.0e-12);
   for( std::size_t i=0; i<dim; ++i ) {
     EXPECT_DOUBLE_EQ(phi(2*(i+1)-1), std::sin(M_PI*x(i)));
     EXPECT_DOUBLE_EQ(phi(2*(i+1)), std::cos(M_PI*x(i)));
 
-    EXPECT_DOUBLE_EQ(basis->EvaluateBasisFunction(2*(i+1)-1, x), std::sin(M_PI*x(i)));
-    EXPECT_DOUBLE_EQ(basis->EvaluateBasisFunction(2*(i+1), x), std::cos(M_PI*x(i)));
+    EXPECT_DOUBLE_EQ(basis->EvaluateBasisFunction(x, 2*(i+1)-1), std::sin(M_PI*x(i)));
+    EXPECT_DOUBLE_EQ(basis->EvaluateBasisFunction(x, 2*(i+1)), std::cos(M_PI*x(i)));
+
+    EXPECT_DOUBLE_EQ(basis->EvaluateBasisFunctionDerivative(x, 2*(i+1)-1, i, 0), std::sin(M_PI*x(i)));
+    EXPECT_DOUBLE_EQ(basis->EvaluateBasisFunctionDerivative(x, 2*(i+1)-1, i, 1), M_PI*std::cos(M_PI*x(i)));
+    EXPECT_DOUBLE_EQ(basis->EvaluateBasisFunctionDerivative(x, 2*(i+1)-1, i, 2), -M_PI*M_PI*std::sin(M_PI*x(i)));
+    EXPECT_DOUBLE_EQ(basis->EvaluateBasisFunctionDerivative(x, 2*(i+1)-1, i, 3), -M_PI*M_PI*M_PI*std::cos(M_PI*x(i)));
+    EXPECT_DOUBLE_EQ(basis->EvaluateBasisFunctionDerivative(x, 2*(i+1)-1, i, 4), M_PI*M_PI*M_PI*M_PI*std::sin(M_PI*x(i)));
+
+    EXPECT_DOUBLE_EQ(basis->EvaluateBasisFunctionDerivative(x, 2*(i+1), i, 0), std::cos(M_PI*x(i)));
+    EXPECT_DOUBLE_EQ(basis->EvaluateBasisFunctionDerivative(x, 2*(i+1), i, 1), -M_PI*std::sin(M_PI*x(i)));
+    EXPECT_DOUBLE_EQ(basis->EvaluateBasisFunctionDerivative(x, 2*(i+1), i, 2), -M_PI*M_PI*std::cos(M_PI*x(i)));
+    EXPECT_DOUBLE_EQ(basis->EvaluateBasisFunctionDerivative(x, 2*(i+1), i, 3), M_PI*M_PI*M_PI*std::sin(M_PI*x(i)));
+    EXPECT_DOUBLE_EQ(basis->EvaluateBasisFunctionDerivative(x, 2*(i+1), i, 4), M_PI*M_PI*M_PI*M_PI*std::cos(M_PI*x(i)));
   }
 }
 

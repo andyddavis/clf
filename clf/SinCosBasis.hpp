@@ -57,11 +57,20 @@ protected:
   l_0(x) = 1 & l_{2j}(x) = \cos{(\pi n x)} & \mbox{(even numbers)} & \mbox{and} & l_{2j-1}(x) = \sin{(\pi n x)} & \mbox{(odd numbers.)}
   \end{array}
   \f}
-  @param[in] ind The index of the \f$i^{th}\f$ scalar basis function
   @param[in] x The point where we are evaluating the scalar basis function
+  @param[in] ind The index of the \f$i^{th}\f$ scalar basis function
   \return The scalar basis function evaluation
   */
-  virtual double ScalarBasisFunction(std::size_t const ind, double const x) const override;
+  virtual double ScalarBasisFunction(double const x, std::size_t const ind) const override;
+
+  /// Evaluate the \f$k^{th}\f$ derivative of the scalar basis function \f$\frac{d^k l_i}{d x^{k}}\f$.
+  /**
+  @param[in] x The point where we are evaluating the scalar basis function
+  @param[in] ind The index of the \f$i^{th}\f$ scalar basis function
+  @param[in] k We want the \f$k^{th}\f$ derivative
+  \return The scalar basis function evaluation
+  */
+  virtual double ScalarBasisFunctionDerivative( double const x, std::size_t const ind, std::size_t const k) const override;
 
 private:
 };

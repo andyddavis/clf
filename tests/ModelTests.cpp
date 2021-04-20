@@ -1,6 +1,8 @@
 #include <gtest/gtest.h>
 
 #include "clf/Model.hpp"
+#include "clf/PolynomialBasis.hpp"
+#include "clf/SinCosBasis.hpp"
 
 namespace pt = boost::property_tree;
 using namespace clf;
@@ -28,6 +30,41 @@ TEST(ModelTests, RightHandSideEvaluationNotImplementedException) {
   } catch( exceptions::ModelHasNotImplementedRHS const& exc ) {
     EXPECT_EQ(exc.type, exceptions::ModelHasNotImplementedRHS::Type::BOTH);
   }
+}
+
+TEST(ModelTests, OperatorEvaluationDefaultImplementation) {
+  // input/output dimension
+  const std::size_t indim = 3, outdim = 2;
+
+  std::vector<std::shared_ptr<BasisFunctions> > basis(outdim);
+
+  pt::ptree polyBasisOptions;
+  polyBasisOptions.put("InputDimension", indim);
+  polyBasisOptions.put("Order", 2);
+  basis[0] = PolynomialBasis::TotalOrderBasis(polyBasisOptions);
+
+  pt::ptree trigBasisOptions;
+  trigBasisOptions.put("InputDimension", indim);
+  trigBasisOptions.put("Order", 2);
+  basis[1] = SinCosBasis::TotalOrderBasis(trigBasisOptions);
+
+  // create a model
+  pt::ptree pt;
+  pt.put("InputDimension", indim);
+  pt.put("OutputDimension", outdim);
+  auto model = std::make_shared<Model>(pt);
+
+  // check in the input/output sizes
+  EXPECT_EQ(model->inputDimension, indim);
+  EXPECT_EQ(model->outputDimension, outdim);
+
+  // pick a random point
+  const Eigen::VectorXd x = Eigen::VectorXd::Random(indim);
+
+  // try to evaluate the right hand side
+  const Eigen::VectorXd rhs = model->Operator(x);
+  EXPECT_EQ(rhs.size(), outdim);
+  //for( std::size_t i=0; i<outdim; ++i ) { EXPECT_NEAR(rhs(i), x.prod(), 1.0e-12); }
 }
 
 class TestVectorValuedImplementationModel : public Model {

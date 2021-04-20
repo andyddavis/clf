@@ -55,4 +55,5 @@ list(APPEND MUQ_LIBRARIES
   "${CLF_EXTERNAL_INSTALL_DIR}/muq/lib/${library_prefix}muqUtilities${shared_library_suffix}"
   "${CLF_EXTERNAL_INSTALL_DIR}/muq/lib/${library_prefix}muqModeling${shared_library_suffix}"
   "${CLF_EXTERNAL_INSTALL_DIR}/muq/lib/${library_prefix}muqApproximation${shared_library_suffix}"
+  "${CLF_EXTERNAL_INSTALL_DIR}/muq/lib/${library_prefix}muqOptimization${shared_library_suffix}"
 )

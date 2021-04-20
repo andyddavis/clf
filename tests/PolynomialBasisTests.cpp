@@ -19,10 +19,10 @@ protected:
     // add linear and quadratic basis functions
     for( std::size_t i=0; i<dim; ++i ) {
       Eigen::RowVectorXi ind = Eigen::RowVectorXi::Zero(dim);
-      ind(i) = 1.0;
+      ind(i) = 1;
       multis->AddActive(std::make_shared<MultiIndex>(ind));
 
-      ind(i) = 2.0;
+      ind(i) = 2;
       multis->AddActive(std::make_shared<MultiIndex>(ind));
     }
   }
@@ -44,18 +44,33 @@ protected:
     const Eigen::VectorXd x = Eigen::VectorXd::Random(dim);
 
     // evaluate the constant basis function
-    EXPECT_DOUBLE_EQ(basis->EvaluateBasisFunction(0, x), 1.0);
+    EXPECT_DOUBLE_EQ(basis->EvaluateBasisFunction(x, 0), 1.0);
 
     auto poly = IndexedScalarBasis::Construct(basisName);
 
     // evaluate the polynomial basis functions
     const Eigen::VectorXd phi = basis->EvaluateBasisFunctions(x);
+    const Eigen::MatrixXd dphidxk = basis->EvaluateBasisFunctionDerivatives(x, 10);
+    EXPECT_EQ(phi.size(), 2*dim+1);
+    EXPECT_EQ(dphidxk.rows(), x.size());
+    EXPECT_EQ(dphidxk.cols(), 2*dim+1);
+    EXPECT_NEAR(dphidxk.col(0).norm(), 0.0, 1.0e-12);
     for( std::size_t i=0; i<dim; ++i ) {
       EXPECT_DOUBLE_EQ(phi(2*(i+1)-1), poly->BasisEvaluate(1, x(i)));
       EXPECT_DOUBLE_EQ(phi(2*(i+1)), poly->BasisEvaluate(2, x(i)));
 
-      EXPECT_DOUBLE_EQ(basis->EvaluateBasisFunction(2*(i+1)-1, x), poly->BasisEvaluate(1, x(i)));
-      EXPECT_DOUBLE_EQ(basis->EvaluateBasisFunction(2*(i+1), x), poly->BasisEvaluate(2, x(i)));
+      EXPECT_DOUBLE_EQ(basis->EvaluateBasisFunction(x, 2*(i+1)-1), poly->BasisEvaluate(1, x(i)));
+      EXPECT_DOUBLE_EQ(basis->EvaluateBasisFunction(x, 2*(i+1)), poly->BasisEvaluate(2, x(i)));
+
+      EXPECT_DOUBLE_EQ(basis->EvaluateBasisFunctionDerivative(x, 2*(i+1)-1, i, 0), poly->BasisEvaluate(1, x(i)));
+      EXPECT_DOUBLE_EQ(basis->EvaluateBasisFunctionDerivative(x, 2*(i+1)-1, i, 1), poly->DerivativeEvaluate(1, 1, x(i)));
+      EXPECT_DOUBLE_EQ(basis->EvaluateBasisFunctionDerivative(x, 2*(i+1)-1, i, 2), poly->DerivativeEvaluate(1, 2, x(i)));
+      EXPECT_DOUBLE_EQ(basis->EvaluateBasisFunctionDerivative(x, 2*(i+1)-1, i, 3), poly->DerivativeEvaluate(1, 3, x(i)));
+
+      EXPECT_DOUBLE_EQ(basis->EvaluateBasisFunctionDerivative(x, 2*(i+1), i, 0), poly->BasisEvaluate(2, x(i)));
+      EXPECT_DOUBLE_EQ(basis->EvaluateBasisFunctionDerivative(x, 2*(i+1), i, 1), poly->DerivativeEvaluate(2, 1, x(i)));
+      EXPECT_DOUBLE_EQ(basis->EvaluateBasisFunctionDerivative(x, 2*(i+1), i, 2), poly->DerivativeEvaluate(2, 2, x(i)));
+      EXPECT_DOUBLE_EQ(basis->EvaluateBasisFunctionDerivative(x, 2*(i+1), i, 3), poly->DerivativeEvaluate(2, 3, x(i)));
     }
   }
 

@@ -79,6 +79,13 @@ public:
   */
   std::vector<std::size_t> GlobalNeighborIndices(std::size_t const outdim = 0) const;
 
+  /// The number of coefficients associated with this support point
+  /**
+  The total number of coefficients is the sum of the coefficients associated with each basis.
+  \return The number of coefficients associated with this support point
+  */
+  std::size_t NumCoefficients() const;
+
   /// Minimize the uncoupled cost function for this support point
   void MinimizeUncoupledCost();
 

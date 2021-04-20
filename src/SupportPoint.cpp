@@ -118,6 +118,12 @@ std::vector<std::size_t> SupportPoint::GlobalNeighborIndices(std::size_t const o
   return std::vector<std::size_t>(globalNeighorIndices.begin(), globalNeighorIndices.begin()+numNeighbors[outdim]);
 }
 
+std::size_t SupportPoint::NumCoefficients() const {
+  std::size_t num = 0;
+  for( const auto& it : bases ) { num += it->NumBasisFunctions(); }
+  return num;
+}
+
 void SupportPoint::MinimizeUncoupledCost() {
   std::cout << "Minimize uncoupled cost" << std::endl;
 }

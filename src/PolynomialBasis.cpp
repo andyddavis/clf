@@ -19,4 +19,13 @@ std::shared_ptr<PolynomialBasis> PolynomialBasis::TotalOrderBasis(pt::ptree cons
   return std::make_shared<PolynomialBasis>(multis, pt);
 }
 
-double PolynomialBasis::ScalarBasisFunction(std::size_t const ind, double const x) const { return poly->BasisEvaluate(ind, x); }
+double PolynomialBasis::ScalarBasisFunction(double const x, std::size_t const ind) const {
+  assert(poly);
+  return poly->BasisEvaluate(ind, x);
+}
+
+double PolynomialBasis::ScalarBasisFunctionDerivative(double const x, std::size_t const ind, std::size_t const k) const {
+  assert(poly);
+  if( k==0 ) { return ScalarBasisFunction(x, ind); }
+  return poly->DerivativeEvaluate(ind, k, x);
+}

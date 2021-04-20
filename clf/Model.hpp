@@ -8,6 +8,7 @@
 #include <Eigen/Core>
 
 #include "clf/ModelExceptions.hpp"
+#include "clf/BasisFunctions.hpp"
 
 namespace clf {
 
@@ -34,6 +35,13 @@ public:
   Model(boost::property_tree::ptree const& pt);
 
   virtual ~Model() = default;
+
+  /// Implement the model operator \f$\mathcal{L}(u)\f$
+  /**
+  @param[in] x The point \f$x \in \Omega \f$
+  \return The evaluation of \f$\mathcal{L}(u)\f$
+  */
+  Eigen::VectorXd Operator(Eigen::VectorXd const& x) const;
 
   /// Implement the right hand side function \f$f\f$
   /**
