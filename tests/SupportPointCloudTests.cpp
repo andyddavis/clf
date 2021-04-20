@@ -72,6 +72,7 @@ TEST_F(SupportPointCloudTests, Construction) {
 
   // create the support point cloud
   cloud = std::make_shared<SupportPointCloud>(supportPoints, ptSupportPointCloud);
+  cloud->FindNearestNeighbors();
 }
 
 TEST_F(SupportPointCloudTests, NearestNeighborSearch) {
@@ -81,7 +82,7 @@ TEST_F(SupportPointCloudTests, NearestNeighborSearch) {
   for( std::size_t i=0; i<n; ++i ) { supportPoints[i] = std::make_shared<SupportPoint>(dist->Sample(), model, ptSupportPoints); }
 
   // create the support point cloud
-  cloud = std::make_shared<SupportPointCloud>(supportPoints, ptSupportPointCloud);
+  cloud = SupportPointCloud::Construct(supportPoints, ptSupportPointCloud);
 
   // find 5 nearest neighbors
   std::vector<std::size_t> neighInd;
@@ -231,7 +232,5 @@ TEST(SupportPointCloudErrorTests, NotConnected) {
     pt::ptree ptSupportPointCloud;
     ptSupportPointCloud.put("RequireConnectedGraphs", true);
     SupportPointCloud cloud(supportPoints, ptSupportPointCloud);
-  } catch( exceptions::SupportPointCloudNotConnected const& exc ) {
-    EXPECT_EQ(exc.outnum, 0);
-  }
+  } catch( exceptions::SupportPointCloudNotConnected const& exc ) {}
 }

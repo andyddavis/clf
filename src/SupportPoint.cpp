@@ -3,6 +3,7 @@
 #include "clf/UtilityFunctions.hpp"
 #include "clf/PolynomialBasis.hpp"
 #include "clf/SinCosBasis.hpp"
+#include "clf/SupportPointCloud.hpp"
 
 namespace pt = boost::property_tree;
 using namespace muq::Modeling;
@@ -19,14 +20,17 @@ delta(pt.get<double>("InitialRadius", 1.0))
   for( const auto& it : bases ) { assert(it); }
 }
 
-std::vector<std::size_t> SupportPoint::DetermineNumNeighbors(std::vector<std::shared_ptr<const BasisFunctions> > const& bases, pt::ptree const& pt) {
-  const std::size_t defaultNumNeighs = pt.get<std::size_t>("NumNeighbors", std::numeric_limits<std::size_t>::max());
-
-  std::vector<std::size_t> numNeighs(bases.size());
-  for( std::size_t d=0; d<bases.size(); ++d ) {
-    numNeighs[d] = pt.get<std::size_t>("NumNeighbors-"+std::to_string(d),  (defaultNumNeighs<std::numeric_limits<std::size_t>::max()? defaultNumNeighs : bases[d]->NumBasisFunctions()+1));
-    if( numNeighs[d]<bases[d]->NumBasisFunctions() ) { throw exceptions::SupportPointWrongNumberOfNearestNeighbors(d, bases[d]->NumBasisFunctions(), numNeighs[d]); }
+std::size_t SupportPoint::DetermineNumNeighbors(std::vector<std::shared_ptr<const BasisFunctions> > const& bases, pt::ptree const& pt) {
+  std::size_t numNeighs = pt.get<std::size_t>("NumNeighbors", std::numeric_limits<std::size_t>::max());
+  if( numNeighs<std::numeric_limits<std::size_t>::max() ) {
+    for( std::size_t d=0; d<bases.size(); ++d ) {
+      if( numNeighs<bases[d]->NumBasisFunctions() ) { throw exceptions::SupportPointWrongNumberOfNearestNeighbors(d, bases[d]->NumBasisFunctions(), numNeighs); }
+    }
+    return numNeighs;
   }
+
+  numNeighs = 0;
+  for( std::size_t d=0; d<bases.size(); ++d ) { numNeighs = std::max(numNeighs, bases[d]->NumBasisFunctions()+1); }
 
   return numNeighs;
 }
@@ -94,9 +98,12 @@ Eigen::VectorXd SupportPoint::GlobalCoordinate(Eigen::VectorXd const& xhat) cons
   return delta*xhat + x;
 }
 
-void SupportPoint::SetNearestNeighbors(std::vector<std::size_t> const& neighInd, std::vector<double> const& neighDist) {
+void SupportPoint::SetNearestNeighbors(std::shared_ptr<const SupportPointCloud> const& newcloud, std::vector<std::size_t> const& neighInd, std::vector<double> const& neighDist) {
   assert(neighInd.size()==neighDist.size());
-  assert(neighInd.size()==*std::max_element(numNeighbors.begin(), numNeighbors.end()));
+  assert(neighInd.size()==numNeighbors);
+
+  // set the cloud
+  cloud = newcloud;
 
   // sort the nearest neighbors (so j=0 is always this support point)
   std::vector<std::size_t> indices(neighInd.size());
@@ -110,18 +117,39 @@ void SupportPoint::SetNearestNeighbors(std::vector<std::size_t> const& neighInd,
     squaredNeighborDistances[i] = neighDist[indices[i]];
     globalNeighorIndices[i] = neighInd[indices[i]];
   }
+
+  // reset the scaling parameter for the squared neighbor distance
+  delta = std::sqrt(*(squaredNeighborDistances.end()-1));
 }
 
-std::vector<std::size_t> SupportPoint::GlobalNeighborIndices(std::size_t const outdim) const {
-  assert(outdim<numNeighbors.size());
-  assert(numNeighbors[outdim]<=globalNeighorIndices.size());
-  return std::vector<std::size_t>(globalNeighorIndices.begin(), globalNeighorIndices.begin()+numNeighbors[outdim]);
-}
+std::vector<std::size_t> SupportPoint::GlobalNeighborIndices() const { return globalNeighorIndices; }
 
 std::size_t SupportPoint::NumCoefficients() const {
   std::size_t num = 0;
   for( const auto& it : bases ) { num += it->NumBasisFunctions(); }
   return num;
+}
+
+Eigen::VectorXd SupportPoint::NearestNeighbor(std::size_t const jnd) const {
+  // get the cloud
+  auto cld = cloud.lock();
+  assert(cld);
+
+  assert(jnd<globalNeighorIndices.size());
+  return cld->GetSupportPoint(globalNeighorIndices[jnd])->x;
+}
+
+Eigen::VectorXd SupportPoint::NearestNeighborKernel() const {
+  Eigen::VectorXd kernel(squaredNeighborDistances.size());
+  const double delta2 = delta*delta;
+  for( std::size_t i=0; i<kernel.size(); ++i ) { kernel(i) = model->NearestNeighborKernel(squaredNeighborDistances[i]/delta2); }
+  return kernel;
+}
+
+Eigen::VectorXd SupportPoint::Operator(Eigen::VectorXd const& loc, Eigen::VectorXd const& coefficients) const {
+  assert(loc.size()==model->inputDimension);
+  assert(coefficients.size()==NumCoefficients());
+  return model->Operator(LocalCoordinate(loc), coefficients, bases);
 }
 
 void SupportPoint::MinimizeUncoupledCost() {

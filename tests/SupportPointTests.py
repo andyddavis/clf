@@ -38,6 +38,6 @@ class TestSupportPoint(unittest.TestCase):
         # make sure the basis was created
         self.assertEqual(len(point.bases), 1)
         self.assertEqual(point.bases[0].NumBasisFunctions(), 35)
-        self.assertEqual(point.numNeighbors[0], 40)
+        self.assertEqual(point.numNeighbors, 40)
         self.assertEqual(point.model.inputDimension, len(x))
         self.assertEqual(point.model.outputDimension, 1)

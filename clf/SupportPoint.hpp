@@ -7,6 +7,9 @@
 
 namespace clf {
 
+/// Forward declaration of the clf::SupportPointCloud
+class SupportPointCloud;
+
 /// The local function \f$\ell\f$ associated with a support point \f$x\f$.
 /**
 Let \f$x \in \Omega \subseteq \mathbb{R}^{d}\f$ be a support point with an associated local function \f$\ell: \Omega \mapsto \mathbb{R}^{m}\f$. Suppose that we are building an approximation of the function \f$u:\Omega \mapsto \mathbb{R}^{m}\f$. Although \f$\ell\f$ is well-defined in the entire domain, we expect there is a smooth monotonic function \f$W: \Omega \mapsto \mathbb{R}^{+}\f$ with \f$W(0) \leq \epsilon\f$ and \f$W(r) \rightarrow \infty\f$ as \f$r \rightarrow \infty\f$ such that \f$\| \ell(y) - u(x) \|^2 \leq W(\|y-x\|^2)\f$. Therefore, we primarily care about the local function \f$\ell\f$ in a ball \f$\mathcal{B}_{\delta}(x)\f$ centered at \f$x\f$ with radius \f$\delta\f$.
@@ -49,6 +52,12 @@ public:
   */
   double& Radius();
 
+  /// Evaluate the nearest neighbor kernel at each neighboring support point
+  /**
+  \return The kernel evaluation at each support point
+  */
+  Eigen::VectorXd NearestNeighborKernel() const;
+
   /// Transform into the local coordinate
   /**
   Given the global coordinate \f$y \in \Omega\f$ compute \f$\hat{x}(y) = (y-x)/\delta\f$.
@@ -67,17 +76,17 @@ public:
 
   /// Set the nearest neighbors
   /**
+  @param[in] newcloud The clf::SupportPointCloud where this support point and its neighbors are stored
   @param[in] neighInd The global indices (in a clf::SupportPointCloud) of the nearest neighbors
   @param[in] neighDist The squared distances (Euclidean inner product) between the support point and its \f$j^{th}\f$ nearest neighbor
   */
-  void SetNearestNeighbors(std::vector<std::size_t> const& neighInd, std::vector<double> const& neighDist);
+  void SetNearestNeighbors(std::shared_ptr<const SupportPointCloud> const& newcloud, std::vector<std::size_t> const& neighInd, std::vector<double> const& neighDist);
 
   /// Get the global indices of this support points nearest neighbors
   /**
-  @param[in] outdim The global indicies of the nearest neighbors for this output dimension (defaults to zero)
   \return The global indices of this support points nearest neighbors
   */
-  std::vector<std::size_t> GlobalNeighborIndices(std::size_t const outdim = 0) const;
+  std::vector<std::size_t> GlobalNeighborIndices() const;
 
   /// The number of coefficients associated with this support point
   /**
@@ -88,6 +97,20 @@ public:
 
   /// Minimize the uncoupled cost function for this support point
   void MinimizeUncoupledCost();
+
+  /// The support point associated with the \f$j^{th}\f$ nearest neighbor
+  /**
+  @param[in] jnd The index of the \f$j^{th}\f$ nearest neighbor
+  \return The point associated with \f$I(i,j)\f$
+  */
+  Eigen::VectorXd NearestNeighbor(std::size_t const jnd) const;
+
+  /// Evaluate the operator applied to the local function at a given point
+  /**
+  @param[in] loc The location where we are evaluating the action of the operator
+  @param[in] coefficients The coefficients that define the local function
+  */
+  Eigen::VectorXd Operator(Eigen::VectorXd const& loc, Eigen::VectorXd const& coefficients) const;
 
   /// The location of the support point \f$x\f$.
   const Eigen::VectorXd x;
@@ -104,19 +127,16 @@ public:
   const std::vector<std::shared_ptr<const BasisFunctions> > bases;
 
   /// The number of nearest neighbors used to compute the coefficients for each output
-  /**
-  The \f$j^{th}\f$ entry corresponds to the number of nearest neighbors for the \f$j^{th}\f$ output
-  */
-  const std::vector<std::size_t> numNeighbors;
+  const std::size_t numNeighbors;
 private:
 
   /// Determine the number of nearest nieghbors for each output
   /**
   @param[in] bases The bases used for each output
   @param[in] pt The options for the support point
-  \return The number of nearest neighbors used to compute the coefficients for each output
+  \return The number of nearest neighbors used to compute the coefficients
   */
-  static std::vector<std::size_t> DetermineNumNeighbors(std::vector<std::shared_ptr<const BasisFunctions> > const& bases, boost::property_tree::ptree const& pt);
+  static std::size_t DetermineNumNeighbors(std::vector<std::shared_ptr<const BasisFunctions> > const& bases, boost::property_tree::ptree const& pt);
 
   /// Create the basis functions from the given options
   /**
@@ -146,6 +166,9 @@ private:
 
   /// The global indices (in a clf::SupportPointCloud) of the nearest neighbors
   std::vector<std::size_t> globalNeighorIndices;
+
+  /// The cloud that stores this point and its nearest neighbor
+  std::weak_ptr<const SupportPointCloud> cloud;
 };
 
 } // namespace clf

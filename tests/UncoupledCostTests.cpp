@@ -13,6 +13,15 @@ public:
   inline ExampleIdentityModelForUncoupledCostTests(pt::ptree const& pt) : Model(pt) {}
 
   virtual ~ExampleIdentityModelForUncoupledCostTests() = default;
+
+protected:
+
+  /**
+  @param[in] x The point \f$x \in \Omega \f$
+  \return The evaluation of \f$f(x)\f$
+  */
+  inline virtual Eigen::VectorXd RightHandSideVectorImpl(Eigen::VectorXd const& x) const override { return Eigen::VectorXd::Constant(outputDimension, x.prod()); }
+
 private:
 };
 
@@ -29,6 +38,7 @@ TEST(UncoupledCostTests, Construction) {
 
   // options for the support point
   pt::ptree suppOptions;
+  suppOptions.put("NumNeighbors", 75);
   suppOptions.put("BasisFunctions", "Basis1, Basis2");
   suppOptions.put("Basis1.Type", "TotalOrderSinCos");
   suppOptions.put("Basis1.Order", orderSinCos);
@@ -49,7 +59,7 @@ TEST(UncoupledCostTests, Construction) {
       suppOptions);
   }
   pt::ptree ptSupportPointCloud;
-  SupportPointCloud cloud(supportPoints, ptSupportPointCloud);
+  auto cloud = SupportPointCloud::Construct(supportPoints, ptSupportPointCloud);
 
   // create the uncoupled cost
   auto cost = std::make_shared<UncoupledCost>(point);
@@ -62,6 +72,19 @@ TEST(UncoupledCostTests, Construction) {
   // choose the vector of coefficients
   const Eigen::VectorXd coefficients = Eigen::VectorXd::Ones(point->NumCoefficients());
 
+  // compute the true cost
+  double trueCost = 0.0;
+  {
+    const Eigen::VectorXd kernel = point->NearestNeighborKernel();
+    EXPECT_EQ(kernel.size(), supportPoints.size());
+    for( std::size_t i=0; i<supportPoints.size(); ++i ) {
+      const Eigen::VectorXd diff = point->Operator(supportPoints[i]->x, coefficients) - point->model->RightHandSide(supportPoints[i]->x);
+      trueCost += kernel(i)*diff.dot(diff);
+    }
+    trueCost /= (2.0*supportPoints.size());
+  }
+
   // compute the cost
   const double cst = cost->Cost(coefficients);
+  EXPECT_NEAR(cst, trueCost, 1.0e-12);
 }

@@ -36,12 +36,24 @@ public:
 
   virtual ~Model() = default;
 
+  /// Implement the nearest neighbor kernel
+  /**
+  The nearest neighbor kernel is a function \f$K:\mathbb{R}^{+} \mapsto \mathbb{R}{+}\f$ such that \f$K(0) = 1\f$ and \f$K\f$ monotonically (not necessarily stricly monotonically) decays so that \f$K(\delta) = 0\f$ if \f$\delta > 1\f$.
+
+  Defaults to the hat kernel.
+  @param[in] delta The input parameter (normalized distance between two points)
+  \return The kernel evaluation
+  */
+  virtual double NearestNeighborKernel(double const delta) const;
+
   /// Implement the model operator \f$\mathcal{L}(u)\f$
   /**
   @param[in] x The point \f$x \in \Omega \f$
+  @param[in] coefficients The coefficients for each basis---this vector is devided into segments that correspond to coefficients of the bases. The length is the sum of the dimension of each basis.
+  @param[in] bases The basis functions for each output
   \return The evaluation of \f$\mathcal{L}(u)\f$
   */
-  Eigen::VectorXd Operator(Eigen::VectorXd const& x) const;
+  virtual Eigen::VectorXd Operator(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases) const;
 
   /// Implement the right hand side function \f$f\f$
   /**

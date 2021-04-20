@@ -16,7 +16,7 @@ Parameter Key | Type | Default Value | Description |
 "MaxLeaf"   | <tt>std::size_t</tt> | <tt>10</tt> | The max leaf parameter for constructing the \f$k\f$-\f$d\f$ tree. |
 "RequireConnectedGraphs"   | <tt>bool</tt> | <tt>false</tt> | <tt>true</tt>: The graphs associated with each output must be connected, <tt>false</tt>: The graphs associated with each output need not be connected |
 */
-class SupportPointCloud {
+class SupportPointCloud : public std::enable_shared_from_this<SupportPointCloud> {
 public:
 
   /**
@@ -26,6 +26,13 @@ public:
   SupportPointCloud(std::vector<std::shared_ptr<SupportPoint> > const& supportPoints, boost::property_tree::ptree const& pt);
 
   virtual ~SupportPointCloud() = default;
+
+  /// Construct the cloud and also set the nearest neighbors
+  /**
+  @param[in] supportPoints The \f$i^{th}\f$ entry is the support point associated with \f$x^{(i)}\f$
+  @param[in] pt The options for the support point cloud
+  */
+  static std::shared_ptr<SupportPointCloud> Construct(std::vector<std::shared_ptr<SupportPoint> > const& supportPoints, boost::property_tree::ptree const& pt);
 
   /// Get the number of support points
   /**
@@ -77,6 +84,9 @@ public:
   */
   std::size_t OutputDimension() const;
 
+  /// Find the required nearest neighbors for each support point
+  void FindNearestNeighbors() const;
+
   /// Find the \f$k\f$ nearest neighbors
   /**
   @param[in] point We want to find the nearest neighbors of this point
@@ -91,7 +101,7 @@ public:
 
   /// An iterator to the last support point
   std::vector<std::shared_ptr<SupportPoint> >::const_iterator End() const;
-  
+
 private:
 
   /// Make sure the support points all have the same input/output dimension
@@ -103,21 +113,18 @@ private:
   */
   void BuildKDTree(std::size_t const maxLeaf);
 
-  /// Find the required nearest neighbors for each support point
-  void FindNearestNeighbors() const;
-
   /// Check to make sure the graph is connected
   /**
   \return <tt>true</tt>: The graph is connected, <tt>false</tt>: The graph is not connected
   */
-  bool CheckConnected(std::size_t const outdim) const;
+  bool CheckConnected() const;
 
   /// Check to make sure the graph is connected
   /**
   @param[in] ind The current index as we transverse the graph
   @param[in] visited A vector of points on the graph, <tt>true</tt> if we have visited that node already, <tt>false</tt> if not
   */
-  void CheckConnected(std::size_t const outdim, std::size_t const ind, std::vector<bool>& visited) const;
+  void CheckConnected(std::size_t const ind, std::vector<bool>& visited) const;
 
   /// The \f$i^{th}\f$ entry is the support point associated with \f$x^{(i)}\f$
   const std::vector<std::shared_ptr<SupportPoint> > supportPoints;

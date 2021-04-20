@@ -4,8 +4,8 @@
 
 using namespace clf::exceptions;
 
-SupportPointCloudNotConnected::SupportPointCloudNotConnected(std::size_t const outnum) : CLFException(), outnum(outnum) {
-  message = "ERROR: The graph in SupportPointCloud associated with output number " + std::to_string(outnum) + " is not connected (clf::exceptions::SupportPointCloudNotConnected).";
+SupportPointCloudNotConnected::SupportPointCloudNotConnected() : CLFException() {
+  message = "ERROR: The graph in SupportPointCloud is not connected (clf::exceptions::SupportPointCloudNotConnected).";
 }
 
 SupportPointCloudNotEnoughPointsException::SupportPointCloudNotEnoughPointsException(std::size_t const numPoints, std::size_t const required) : CLFException(), numPoints(numPoints), required(required) {

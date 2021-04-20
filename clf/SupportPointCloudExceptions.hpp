@@ -9,16 +9,11 @@ namespace exceptions {
 /// The graph connected the points in a support point cloud is not connected
 class SupportPointCloudNotConnected : virtual public CLFException {
 public:
-  /**
-  @param[in] outnum The output associated with the unconnected graph
-  */
-  SupportPointCloudNotConnected(std::size_t const outnum);
+
+  SupportPointCloudNotConnected();
 
   virtual ~SupportPointCloudNotConnected() = default;
 
-  /// The output associated with the unconnected graph
-  const std::size_t outnum;
-  
 private:
 };
 

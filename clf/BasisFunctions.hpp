@@ -54,6 +54,15 @@ public:
 
   virtual ~BasisFunctions() = default;
 
+  /// Evaluate a function in this space given the basis coefficients
+  /**
+  The function evaluation is given coefficients \f$c\f$ is \f$c \cdot \phi(x)\f$
+  @param[in] x The location where we are evaluating the function
+  @param[in] coefficients The basis coefficients
+  \return The function evaluation
+  */
+  double FunctionEvaluation(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients) const;
+
   /// Evaluate the basis functions
   /**
   The vector of basis functions is \f$\phi(x) = [\phi_1(x),\, \phi_2(x),\, ...,\, \phi_q(x)]\f$.

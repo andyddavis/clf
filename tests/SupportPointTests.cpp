@@ -93,13 +93,12 @@ TEST_F(SupportPointTests, TotalOrderPolynomials) {
   pt.put("Basis3.Order", order);
   point = std::make_shared<SupportPoint>(x, model, pt);
   EXPECT_EQ(point->bases.size(), outdim);
-  EXPECT_EQ(point->numNeighbors.size(), outdim);
+  EXPECT_EQ(point->numNeighbors, 36);
   for( std::size_t i=0; i<outdim; ++i ) {
     EXPECT_TRUE(point->bases[i]);
     EXPECT_TRUE(std::dynamic_pointer_cast<const PolynomialBasis>(point->bases[i]));
     // the formula for the expected number of basis functions: [dimension]+[order] choose [dimension], in this case the answer is 35 so we hard code it
     EXPECT_EQ(point->bases[i]->NumBasisFunctions(), 35);
-    EXPECT_EQ(point->numNeighbors[i], 36);
   }
 }
 
@@ -117,13 +116,12 @@ TEST_F(SupportPointTests, TotalOrderSineCosine) {
   pt.put("Basis3.Order", order);
   point = std::make_shared<SupportPoint>(x, model, pt);
   EXPECT_EQ(point->bases.size(), outdim);
-  EXPECT_EQ(point->numNeighbors.size(), outdim);
+  EXPECT_EQ(point->numNeighbors, 71);
   for( std::size_t i=0; i<outdim; ++i ) {
     EXPECT_TRUE(point->bases[i]);
     EXPECT_TRUE(std::dynamic_pointer_cast<const SinCosBasis>(point->bases[i]));
     // the formula for the expected number of basis functions: [dimension]+[2*order] choose [dimension], in this case the answer is 70 so we hard code it
     EXPECT_EQ(point->bases[i]->NumBasisFunctions(), 70);
-    EXPECT_EQ(point->numNeighbors[i], 71);
   }
 }
 
@@ -141,19 +139,17 @@ TEST_F(SupportPointTests, MixedBasisTypes) {
   pt.put("Basis3.Order", orderSinCos);
   point = std::make_shared<SupportPoint>(x, model, pt);
   EXPECT_EQ(point->bases.size(), outdim);
-  EXPECT_EQ(point->numNeighbors.size(), outdim);
+  EXPECT_EQ(point->numNeighbors, 71);
   for( std::size_t i=0; i<outdim; ++i ) {
     EXPECT_TRUE(point->bases[i]);
     if( i==1 ) {
       EXPECT_TRUE(std::dynamic_pointer_cast<const PolynomialBasis>(point->bases[i]));
       // the formula for the expected number of basis functions: [dimension]+[order] choose [dimension], in this case the answer is 35 so we hard code it
       EXPECT_EQ(point->bases[i]->NumBasisFunctions(), 35);
-      EXPECT_EQ(point->numNeighbors[i], 36);
     } else {
       EXPECT_TRUE(std::dynamic_pointer_cast<const SinCosBasis>(point->bases[i]));
       // the formula for the expected number of basis functions: [dimension]+[2*order] choose [dimension], in this case the answer is 70 so we hard code it
       EXPECT_EQ(point->bases[i]->NumBasisFunctions(), 70);
-      EXPECT_EQ(point->numNeighbors[i], 71);
     }
   }
 }
@@ -168,12 +164,8 @@ TEST_F(SupportPointTests, CustomNearestNeighborsWithDefault) {
   pt.put("Basis2.Type", "TotalOrderPolynomials");
   pt.put("Basis3.Type", "TotalOrderSinCos");
   pt.put("NumNeighbors", 85);
-  pt.put("NumNeighbors-2", 73);
   point = std::make_shared<SupportPoint>(x, model, pt);
-  EXPECT_EQ(point->numNeighbors.size(), outdim);
-  EXPECT_EQ(point->numNeighbors[0], 85);
-  EXPECT_EQ(point->numNeighbors[1], 85);
-  EXPECT_EQ(point->numNeighbors[2], 73);
+  EXPECT_EQ(point->numNeighbors, 85);
 }
 
 TEST_F(SupportPointTests, CustomNearestNeighbors) {
@@ -185,14 +177,9 @@ TEST_F(SupportPointTests, CustomNearestNeighbors) {
   pt.put("Basis1.Type", "TotalOrderSinCos");
   pt.put("Basis2.Type", "TotalOrderPolynomials");
   pt.put("Basis3.Type", "TotalOrderSinCos");
-  pt.put("NumNeighbors-0", 85);
-  pt.put("NumNeighbors-1", 45);
-  pt.put("NumNeighbors-2", 73);
+  pt.put("NumNeighbors", 85);
   point = std::make_shared<SupportPoint>(x, model, pt);
-  EXPECT_EQ(point->numNeighbors.size(), outdim);
-  EXPECT_EQ(point->numNeighbors[0], 85);
-  EXPECT_EQ(point->numNeighbors[1], 45);
-  EXPECT_EQ(point->numNeighbors[2], 73);
+  EXPECT_EQ(point->numNeighbors, 85);
 }
 
 TEST(SupportPointExceptionHandlingTests, WrongNumberOfNearestNeighbors) {

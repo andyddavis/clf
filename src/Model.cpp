@@ -8,8 +8,22 @@ inputDimension(pt.get<std::size_t>("InputDimension", 1)),
 outputDimension(pt.get<std::size_t>("OutputDimension", 1))
 {}
 
-Eigen::VectorXd Model::Operator(Eigen::VectorXd const& x) const {
-  return Eigen::VectorXd();
+double Model::NearestNeighborKernel(double const delta) const {
+  assert(delta>-1.0e-10);
+  if( delta>1.0+1.0e-10 ) { return 0.0; }
+  return 1.0;
+}
+
+Eigen::VectorXd Model::Operator(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases) const {
+  assert(bases.size()==outputDimension);
+  Eigen::VectorXd output(outputDimension);
+  std::size_t runningind = 0;
+  for( std::size_t i=0; i<outputDimension; ++i ) {
+    assert(runningind+bases[i]->NumBasisFunctions()<=coefficients.size());
+    output(i) = bases[i]->FunctionEvaluation(x, coefficients.segment(runningind, bases[i]->NumBasisFunctions()));
+    runningind += bases[i]->NumBasisFunctions();
+  }
+  return output;
 }
 
 Eigen::VectorXd Model::RightHandSide(Eigen::VectorXd const& x) const {

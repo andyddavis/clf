@@ -9,16 +9,23 @@ SupportPointCloud::SupportPointCloud(std::vector<std::shared_ptr<SupportPoint> >
 
   // build the kd tree
   BuildKDTree(pt.get<std::size_t>("MaxLeaf", 10));
+}
+
+std::shared_ptr<SupportPointCloud> SupportPointCloud::Construct(std::vector<std::shared_ptr<SupportPoint> > const& supportPoints, boost::property_tree::ptree const& pt) {
+  // make the cloud
+  auto cloud = std::make_shared<SupportPointCloud>(supportPoints, pt);
 
   // find the required nearest neighbors for each support point
-  FindNearestNeighbors();
+  cloud->FindNearestNeighbors();
+
+  return cloud;
 }
 
 void SupportPointCloud::FindNearestNeighbors() const {
   // loop through each support point
   for( const auto& point : supportPoints ) {
     // the maximum required nearest neighbors
-    const std::size_t maxNeigh = *std::max_element(point->numNeighbors.begin(), point->numNeighbors.end());
+    const std::size_t maxNeigh = point->numNeighbors;
     if( maxNeigh>supportPoints.size() ) { throw exceptions::SupportPointCloudNotEnoughPointsException(supportPoints.size(), maxNeigh); }
 
     // find the nearest nieghbors
@@ -27,34 +34,34 @@ void SupportPointCloud::FindNearestNeighbors() const {
     assert(neighInd.size()==maxNeigh); assert(neighDist.size()==maxNeigh);
 
     // set the nearest neighbors
-    point->SetNearestNeighbors(neighInd, neighDist);
+    point->SetNearestNeighbors(shared_from_this(), neighInd, neighDist);
   }
 
   if( requireConnectedGraphs ) {
     // check to make sure the graph is connected
-    for( std::size_t i=0; i<OutputDimension(); ++i ) { if( !CheckConnected(i) ) { throw exceptions::SupportPointCloudNotConnected(i); } }
+    if( !CheckConnected() ) { throw exceptions::SupportPointCloudNotConnected(); }
   }
 }
 
-bool SupportPointCloud::CheckConnected(std::size_t const outdim) const {
+bool SupportPointCloud::CheckConnected() const {
   std::vector<bool> visited(supportPoints.size(), false);
 
-  CheckConnected(outdim, 0, visited);
+  CheckConnected(0, visited);
 
   for( const auto& node : visited ) { if( !node ) { return false; } }
   return true;
 }
 
-void SupportPointCloud::CheckConnected(std::size_t const outdim, std::size_t const ind, std::vector<bool>& visited) const {
+void SupportPointCloud::CheckConnected(std::size_t const ind, std::vector<bool>& visited) const {
   // mark the current node as visited
   assert(ind<visited.size());
   visited[ind] = true;
 
   // get the connected neighbors and recursively mark them as visited
-  const std::vector<size_t> neighbors = supportPoints[ind]->GlobalNeighborIndices(outdim);
+  const std::vector<size_t> neighbors = supportPoints[ind]->GlobalNeighborIndices();
   for( std::size_t i=0; i<neighbors.size(); ++i ) {
     assert(neighbors[i]<visited.size());
-    if( !visited[neighbors[i]] ) { CheckConnected(outdim, neighbors[i], visited); }
+    if( !visited[neighbors[i]] ) { CheckConnected(neighbors[i], visited); }
   }
 }
 

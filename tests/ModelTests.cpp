@@ -36,17 +36,17 @@ TEST(ModelTests, OperatorEvaluationDefaultImplementation) {
   // input/output dimension
   const std::size_t indim = 3, outdim = 2;
 
-  std::vector<std::shared_ptr<BasisFunctions> > basis(outdim);
+  std::vector<std::shared_ptr<const BasisFunctions> > bases(outdim);
 
   pt::ptree polyBasisOptions;
   polyBasisOptions.put("InputDimension", indim);
   polyBasisOptions.put("Order", 2);
-  basis[0] = PolynomialBasis::TotalOrderBasis(polyBasisOptions);
+  bases[0] = PolynomialBasis::TotalOrderBasis(polyBasisOptions);
 
   pt::ptree trigBasisOptions;
   trigBasisOptions.put("InputDimension", indim);
   trigBasisOptions.put("Order", 2);
-  basis[1] = SinCosBasis::TotalOrderBasis(trigBasisOptions);
+  bases[1] = SinCosBasis::TotalOrderBasis(trigBasisOptions);
 
   // create a model
   pt::ptree pt;
@@ -61,10 +61,14 @@ TEST(ModelTests, OperatorEvaluationDefaultImplementation) {
   // pick a random point
   const Eigen::VectorXd x = Eigen::VectorXd::Random(indim);
 
-  // try to evaluate the right hand side
-  const Eigen::VectorXd rhs = model->Operator(x);
-  EXPECT_EQ(rhs.size(), outdim);
-  //for( std::size_t i=0; i<outdim; ++i ) { EXPECT_NEAR(rhs(i), x.prod(), 1.0e-12); }
+  // the coefficients
+  const Eigen::VectorXd coefficients = Eigen::VectorXd::Random(bases[0]->NumBasisFunctions()+bases[1]->NumBasisFunctions());
+
+  // try to evaluate the operator---the default is the identity operator
+  const Eigen::VectorXd modelEval = model->Operator(x, coefficients, bases);
+  EXPECT_EQ(modelEval.size(), outdim);
+  EXPECT_NEAR(modelEval(0), coefficients.head(bases[0]->NumBasisFunctions()).dot(bases[0]->EvaluateBasisFunctions(x)), 1.0e-12);
+  EXPECT_NEAR(modelEval(1), coefficients.tail(bases[1]->NumBasisFunctions()).dot(bases[1]->EvaluateBasisFunctions(x)), 1.0e-12);
 }
 
 class TestVectorValuedImplementationModel : public Model {
