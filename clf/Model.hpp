@@ -64,6 +64,20 @@ public:
   */
   virtual Eigen::VectorXd IdentityOperator(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases) const;
 
+  /// Compute the Jacobian of the model operator with respect to the basis coefficients using finite difference
+  /**
+  The \f$(i,j)\f$ entry of the returned matrix is
+  \f{equation*}{
+  \left. \frac{d (\mathcal{L}(u))_i }{d p_j} \right|_{x},
+  \f}
+  the derivative of the \f$i^{th}\f$ output with respect to the \f$j^{th}\f$ coefficient, evaluated at a point \f$x\f$.
+  @param[in] x The point \f$x \in \Omega \f$
+  @param[in] coefficients The coefficients for each basis---this vector is devided into segments that correspond to coefficients of the bases. The length is the sum of the dimension of each basis.
+  @param[in] bases The basis functions for each output
+  \return The evaluation of \f$\mathcal{L}(u)\f$
+  */
+  virtual Eigen::MatrixXd OperatorJacobianByFD(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases) const;
+
   /// Compute the Jacobian of the model operator with respect to the basis coefficients
   /**
   The \f$(i,j)\f$ entry of the returned matrix is

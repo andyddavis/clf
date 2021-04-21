@@ -57,6 +57,10 @@ Eigen::VectorXd Model::IdentityOperator(Eigen::VectorXd const& x, Eigen::VectorX
    return Eigen::MatrixXd();
  }
 
+  Eigen::MatrixXd Model::OperatorJacobianByFD(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases) const {
+   return Eigen::MatrixXd();
+ }
+
 Eigen::VectorXd Model::RightHandSide(Eigen::VectorXd const& x) const {
   if( x.size()!=inputDimension) { throw exceptions::ModelHasWrongInputOutputDimensions(exceptions::ModelHasWrongInputOutputDimensions::Type::INPUT, exceptions::ModelHasWrongInputOutputDimensions::Function::RHS, x.size(), inputDimension); }
   Eigen::VectorXd rhs;
