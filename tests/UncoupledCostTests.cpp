@@ -4,6 +4,7 @@
 #include "clf/SupportPointCloud.hpp"
 
 namespace pt = boost::property_tree;
+using namespace muq::Modeling;
 using namespace muq::Optimization;
 using namespace clf;
 
@@ -87,4 +88,11 @@ TEST(UncoupledCostTests, Construction) {
   // compute the cost
   const double cst = cost->Cost(coefficients);
   EXPECT_NEAR(cst, trueCost, 1.0e-12);
+
+  // compute the gradient
+  const Eigen::VectorXd gradFD = cost->GradientByFD(0, 0, ref_vector<Eigen::VectorXd>(1, coefficients), Eigen::VectorXd::Ones(1));
+  const Eigen::VectorXd grad = cost->Gradient(0, std::vector<Eigen::VectorXd>(1, coefficients), Eigen::VectorXd::Ones(1).eval());
+
+  std::cout << "gradFD: " << gradFD.transpose() << std::endl;
+  std::cout << "grad: " << grad.transpose() << std::endl;
 }

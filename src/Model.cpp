@@ -15,6 +15,28 @@ double Model::NearestNeighborKernel(double const delta) const {
 }
 
 Eigen::VectorXd Model::Operator(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases) const {
+  if( x.size()!=inputDimension) { throw exceptions::ModelHasWrongInputOutputDimensions(exceptions::ModelHasWrongInputOutputDimensions::Type::INPUT, exceptions::ModelHasWrongInputOutputDimensions::Function::OPERATOR, x.size(), inputDimension); }
+
+  // the action of the operator at x
+  Eigen::VectorXd output;
+
+  // try to call the implementation of the operator
+  try {
+    output = OperatorImpl(x, coefficients, bases);
+  } catch( exceptions::ModelHasNotImplemented const& exc ) {
+    // the user has not implemented the operator, so use the identity
+    output = IdentityOperator(x, coefficients, bases);
+  }
+
+  // make sure the output dimension is correct
+  if( output.size()!=outputDimension) { throw exceptions::ModelHasWrongInputOutputDimensions(exceptions::ModelHasWrongInputOutputDimensions::Type::OUTPUT, exceptions::ModelHasWrongInputOutputDimensions::Function::OPERATOR, output.size(), outputDimension); }
+
+  return output;
+}
+
+Eigen::VectorXd Model::IdentityOperator(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases) const {
+  if( x.size()!=inputDimension) { throw exceptions::ModelHasWrongInputOutputDimensions(exceptions::ModelHasWrongInputOutputDimensions::Type::INPUT, exceptions::ModelHasWrongInputOutputDimensions::Function::OPERATOR, x.size(), inputDimension); }
+
   assert(bases.size()==outputDimension);
   Eigen::VectorXd output(outputDimension);
   std::size_t runningind = 0;
@@ -26,6 +48,15 @@ Eigen::VectorXd Model::Operator(Eigen::VectorXd const& x, Eigen::VectorXd const&
   return output;
 }
 
+ Eigen::VectorXd Model::OperatorImpl(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases) const {
+   throw exceptions::ModelHasNotImplemented(exceptions::ModelHasNotImplemented::Type::BOTH, exceptions::ModelHasNotImplemented::Function::OPERATOR);
+   return Eigen::VectorXd();
+ }
+
+ Eigen::MatrixXd Model::OperatorJacobian(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases) const {
+   return Eigen::MatrixXd();
+ }
+
 Eigen::VectorXd Model::RightHandSide(Eigen::VectorXd const& x) const {
   if( x.size()!=inputDimension) { throw exceptions::ModelHasWrongInputOutputDimensions(exceptions::ModelHasWrongInputOutputDimensions::Type::INPUT, exceptions::ModelHasWrongInputOutputDimensions::Function::RHS, x.size(), inputDimension); }
   Eigen::VectorXd rhs;
@@ -33,12 +64,12 @@ Eigen::VectorXd Model::RightHandSide(Eigen::VectorXd const& x) const {
   // try to call the vector implementation
   try {
     rhs = RightHandSideVectorImpl(x);
-  } catch( exceptions::ModelHasNotImplementedRHS const& excvector ) {
+  } catch( exceptions::ModelHasNotImplemented const& excvector ) {
     try {
       rhs.resize(outputDimension);
       for( std::size_t i=0; i<outputDimension; ++i ) { rhs(i) = RightHandSideComponentImpl(x, i); }
-    } catch( exceptions::ModelHasNotImplementedRHS const& exccomponent ) {
-      throw exceptions::ModelHasNotImplementedRHS(exceptions::ModelHasNotImplementedRHS::Type::BOTH);
+    } catch( exceptions::ModelHasNotImplemented const& exccomponent ) {
+      throw exceptions::ModelHasNotImplemented(exceptions::ModelHasNotImplemented::Type::BOTH, exceptions::ModelHasNotImplemented::Function::RHS);
     }
   }
 
@@ -48,11 +79,11 @@ Eigen::VectorXd Model::RightHandSide(Eigen::VectorXd const& x) const {
 }
 
 Eigen::VectorXd Model::RightHandSideVectorImpl(Eigen::VectorXd const& x) const {
-  throw exceptions::ModelHasNotImplementedRHS(exceptions::ModelHasNotImplementedRHS::Type::VECTOR);
+  throw exceptions::ModelHasNotImplemented(exceptions::ModelHasNotImplemented::Type::VECTOR, exceptions::ModelHasNotImplemented::Function::RHS);
   return Eigen::VectorXd();
 }
 
 double Model::RightHandSideComponentImpl(Eigen::VectorXd const& x, std::size_t const outind) const {
-  throw exceptions::ModelHasNotImplementedRHS(exceptions::ModelHasNotImplementedRHS::Type::COMPONENT);
+  throw exceptions::ModelHasNotImplemented(exceptions::ModelHasNotImplemented::Type::COMPONENT, exceptions::ModelHasNotImplemented::Function::RHS);
   return 0.0;
 }

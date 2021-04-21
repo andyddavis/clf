@@ -31,3 +31,23 @@ double UncoupledCost::CostImpl(muq::Modeling::ref_vector<Eigen::VectorXd> const&
 
   return cost/(2.0*pnt->numNeighbors);
 }
+
+ void UncoupledCost::GradientImpl(unsigned int const inputDimWrt, muq::Modeling::ref_vector<Eigen::VectorXd> const& input, Eigen::VectorXd const& sensitivity) {
+   // get the support point
+   auto pnt = point.lock();
+   assert(pnt);
+
+   // get the kernel evaluation
+   const Eigen::VectorXd kernel = pnt->NearestNeighborKernel();
+   assert(kernel.size()==pnt->numNeighbors);
+
+   // loop through the neighbors
+   double cost = 0.0;
+   for( std::size_t i=0; i<pnt->numNeighbors; ++i ) {
+     // the location of the neighbor
+     const Eigen::VectorXd& neighx = pnt->NearestNeighbor(i);
+   }
+
+   this->gradient = Eigen::VectorXd::Zero(inputSizes(0));
+   this->gradient *= sensitivity(0);
+ }

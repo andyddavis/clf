@@ -52,10 +52,16 @@ public:
   const std::size_t dim;
 
 private:
+
+  /// The dimensions for the right hand side are wrong
+  void WrongRHSDimensions();
+
+  /// The dimensions for the operator are wrong
+  void WrongOperatorDimensions();
 };
 
-/// The model has not implemented the right hand side function
-class ModelHasNotImplementedRHS : virtual public CLFException {
+/// The model has not implemented the right hand side function or the operator
+class ModelHasNotImplemented : virtual public CLFException {
 public:
 
   /// Which potential implementation threw this exception?
@@ -70,12 +76,25 @@ public:
     BOTH
   };
 
-  ModelHasNotImplementedRHS(Type const& type);
+  /// Was the right hand side or the operator called not implemented
+  enum Function {
+    /// The right hand side is wrong
+    RHS,
 
-  virtual ~ModelHasNotImplementedRHS() = default;
+    /// The operator is wrong
+    OPERATOR
+  };
+
+
+  ModelHasNotImplemented(Type const& type, Function const& func);
+
+  virtual ~ModelHasNotImplemented() = default;
 
   /// Which potential implementation threw this exception?
-  Type type;
+  const Type type;
+
+  /// Was the right hand side function or the operator not implemented?
+  const Function func;
 private:
 };
 

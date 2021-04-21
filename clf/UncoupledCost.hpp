@@ -29,6 +29,8 @@ protected:
 
   virtual double CostImpl(muq::Modeling::ref_vector<Eigen::VectorXd> const& input) override;
 
+  virtual void GradientImpl(unsigned int const inputDimWrt, muq::Modeling::ref_vector<Eigen::VectorXd> const& input, Eigen::VectorXd const& sensitivity) override;
+
 private:
 };
 
