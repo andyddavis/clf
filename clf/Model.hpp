@@ -25,6 +25,7 @@ Parameter Key | Type | Default Value | Description |
 ------------- | ------------- | ------------- | ------------- |
 "InputDimension"   | <tt>std::size_t</tt> | <tt>1</tt> | The input dimension \f$d\f$. |
 "OutputDimension"   | <tt>std::size_t</tt> | <tt>1</tt> | The output dimension \f$m\f$. |
+"FiniteDifferenceStep"   | <tt>double</tt> | <tt>1.0e-6</tt> | The parameter used to approximate derivatives with finite difference. |
 */
 class Model {
 public:
@@ -92,6 +93,16 @@ public:
   */
   virtual Eigen::MatrixXd OperatorJacobian(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases) const;
 
+  /// Compute the Jacobian (with respect to coefficients) of the identity operator given the bases
+  /**
+  The Jacobian of the identity is simply the basis evaluated at the given location
+  @param[in] x The point \f$x \in \Omega \f$
+  @param[in] bases The basis functions for each output
+  @param[in] numCoeffs The total number of basis functions, defaults to zero which means we need to compute this value by summing over the given basis functions
+  \return The Jacobian of the identity operator
+  */
+  Eigen::MatrixXd IdentityOperatorJacboian(Eigen::VectorXd const& x, std::vector<std::shared_ptr<const BasisFunctions> > const& bases, std::size_t numCoeffs = 0) const;
+
   /// Implement the right hand side function \f$f\f$
   /**
   @param[in] x The point \f$x \in \Omega \f$
@@ -123,6 +134,20 @@ protected:
   */
   virtual Eigen::VectorXd OperatorImpl(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases) const;
 
+  /// Implement the Jacobian of action of the operator \f$\mathcal{L}(u)\f$
+  /**
+  The \f$(i,j)\f$ entry of the returned matrix is
+  \f{equation*}{
+  \left. \frac{d (\mathcal{L}(u))_i }{d p_j} \right|_{x},
+  \f}
+  the derivative of the \f$i^{th}\f$ output with respect to the \f$j^{th}\f$ coefficient, evaluated at a point \f$x\f$.
+  @param[in] x The point \f$x \in \Omega \f$
+  @param[in] coefficients The coefficients for each basis---this vector is devided into segments that correspond to coefficients of the bases. The length is the sum of the dimension of each basis.
+  @param[in] bases The basis functions for each output
+  \return The evaluation of \f$\mathcal{L}(u)\f$
+  */
+  virtual Eigen::MatrixXd OperatorJacobianImpl(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases) const;
+
   /// Implement the right hand side function \f$f\f$
   /**
   @param[in] x The point \f$x \in \Omega \f$
@@ -132,6 +157,9 @@ protected:
   virtual double RightHandSideComponentImpl(Eigen::VectorXd const& x, std::size_t const outind) const;
 
 private:
+
+  /// The parameter used to approximate derivatives with finite difference.
+  const double fdEps;
 };
 
 } // namespace clf

@@ -69,7 +69,7 @@ public:
   /// Transform into the global coordinate
   /**
   Given the local coordinate \f$\hat{x} \in \mathbb{R}^{d}\f$ compute \f$y = \delta \hat{x} + x\f$.
-  @param[in] y The local coordinate \f$\hat{x} \in \mathbb{R}^{d}\f$
+  @param[in] xhat The local coordinate \f$\hat{x} \in \mathbb{R}^{d}\f$
   \return The global coordinate \f$y = \delta \hat{x} + x\f$
   */
   Eigen::VectorXd GlobalCoordinate(Eigen::VectorXd const& xhat) const;
