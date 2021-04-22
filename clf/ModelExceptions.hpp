@@ -31,7 +31,16 @@ public:
     OPERATOR,
 
     /// The Jacobian of the operator with respect to the coefficients is wrong
-    OPERATOR_JACOBIAN
+    OPERATOR_JACOBIAN,
+
+    /// The Hessian of the operator with respect to the coefficients (input dimension only)
+    OPERATOR_HESSIAN,
+
+    /// The Hessian of the operator with respect to the coefficients (wrong number of output matrices)
+    OPERATOR_HESSIAN_VECTOR,
+
+    /// The Hessian of the operator with respect to the coefficients (one of the matrices has the wrong dimension)
+    OPERATOR_HESSIAN_MATRIX
   };
 
   /**
@@ -42,6 +51,7 @@ public:
   */
   ModelHasWrongInputOutputDimensions(Type const& type, Function const& func, std::size_t const givendim, std::size_t const dim);
 
+  /// This constructor is used with the output of the operator Jacobian has the wrong dimension
   /**
   @param[in] func Was the wrong dimension when calling the right hand side function or the operator?
   @param[in] givendim1 The given first dimension
@@ -50,6 +60,18 @@ public:
   @param[in] dim2 The expected second dimension
   */
   ModelHasWrongInputOutputDimensions(Function const& func, std::size_t const givendim1, std::size_t const dim1, std::size_t const givendim2, std::size_t const dim2);
+
+  /// This constructor is used with the output of the operator Hessian has the wrong dimension
+  /**
+  @param[in] func Was the wrong dimension when calling the right hand side function or the operator?
+  @param[in] givendim1 The given first dimension
+  @param[in] dim1 The expected first dimension
+  @param[in] givendim2 The given second dimension
+  @param[in] dim2 The expected second dimension
+  @param[in] givendim3 The given third dimension
+  @param[in] dim3 The expected third dimension
+  */
+  //ModelHasWrongInputOutputDimensions(Function const& func, std::size_t const givendim1, std::size_t const dim1, std::size_t const givendim2, std::size_t const dim2, std::size_t const givendim3, std::size_t const dim3);
 
   virtual ~ModelHasWrongInputOutputDimensions() = default;
 
@@ -90,6 +112,13 @@ private:
   @param[in] type Is the input or output dimension wrong?
   */
   void WrongOperatorJacobianDimensions(Type const& type);
+
+  /// The dimensions for the Hessian of the operator are wrong
+  /**
+  @param[in] type Is the input or output dimension wrong?
+  @param[in] func How exactly did the Hessian fail to have the wrong input/output dimensions
+  */
+  void WrongOperatorHessianDimensions(Type const& type, Function const& func);
 };
 
 /// The model has not implemented the right hand side function or the operator
@@ -117,7 +146,10 @@ public:
     OPERATOR,
 
     /// The Jacobian of the operator is not implemented
-    OPERATOR_JACOBIAN
+    OPERATOR_JACOBIAN,
+
+    /// The Hessian of the operator with respect to the coefficients is wrong
+    OPERATOR_HESSIAN
   };
 
 

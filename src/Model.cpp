@@ -74,7 +74,7 @@ Eigen::VectorXd Model::IdentityOperator(Eigen::VectorXd const& x, Eigen::VectorX
      }
 
      // the operator HAS been implemented (but not the Jacobian) so return the finite difference approximation
-     if( jac.size()==0 ) { jac = OperatorJacobianByFD(x, coefficients, bases); }
+     if( jac.size()==0 ) { jac = OperatorJacobianByFD(x, coefficients, bases, u); }
    }
 
    if( jac.rows()!=outputDimension | jac.cols()!=coefficients.size() ) { throw exceptions::ModelHasWrongInputOutputDimensions(exceptions::ModelHasWrongInputOutputDimensions::Function::OPERATOR_JACOBIAN, jac.rows(), outputDimension, jac.cols(), coefficients.size()); }
@@ -87,9 +87,12 @@ Eigen::VectorXd Model::IdentityOperator(Eigen::VectorXd const& x, Eigen::VectorX
    return Eigen::MatrixXd();
  }
 
- Eigen::MatrixXd Model::OperatorJacobianByFD(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases) const {
+ Eigen::MatrixXd Model::OperatorJacobianByFD(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases, Eigen::VectorXd const& eval) const {
     // compute the reference action of the operator
-    const Eigen::VectorXd u = Operator(x, coefficients, bases);
+    Eigen::VectorXd u;
+    if( eval.size()==0 ) { u = Operator(x, coefficients, bases); }
+    assert(eval.size()==0 || u.size()==0);
+    assert(eval.size()==outputDimension || u.size()==outputDimension);
 
     // the operator jacobian with respect to the coefficients
     Eigen::MatrixXd jac(outputDimension, coefficients.size());
@@ -102,7 +105,7 @@ Eigen::VectorXd Model::IdentityOperator(Eigen::VectorXd const& x, Eigen::VectorX
       coeffPlus(i) += fdEps;
 
       // compute the derivative using finite difference
-      jac.col(i) = (Operator(x, coeffPlus, bases)-u)/fdEps;
+      jac.col(i) = (Operator(x, coeffPlus, bases)-(eval.size()==0? u : eval))/fdEps;
     }
 
    return jac;
@@ -123,6 +126,64 @@ Eigen::VectorXd Model::IdentityOperator(Eigen::VectorXd const& x, Eigen::VectorX
    assert(ind==numCoeffs);
 
    return jac;
+ }
+
+ std::vector<Eigen::MatrixXd> Model::OperatorHessianByFD(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases, Eigen::MatrixXd const& jacEval) const {
+   // compute the reference jacobian
+   Eigen::MatrixXd jac;
+   if( jacEval.size()==0 ) { jac = OperatorJacobian(x, coefficients, bases); }
+   assert(jacEval.size()==0 || jac.size()==0);
+   assert(jacEval.rows()==outputDimension || jac.rows()==outputDimension);
+   assert(jacEval.cols()==coefficients.size() || jac.cols()==coefficients.size());
+
+   std::vector<Eigen::MatrixXd> hess(coefficients.size());
+
+   // the coefficients plus epsilon
+    Eigen::VectorXd coeffPlus = coefficients;
+    for( std::size_t i=0; i<coefficients.size(); ++i ) {
+      // add to the ith coefficient
+      if( i>0 ) { coeffPlus(i-1) -= fdEps; }
+      coeffPlus(i) += fdEps;
+
+      // compute the second derivative using finite difference
+      hess[i] = (OperatorJacobian(x, coeffPlus, bases)-(jac.size()==0? jacEval : jac))/fdEps;
+    }
+
+   return hess;
+ }
+
+ std::vector<Eigen::MatrixXd> Model::OperatorHessian(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases) const {
+   if( x.size()!=inputDimension) { throw exceptions::ModelHasWrongInputOutputDimensions(exceptions::ModelHasWrongInputOutputDimensions::Type::INPUT, exceptions::ModelHasWrongInputOutputDimensions::Function::OPERATOR_HESSIAN, x.size(), inputDimension); }
+
+   std::vector<Eigen::MatrixXd> hess;
+
+   // try to evaluate the model hessian
+   try {
+     hess = OperatorHessianImpl(x, coefficients, bases);
+   } catch( exceptions::ModelHasNotImplemented const& exc ) {
+     // the model HAS been implemented
+     try {
+       const Eigen::VectorXd u = OperatorImpl(x, coefficients, bases);
+     } catch( exceptions::ModelHasNotImplemented const& exc ) {
+       // the operator HAS NOT been implemented---return the hessian of the identity
+       hess.resize(coefficients.size(), Eigen::MatrixXd::Zero(outputDimension, coefficients.size()));
+     }
+
+     // the operator HAS been implemented (but not the Hessian) so return the finite difference approximation
+     if( hess.empty() ) { hess = OperatorHessianByFD(x, coefficients, bases); }
+   }
+
+   if( hess.size()!=coefficients.size() ) { throw exceptions::ModelHasWrongInputOutputDimensions(exceptions::ModelHasWrongInputOutputDimensions::Type::OUTPUT, exceptions::ModelHasWrongInputOutputDimensions::Function::OPERATOR_HESSIAN_VECTOR, hess.size(), coefficients.size()); }
+   for( const auto& it : hess ) {
+     if( it.rows()!=outputDimension | it.cols()!=coefficients.size() ) { throw exceptions::ModelHasWrongInputOutputDimensions(exceptions::ModelHasWrongInputOutputDimensions::Function::OPERATOR_HESSIAN_MATRIX, it.rows(), outputDimension, it.cols(), coefficients.size()); }
+   }
+
+   return hess;
+ }
+
+ std::vector<Eigen::MatrixXd> Model::OperatorHessianImpl(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases) const {
+   throw exceptions::ModelHasNotImplemented(exceptions::ModelHasNotImplemented::Type::BOTH, exceptions::ModelHasNotImplemented::Function::OPERATOR_HESSIAN);
+   return std::vector<Eigen::MatrixXd>();
  }
 
 Eigen::VectorXd Model::RightHandSide(Eigen::VectorXd const& x) const {
