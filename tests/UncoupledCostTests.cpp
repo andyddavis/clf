@@ -26,7 +26,7 @@ protected:
   inline virtual Eigen::VectorXd OperatorImpl(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases) const override {
     assert(bases.size()==outputDimension);
     Eigen::VectorXd output = IdentityOperator(x, coefficients, bases);
-    output = output.array()*output.array();
+    output += (output.array()*output.array()).matrix();
 
     return output;
   }
@@ -40,12 +40,12 @@ protected:
       const Eigen::VectorXd phi = bases[i]->EvaluateBasisFunctions(x);
       assert(phi.size()==basisSize);
 
-      jac.row(i).segment(ind, basisSize) = phi.dot(coefficients.segment(ind, basisSize))*phi;
+      jac.row(i).segment(ind, basisSize) = 2.0*phi.dot(coefficients.segment(ind, basisSize))*phi + phi;
 
       ind += basisSize;
     }
 
-    return 2.0*jac;
+    return jac;
   }
 
   /// Compute the true Hessian of the operator with respect to the coefficients
@@ -69,45 +69,66 @@ protected:
 private:
 };
 
-TEST(UncoupledCostTests, CostEvaluationAndDerivatives) {
-  // the input and output dimensions
-  const std::size_t indim = 3, outdim = 2;
+class UncoupledCostTests : public::testing::Test {
+public:
+  /// Set up information to test the support point
+  virtual void SetUp() override {
+    // the input and output dimensions
+    const std::size_t indim = 3, outdim = 2;
 
-  pt::ptree modelOptions;
-  modelOptions.put("InputDimension", indim);
-  modelOptions.put("OutputDimension", outdim);
+    pt::ptree modelOptions;
+    modelOptions.put("InputDimension", indim);
+    modelOptions.put("OutputDimension", outdim);
 
-  // the order of the total order polynomial and sin/cos bases
-  const std::size_t orderPoly = 3, orderSinCos = 2;
+    // the order of the total order polynomial and sin/cos bases
+    const std::size_t orderPoly = 5, orderSinCos = 2;
 
-  // options for the support point
-  pt::ptree suppOptions;
-  suppOptions.put("NumNeighbors", 75);
-  suppOptions.put("BasisFunctions", "Basis1, Basis2");
-  suppOptions.put("Basis1.Type", "TotalOrderSinCos");
-  suppOptions.put("Basis1.Order", orderSinCos);
-  suppOptions.put("Basis2.Type", "TotalOrderPolynomials");
-  suppOptions.put("Basis2.Order", orderPoly);
-  auto point = SupportPoint::Construct(
-    Eigen::VectorXd::Random(indim),
-    std::make_shared<ExampleIdentityModelForUncoupledCostTests>(modelOptions),
-    suppOptions);
-
-  // create a support point cloud so that this point has nearest neighbors
-  std::vector<std::shared_ptr<SupportPoint> > supportPoints(75);
-  supportPoints[0] = point;
-  for( std::size_t i=1; i<supportPoints.size(); ++i ) {
-    supportPoints[i] = SupportPoint::Construct(
+    // options for the support point
+    pt::ptree suppOptions;
+    suppOptions.put("NumNeighbors", 75);
+    suppOptions.put("BasisFunctions", "Basis1, Basis2");
+    suppOptions.put("Basis1.Type", "TotalOrderSinCos");
+    suppOptions.put("Basis1.Order", orderSinCos);
+    suppOptions.put("Basis2.Type", "TotalOrderPolynomials");
+    suppOptions.put("Basis2.Order", orderPoly);
+    point = SupportPoint::Construct(
       Eigen::VectorXd::Random(indim),
       std::make_shared<ExampleIdentityModelForUncoupledCostTests>(modelOptions),
       suppOptions);
-  }
-  pt::ptree ptSupportPointCloud;
-  auto cloud = SupportPointCloud::Construct(supportPoints, ptSupportPointCloud);
 
+    // create a support point cloud so that this point has nearest neighbors
+    supportPoints.resize(75);
+    supportPoints[0] = point;
+    for( std::size_t i=1; i<supportPoints.size(); ++i ) {
+      supportPoints[i] = SupportPoint::Construct(
+        point->x + 0.1*Eigen::VectorXd::Random(indim), // choose a bunch of points that are close to the point we care about
+        std::make_shared<ExampleIdentityModelForUncoupledCostTests>(modelOptions),
+        suppOptions);
+      }
+      pt::ptree ptSupportPointCloud;
+      cloud = SupportPointCloud::Construct(supportPoints, ptSupportPointCloud);
+    }
+
+  /// Make sure everything is what we expect
+  virtual void TearDown() override {}
+
+  std::vector<std::shared_ptr<SupportPoint> > supportPoints;
+
+  std::shared_ptr<SupportPoint> point;
+
+  std::shared_ptr<SupportPointCloud> cloud;
+
+  const double regularizationScale = 0.5;
+private:
+};
+
+TEST_F(UncoupledCostTests, CostEvaluationAndDerivatives) {
   // create the uncoupled cost
-  auto cost = std::make_shared<UncoupledCost>(point);
+  pt::ptree costOptions;
+  costOptions.put("RegularizationParameter", regularizationScale);
+  auto cost = std::make_shared<UncoupledCost>(point, costOptions);
   EXPECT_EQ(cost->inputSizes(0), point->NumCoefficients());
+  EXPECT_DOUBLE_EQ(cost->regularizationScale, regularizationScale);
 
   // the points should be the same
   auto costPt = cost->point.lock();
@@ -125,6 +146,7 @@ TEST(UncoupledCostTests, CostEvaluationAndDerivatives) {
       const Eigen::VectorXd diff = point->Operator(supportPoints[i]->x, coefficients) - point->model->RightHandSide(supportPoints[i]->x);
       trueCost += kernel(i)*diff.dot(diff);
     }
+    trueCost += regularizationScale*coefficients.dot(coefficients);
     trueCost /= (2.0*supportPoints.size());
   }
 
@@ -152,4 +174,15 @@ TEST(UncoupledCostTests, CostEvaluationAndDerivatives) {
 
   // the finite difference and the exact Hessian should be similar
   EXPECT_NEAR((hessFD-hess).norm()/hessFD.norm(), 0.0, 1.0e-5);
+}
+
+TEST_F(UncoupledCostTests, MinimizeOnePoint) {
+  point->MinimizeUncoupledCost();
+
+  for( const auto& it : supportPoints ) {
+    const Eigen::VectorXd eval = point->EvaluateLocalFunction(it->x);
+    const Eigen::VectorXd operatorEval = (eval.array()*eval.array()).matrix()+eval;
+    EXPECT_EQ(eval.size(), point->model->outputDimension);
+    for( std::size_t i=0; i<eval.size(); ++i ) { EXPECT_NEAR(it->x.prod(), operatorEval(i), 1.0e-2); }
+  }
 }

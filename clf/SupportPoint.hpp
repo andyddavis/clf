@@ -3,6 +3,7 @@
 
 #include "clf/SupportPointBasis.hpp"
 #include "clf/Model.hpp"
+#include "clf/UncoupledCost.hpp"
 #include "clf/SupportPointExceptions.hpp"
 
 namespace clf {
@@ -25,6 +26,7 @@ Parameter Key | Type | Default Value | Description |
 ------------- | ------------- | ------------- | ------------- |
 "OutputDimension"   | <tt>std::size_t</tt> | <tt>1</tt> | The output dimension of the support point. |
 "Radius"   | <tt>double</tt> | <tt>1.0</tt> | The initial value of the \f$\delta\f$ parameter. |
+"RegularizationParameter"   | <tt>double</tt> | <tt>0.0</tt> | The regularization parameter for the uncoupled cost (see clf::UncoupledCost). |
 "BasisFunctions"   | <tt>std::string</tt> |--- | The options to make the basis functions for each output, separated by commas (see SupportPoint::CreateBasisFunctions) |
 "NumNeighbors"   | <tt>std::string</tt> | <tt>""</tt> | A comma-seperated list of the number of nearest neighbors to use to compute the coefficients for each output (if empty, use the number required to interpolate plus one) |
 */
@@ -78,7 +80,10 @@ public:
   std::size_t NumCoefficients() const;
 
   /// Minimize the uncoupled cost function for this support point
-  void MinimizeUncoupledCost();
+  /**
+  \return The uncoupled cost at the optimal coefficients value
+  */
+  double MinimizeUncoupledCost();
 
   /// The support point associated with the \f$j^{th}\f$ nearest neighbor
   /**
@@ -119,6 +124,13 @@ public:
   \return The number of nearest neighbors
   */
   std::size_t NumNeighbors() const;
+
+  /// Evaluate the local function associated with this support point
+  /**
+  @param[in] loc The point where we want to evaluate the local function
+  \return The function evaluation
+  */
+  Eigen::VectorXd EvaluateLocalFunction(Eigen::VectorXd const& loc) const;
 
   /// The location of the support point \f$x\f$.
   const Eigen::VectorXd x;
@@ -173,6 +185,12 @@ private:
 
   /// The cloud that stores this point and its nearest neighbor
   std::weak_ptr<const SupportPointCloud> cloud;
+
+  /// The uncoupled cost function
+  std::shared_ptr<UncoupledCost> uncoupledCost;
+
+  /// The coefficients used to evaluate the local function associated with this support point
+  Eigen::VectorXd coefficients;
 };
 
 } // namespace clf

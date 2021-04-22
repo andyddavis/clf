@@ -1,5 +1,7 @@
 #include "clf/SupportPoint.hpp"
 
+#include <MUQ/Optimization/NLoptOptimizer.h>
+
 #include "clf/UtilityFunctions.hpp"
 #include "clf/PolynomialBasis.hpp"
 #include "clf/SinCosBasis.hpp"
@@ -7,6 +9,7 @@
 
 namespace pt = boost::property_tree;
 using namespace muq::Modeling;
+using namespace muq::Optimization;
 using namespace clf;
 
 SupportPoint::SupportPoint(Eigen::VectorXd const& x, std::shared_ptr<const Model> const& model, pt::ptree const& pt) : x(x), model(model) {}
@@ -24,6 +27,12 @@ std::shared_ptr<SupportPoint> SupportPoint::Construct(Eigen::VectorXd const& x, 
   for( const auto& it : bases ) { assert(it); }
   point->bases = bases;
   point->numNeighbors = DetermineNumNeighbors(bases, pt);
+
+  // set the coefficients to zero
+  point->coefficients = Eigen::VectorXd::Zero(point->NumCoefficients());
+
+  // create the uncoupled cost
+  point->uncoupledCost = std::make_shared<UncoupledCost>(point, pt);
 
   return point;
 }
@@ -162,8 +171,42 @@ std::vector<Eigen::MatrixXd> SupportPoint::OperatorHessian(Eigen::VectorXd const
   return model->OperatorHessian(loc, coefficients, bases);
 }
 
-void SupportPoint::MinimizeUncoupledCost() {
-  std::cout << "Minimize uncoupled cost" << std::endl;
+double SupportPoint::MinimizeUncoupledCost() {
+  assert(uncoupledCost);
+
+  pt::ptree optimizationOptions;
+  optimizationOptions.put("Ftol.AbsoluteTolerance", 1.0e-15);
+  optimizationOptions.put("Ftol.RelativeTolerance", 1.0e-15);
+  optimizationOptions.put("Xtol.AbsoluteTolerance", 1.0e-15);
+  optimizationOptions.put("Xtol.RelativeTolerance", 1.0e-15);
+  optimizationOptions.put("MaxEvaluations", 1000000); // max number of cost function evaluations
+  optimizationOptions.put("Algorithm", "LBFGS");
+
+  auto opt = std::make_shared<NLoptOptimizer>(uncoupledCost, optimizationOptions);
+
+  std::cout << "cost before: " << uncoupledCost->Cost(coefficients) << std::endl;
+
+  double costVal;
+  std::tie(coefficients, costVal) = opt->Solve(std::vector<Eigen::VectorXd>(1, coefficients));
+
+  std::cout << "soln: " << coefficients.transpose() << std::endl;
+
+  std::cout << "cost after: " << costVal << std::endl;
+
+  return costVal;
+}
+
+Eigen::VectorXd SupportPoint::EvaluateLocalFunction(Eigen::VectorXd const& loc) const {
+  assert(loc.size()==model->inputDimension);
+  Eigen::VectorXd output(model->outputDimension);
+  std::size_t ind = 0;
+  for( std::size_t i=0; i<model->outputDimension; ++i ) {
+    const std::size_t basisSize = bases[i]->NumBasisFunctions();
+    output(i) = coefficients.segment(ind, basisSize).dot(bases[i]->EvaluateBasisFunctions(loc));
+    ind += basisSize;
+  }
+
+  return output;
 }
 
 const std::vector<std::shared_ptr<const BasisFunctions> >& SupportPoint::GetBasisFunctions() const { return bases; }

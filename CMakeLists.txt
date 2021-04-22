@@ -79,10 +79,10 @@ set(CLF_SOURCE
     src/SupportPointExceptions.cpp
     src/SupportPoint.cpp
 
-    src/UncoupledCost.cpp
-
     src/SupportPointCloudExceptions.cpp
     src/SupportPointCloud.cpp
+
+    src/UncoupledCost.cpp
 
     src/LocalFunction.cpp
 )
