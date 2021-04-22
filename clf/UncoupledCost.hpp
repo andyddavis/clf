@@ -22,6 +22,8 @@ public:
 
   virtual ~UncoupledCost() = default;
 
+  Eigen::MatrixXd Hessian(Eigen::VectorXd const& coefficients, bool const gaussNewtonHessian) const;
+
   /// The point that is associated with this cost
   std::weak_ptr<const SupportPoint> point;
 

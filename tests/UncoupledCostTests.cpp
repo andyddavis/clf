@@ -23,12 +23,55 @@ protected:
   */
   inline virtual Eigen::VectorXd RightHandSideVectorImpl(Eigen::VectorXd const& x) const override { return Eigen::VectorXd::Constant(outputDimension, x.prod()); }
 
+  inline virtual Eigen::VectorXd OperatorImpl(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases) const override {
+    assert(bases.size()==outputDimension);
+    Eigen::VectorXd output = IdentityOperator(x, coefficients, bases);
+    output = output.array()*output.array();
+
+    return output;
+  }
+
+  inline virtual Eigen::MatrixXd OperatorJacobianImpl(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases) const override {
+    Eigen::MatrixXd jac = Eigen::MatrixXd::Zero(outputDimension, coefficients.size());
+
+    std::size_t ind = 0;
+    for( std::size_t i=0; i<outputDimension; ++i ) {
+      std::size_t basisSize = bases[i]->NumBasisFunctions();
+      const Eigen::VectorXd phi = bases[i]->EvaluateBasisFunctions(x);
+      assert(phi.size()==basisSize);
+
+      jac.row(i).segment(ind, basisSize) = phi.dot(coefficients.segment(ind, basisSize))*phi;
+
+      ind += basisSize;
+    }
+
+    return 2.0*jac;
+  }
+
+  /// Compute the true Hessian of the operator with respect to the coefficients
+  inline std::vector<Eigen::MatrixXd> OperatorHessianImpl(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases) const {
+    std::vector<Eigen::MatrixXd> hess(outputDimension, Eigen::MatrixXd::Zero(coefficients.size(), coefficients.size()));
+
+    std::size_t ind = 0;
+    for( std::size_t i=0; i<outputDimension; ++i ) {
+      Eigen::VectorXd phi = bases[i]->EvaluateBasisFunctions(x);
+      for( std::size_t k=0; k<phi.size(); ++k ) {
+        for( std::size_t j=0; j<phi.size(); ++j ) {
+          hess[i](ind+k, ind+j) = 2.0*phi(k)*phi(j);
+        }
+      }
+      ind += bases[i]->NumBasisFunctions();
+    }
+
+    return hess;
+  }
+
 private:
 };
 
-TEST(UncoupledCostTests, Construction) {
+TEST(UncoupledCostTests, CostEvaluationAndDerivatives) {
   // the input and output dimensions
-  const std::size_t indim = 4, outdim = 2;
+  const std::size_t indim = 3, outdim = 2;
 
   pt::ptree modelOptions;
   modelOptions.put("InputDimension", indim);
@@ -87,12 +130,26 @@ TEST(UncoupledCostTests, Construction) {
 
   // compute the cost
   const double cst = cost->Cost(coefficients);
-  EXPECT_NEAR(cst, trueCost, 1.0e-12);
+  EXPECT_NEAR(cst, trueCost, 1.0e-10);
 
   // compute the gradient
-  const Eigen::VectorXd gradFD = cost->GradientByFD(0, 0, ref_vector<Eigen::VectorXd>(1, coefficients), Eigen::VectorXd::Ones(1));
-  const Eigen::VectorXd grad = cost->Gradient(0, std::vector<Eigen::VectorXd>(1, coefficients), Eigen::VectorXd::Ones(1).eval());
+  const Eigen::VectorXd gradFD = cost->GradientByFD(0, 0, ref_vector<Eigen::VectorXd>(1, coefficients), 0.75*Eigen::VectorXd::Ones(1));
+  EXPECT_EQ(gradFD.size(), coefficients.size());
+  const Eigen::VectorXd grad = cost->Gradient(0, std::vector<Eigen::VectorXd>(1, coefficients), (0.75*Eigen::VectorXd::Ones(1)).eval());
+  EXPECT_EQ(grad.size(), coefficients.size());
+  EXPECT_NEAR((gradFD-grad).norm()/gradFD.norm(), 0.0, 1.0e-5);
 
-  std::cout << "gradFD: " << gradFD.transpose() << std::endl;
-  std::cout << "grad: " << grad.transpose() << std::endl;
+  // compute the Hessian
+  const Eigen::MatrixXd hessFD = cost->HessianByFD(0, std::vector<Eigen::VectorXd>(1, coefficients));
+  EXPECT_EQ(hessFD.rows(), coefficients.size());
+  EXPECT_EQ(hessFD.cols(), coefficients.size());
+  const Eigen::MatrixXd hessGN = cost->Hessian(coefficients, true);
+  EXPECT_EQ(hessGN.rows(), coefficients.size());
+  EXPECT_EQ(hessGN.cols(), coefficients.size());
+  const Eigen::MatrixXd hess = cost->Hessian(coefficients, false);
+  EXPECT_EQ(hess.rows(), coefficients.size());
+  EXPECT_EQ(hess.cols(), coefficients.size());
+
+  // the finite difference and the exact Hessian should be similar
+  EXPECT_NEAR((hessFD-hess).norm()/hessFD.norm(), 0.0, 1.0e-5);
 }

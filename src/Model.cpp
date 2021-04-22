@@ -136,7 +136,7 @@ Eigen::VectorXd Model::IdentityOperator(Eigen::VectorXd const& x, Eigen::VectorX
    assert(jacEval.rows()==outputDimension || jac.rows()==outputDimension);
    assert(jacEval.cols()==coefficients.size() || jac.cols()==coefficients.size());
 
-   std::vector<Eigen::MatrixXd> hess(coefficients.size());
+   std::vector<Eigen::MatrixXd> hess(outputDimension, Eigen::MatrixXd(coefficients.size(), coefficients.size()));
 
    // the coefficients plus epsilon
     Eigen::VectorXd coeffPlus = coefficients;
@@ -146,7 +146,8 @@ Eigen::VectorXd Model::IdentityOperator(Eigen::VectorXd const& x, Eigen::VectorX
       coeffPlus(i) += fdEps;
 
       // compute the second derivative using finite difference
-      hess[i] = (OperatorJacobian(x, coeffPlus, bases)-(jac.size()==0? jacEval : jac))/fdEps;
+      const Eigen::MatrixXd secondDeriv = (OperatorJacobian(x, coeffPlus, bases)-(jac.size()==0? jacEval : jac))/fdEps;
+      for( std::size_t j=0; j<outputDimension; ++j ) { hess[j].row(i) = secondDeriv.row(j); }
     }
 
    return hess;
@@ -166,16 +167,16 @@ Eigen::VectorXd Model::IdentityOperator(Eigen::VectorXd const& x, Eigen::VectorX
        const Eigen::VectorXd u = OperatorImpl(x, coefficients, bases);
      } catch( exceptions::ModelHasNotImplemented const& exc ) {
        // the operator HAS NOT been implemented---return the hessian of the identity
-       hess.resize(coefficients.size(), Eigen::MatrixXd::Zero(outputDimension, coefficients.size()));
+       hess.resize(outputDimension, Eigen::MatrixXd::Zero(coefficients.size(), coefficients.size()));
      }
 
      // the operator HAS been implemented (but not the Hessian) so return the finite difference approximation
      if( hess.empty() ) { hess = OperatorHessianByFD(x, coefficients, bases); }
    }
 
-   if( hess.size()!=coefficients.size() ) { throw exceptions::ModelHasWrongInputOutputDimensions(exceptions::ModelHasWrongInputOutputDimensions::Type::OUTPUT, exceptions::ModelHasWrongInputOutputDimensions::Function::OPERATOR_HESSIAN_VECTOR, hess.size(), coefficients.size()); }
+   if( hess.size()!=outputDimension ) { throw exceptions::ModelHasWrongInputOutputDimensions(exceptions::ModelHasWrongInputOutputDimensions::Type::OUTPUT, exceptions::ModelHasWrongInputOutputDimensions::Function::OPERATOR_HESSIAN_VECTOR, hess.size(), outputDimension); }
    for( const auto& it : hess ) {
-     if( it.rows()!=outputDimension | it.cols()!=coefficients.size() ) { throw exceptions::ModelHasWrongInputOutputDimensions(exceptions::ModelHasWrongInputOutputDimensions::Function::OPERATOR_HESSIAN_MATRIX, it.rows(), outputDimension, it.cols(), coefficients.size()); }
+     if( it.rows()!=coefficients.size() | it.cols()!=coefficients.size() ) { throw exceptions::ModelHasWrongInputOutputDimensions(exceptions::ModelHasWrongInputOutputDimensions::Function::OPERATOR_HESSIAN_MATRIX, it.rows(), coefficients.size(), it.cols(), coefficients.size()); }
    }
 
    return hess;

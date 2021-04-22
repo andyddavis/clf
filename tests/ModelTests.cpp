@@ -92,14 +92,14 @@ TEST(ModelTests, OperatorEvaluationDefaultImplementation) {
   // evaluate the true hessian using the default implementation
   const std::vector<Eigen::MatrixXd> modelHessFD = model->OperatorHessianByFD(x, coefficients, bases);
   const std::vector<Eigen::MatrixXd> modelHess = model->OperatorHessian(x, coefficients, bases);
-  EXPECT_EQ(modelHessFD.size(), coefficients.size());
-  EXPECT_EQ(modelHess.size(), coefficients.size());
-  for( std::size_t i=0; i<coefficients.size(); ++i ) {
-    EXPECT_EQ(modelHess[i].rows(), outdim);
+  EXPECT_EQ(modelHessFD.size(), outdim);
+  EXPECT_EQ(modelHess.size(), outdim);
+  for( std::size_t i=0; i<outdim; ++i ) {
+    EXPECT_EQ(modelHess[i].rows(), coefficients.size());
     EXPECT_EQ(modelHess[i].cols(), coefficients.size());
     EXPECT_DOUBLE_EQ(modelHess[i].norm(), 0.0);
 
-    EXPECT_EQ(modelHessFD[i].rows(), outdim);
+    EXPECT_EQ(modelHessFD[i].rows(), coefficients.size());
     EXPECT_EQ(modelHessFD[i].cols(), coefficients.size());
     EXPECT_DOUBLE_EQ(modelHessFD[i].norm(), 0.0);
   }
@@ -287,7 +287,7 @@ protected:
   @param[in] bases The basis functions for each output
   \return The evaluation of \f$\mathcal{L}(u)\f$
   */
-  inline virtual std::vector<Eigen::MatrixXd> OperatorHessianImpl(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases) const override { return std::vector<Eigen::MatrixXd>(coefficients.size()+1); }
+  inline virtual std::vector<Eigen::MatrixXd> OperatorHessianImpl(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases) const override { return std::vector<Eigen::MatrixXd>(outputDimension+1); }
 
 private:
 };
@@ -351,8 +351,8 @@ TEST(ModelTests, WrongNumberOfOutputs) {
   } catch( exceptions::ModelHasWrongInputOutputDimensions const& exc ) {
     EXPECT_EQ(exc.type, exceptions::ModelHasWrongInputOutputDimensions::Type::OUTPUT);
     EXPECT_EQ(exc.func, exceptions::ModelHasWrongInputOutputDimensions::Function::OPERATOR_HESSIAN_VECTOR);
-    EXPECT_NE(exc.givendim, coefficients.size());
-    EXPECT_EQ(exc.dim, coefficients.size());
+    EXPECT_NE(exc.givendim, outdim);
+    EXPECT_EQ(exc.dim, outdim);
   }
 }
 
@@ -371,8 +371,8 @@ protected:
   \return The evaluation of \f$\mathcal{L}(u)\f$
   */
   inline virtual std::vector<Eigen::MatrixXd> OperatorHessianImpl(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases) const override {
-    std::vector<Eigen::MatrixXd> hess(coefficients.size(), Eigen::MatrixXd(outputDimension, coefficients.size()));
-    hess[0] = Eigen::MatrixXd(outputDimension+1, coefficients.size()+1);
+    std::vector<Eigen::MatrixXd> hess(outputDimension, Eigen::MatrixXd(coefficients.size(), coefficients.size()));
+    hess[0] = Eigen::MatrixXd(coefficients.size()+1, coefficients.size()+1);
     return hess;
   }
 
@@ -406,8 +406,8 @@ TEST(ModelTests, WrongNumberOfOutputsHessianCheck) {
   } catch( exceptions::ModelHasWrongInputOutputDimensions const& exc ) {
     EXPECT_EQ(exc.type, exceptions::ModelHasWrongInputOutputDimensions::Type::OUTPUT);
     EXPECT_EQ(exc.func, exceptions::ModelHasWrongInputOutputDimensions::Function::OPERATOR_HESSIAN_MATRIX);
-    EXPECT_NE(exc.givendim, outdim);
-    EXPECT_EQ(exc.dim, outdim);
+    EXPECT_NE(exc.givendim, coefficients.size());
+    EXPECT_EQ(exc.dim, coefficients.size());
     EXPECT_NE(exc.givendimSecond, coefficients.size());
     EXPECT_EQ(exc.dimSecond, coefficients.size());
   }
@@ -422,15 +422,14 @@ public:
 
   /// Compute the true Hessian of the operator with respect to the coefficients
   inline std::vector<Eigen::MatrixXd> TrueHessian(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases) const {
-    std::vector<Eigen::MatrixXd> hess(coefficients.size());
-    for( std::size_t i=0; i<hess.size(); ++i ) { hess[i] = Eigen::MatrixXd::Zero(outputDimension, coefficients.size()); }
+    std::vector<Eigen::MatrixXd> hess(outputDimension, Eigen::MatrixXd::Zero(coefficients.size(), coefficients.size()));
 
     std::size_t ind = 0;
     for( std::size_t i=0; i<outputDimension; ++i ) {
       Eigen::VectorXd phi = bases[i]->EvaluateBasisFunctions(x);
       for( std::size_t k=0; k<phi.size(); ++k ) {
         for( std::size_t j=0; j<phi.size(); ++j ) {
-          hess[ind+k](i, ind+j) = 2.0*phi(k)*phi(j);
+          hess[i](ind+k, ind+j) = 2.0*phi(k)*phi(j);
         }
       }
       ind += bases[i]->NumBasisFunctions();
@@ -516,12 +515,12 @@ TEST(ModelTests, ComponentWiseImplementation) {
   // evaluate the hessian of the operator
   const std::vector<Eigen::MatrixXd> trueHess = model->TrueHessian(x, coefficients, bases);
   const std::vector<Eigen::MatrixXd> hessFD = model->OperatorHessian(x, coefficients, bases);
-  EXPECT_EQ(trueHess.size(), coefficients.size());
+  EXPECT_EQ(trueHess.size(), outdim);
   EXPECT_EQ(trueHess.size(), hessFD.size());
   for( std::size_t i=0; i<trueHess.size(); ++i ) {
-    EXPECT_EQ(trueHess[i].rows(), outdim);
+    EXPECT_EQ(trueHess[i].rows(), coefficients.size());
     EXPECT_EQ(trueHess[i].cols(), coefficients.size());
-    EXPECT_EQ(hessFD[i].rows(), outdim);
+    EXPECT_EQ(hessFD[i].rows(), coefficients.size());
     EXPECT_EQ(hessFD[i].cols(), coefficients.size());
     EXPECT_NEAR((trueHess[i]-hessFD[i]).norm(), 0.0, 1.0e-8);
   }
@@ -571,15 +570,14 @@ protected:
 
   /// Compute the true Hessian of the operator with respect to the coefficients
   inline std::vector<Eigen::MatrixXd> OperatorHessianImpl(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases) const {
-    std::vector<Eigen::MatrixXd> hess(coefficients.size());
-    for( std::size_t i=0; i<hess.size(); ++i ) { hess[i] = Eigen::MatrixXd::Zero(outputDimension, coefficients.size()); }
+    std::vector<Eigen::MatrixXd> hess(outputDimension, Eigen::MatrixXd::Zero(coefficients.size(), coefficients.size()));
 
     std::size_t ind = 0;
     for( std::size_t i=0; i<outputDimension; ++i ) {
       Eigen::VectorXd phi = bases[i]->EvaluateBasisFunctions(x);
       for( std::size_t k=0; k<phi.size(); ++k ) {
         for( std::size_t j=0; j<phi.size(); ++j ) {
-          hess[ind+k](i, ind+j) = 2.0*phi(k)*phi(j);
+          hess[i](ind+k, ind+j) = 2.0*phi(k)*phi(j);
         }
       }
       ind += bases[i]->NumBasisFunctions();
@@ -630,12 +628,12 @@ TEST(ModelTests, HessianImplementation) {
   // evaluate the hessian of the operator
   const std::vector<Eigen::MatrixXd> hess = model->OperatorHessian(x, coefficients, bases);
   const std::vector<Eigen::MatrixXd> hessFD = model->OperatorHessianByFD(x, coefficients, bases);
-  EXPECT_EQ(hess.size(), coefficients.size());
+  EXPECT_EQ(hess.size(), outdim);
   EXPECT_EQ(hess.size(), hessFD.size());
   for( std::size_t i=0; i<hess.size(); ++i ) {
-    EXPECT_EQ(hess[i].rows(), outdim);
+    EXPECT_EQ(hess[i].rows(), coefficients.size());
     EXPECT_EQ(hess[i].cols(), coefficients.size());
-    EXPECT_EQ(hessFD[i].rows(), outdim);
+    EXPECT_EQ(hessFD[i].rows(), coefficients.size());
     EXPECT_EQ(hessFD[i].cols(), coefficients.size());
     EXPECT_NEAR((hess[i]-hessFD[i]).norm(), 0.0, 1.0e-8);
   }

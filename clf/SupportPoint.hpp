@@ -101,6 +101,13 @@ public:
   */
   Eigen::MatrixXd OperatorJacobian(Eigen::VectorXd const& loc, Eigen::VectorXd const& coefficients) const;
 
+  /// Evaluate the Hessian of the operator applied to the local function at a given point
+  /**
+  @param[in] loc The location where we are evaluating the action of the operator
+  @param[in] coefficients The coefficients that define the local function
+  */
+  std::vector<Eigen::MatrixXd> OperatorHessian(Eigen::VectorXd const& loc, Eigen::VectorXd const& coefficients) const;
+
   /// Get the basis function
   /**
   \return Each component is the basis for the corresponding output
