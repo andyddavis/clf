@@ -59,18 +59,20 @@ protected:
   \f}
   @param[in] x The point where we are evaluating the scalar basis function
   @param[in] ind The index of the \f$i^{th}\f$ scalar basis function
+  @param[in] coordinate The index of the coordinate (the parameter \$x\f$ is the \f$i^{th}\f$ input)
   \return The scalar basis function evaluation
   */
-  virtual double ScalarBasisFunction(double const x, std::size_t const ind) const override;
+  virtual double ScalarBasisFunction(double const x, std::size_t const ind, std::size_t const coordinate) const override;
 
   /// Evaluate the \f$k^{th}\f$ derivative of the scalar basis function \f$\frac{d^k l_i}{d x^{k}}\f$.
   /**
   @param[in] x The point where we are evaluating the scalar basis function
   @param[in] ind The index of the \f$i^{th}\f$ scalar basis function
+  @param[in] coordinate The index of the coordinate (the parameter \$x\f$ is the \f$i^{th}\f$ input)
   @param[in] k We want the \f$k^{th}\f$ derivative
   \return The scalar basis function evaluation
   */
-  virtual double ScalarBasisFunctionDerivative( double const x, std::size_t const ind, std::size_t const k) const override;
+  virtual double ScalarBasisFunctionDerivative( double const x, std::size_t const ind, std::size_t const coordinate, std::size_t const k) const override;
 
 private:
 };

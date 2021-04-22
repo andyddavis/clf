@@ -24,14 +24,15 @@ std::shared_ptr<SupportPointCloud> SupportPointCloud::Construct(std::vector<std:
 void SupportPointCloud::FindNearestNeighbors() const {
   // loop through each support point
   for( const auto& point : supportPoints ) {
+    assert(point);
     // the maximum required nearest neighbors
-    const std::size_t maxNeigh = point->numNeighbors;
-    if( maxNeigh>supportPoints.size() ) { throw exceptions::SupportPointCloudNotEnoughPointsException(supportPoints.size(), maxNeigh); }
+    const std::size_t numNeigh = point->NumNeighbors();
+    if( numNeigh>supportPoints.size() ) { throw exceptions::SupportPointCloudNotEnoughPointsException(supportPoints.size(), numNeigh); }
 
     // find the nearest nieghbors
     std::vector<std::size_t> neighInd; std::vector<double> neighDist;
-    FindNearestNeighbors(point->x, maxNeigh, neighInd, neighDist);
-    assert(neighInd.size()==maxNeigh); assert(neighDist.size()==maxNeigh);
+    FindNearestNeighbors(point->x, numNeigh, neighInd, neighDist);
+    assert(neighInd.size()==numNeigh); assert(neighDist.size()==numNeigh);
 
     // set the nearest neighbors
     point->SetNearestNeighbors(shared_from_this(), neighInd, neighDist);
@@ -105,9 +106,11 @@ void SupportPointCloud::FindNearestNeighbors(Eigen::VectorXd const& point, std::
   assert(k<=supportPoints.size());
 
   // resize the input vecotrs
+  assert(k>0);
   neighInd.resize(k); neighDist.resize(k);
 
   // find the nearest neighbors
+  assert(kdtree);
   const std::size_t nfound = kdtree->knnSearch(point.data(), k, neighInd.data(), neighDist.data());
   assert(nfound==k);
 }

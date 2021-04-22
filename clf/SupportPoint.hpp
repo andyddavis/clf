@@ -1,7 +1,7 @@
 #ifndef SUPPORTPOINT_HPP_
 #define SUPPORTPOINT_HPP_
 
-#include "clf/BasisFunctions.hpp"
+#include "clf/SupportPointBasis.hpp"
 #include "clf/Model.hpp"
 #include "clf/SupportPointExceptions.hpp"
 
@@ -24,13 +24,13 @@ The \f$j^{th}\f$ output of the local function is defined by coordinates \f$p_j \
 Parameter Key | Type | Default Value | Description |
 ------------- | ------------- | ------------- | ------------- |
 "OutputDimension"   | <tt>std::size_t</tt> | <tt>1</tt> | The output dimension of the support point. |
-"InitialRadius"   | <tt>double</tt> | <tt>1.0</tt> | The initial value of the \f$\delta\f$ parameter. |
+"Radius"   | <tt>double</tt> | <tt>1.0</tt> | The initial value of the \f$\delta\f$ parameter. |
 "BasisFunctions"   | <tt>std::string</tt> |--- | The options to make the basis functions for each output, separated by commas (see SupportPoint::CreateBasisFunctions) |
 "NumNeighbors"   | <tt>std::string</tt> | <tt>""</tt> | A comma-seperated list of the number of nearest neighbors to use to compute the coefficients for each output (if empty, use the number required to interpolate plus one) |
 */
 class SupportPoint {
-public:
-
+// make the constructors private because we will always want to wrap the basis in a SupportPointBasis
+private:
   /**
   @param[in] x The location of the support point \f$x\f$
   @param[in] model The model that defines the "data" at this support point
@@ -38,41 +38,23 @@ public:
   */
   SupportPoint(Eigen::VectorXd const& x, std::shared_ptr<const Model> const& model, boost::property_tree::ptree const& pt);
 
+public:
+
+  /**
+  @param[in] x The location of the support point \f$x\f$
+  @param[in] model The model that defines the "data" at this support point
+  @param[in] pt The options for the support point
+  \return A smart pointer to the support point
+  */
+  static std::shared_ptr<SupportPoint> Construct(Eigen::VectorXd const& x, std::shared_ptr<const Model> const& model, boost::property_tree::ptree const& pt);
+
   virtual ~SupportPoint() = default;
-
-  /// The radius of the ball the defines where the local function is relatively accurate
-  /**
-  \return The radius of the ball the defines where the local function is relatively accurate
-  */
-  double Radius() const;
-
-  /// The radius of the ball the defines where the local function is relatively accurate
-  /**
-  \return The radius of the ball the defines where the local function is relatively accurate
-  */
-  double& Radius();
 
   /// Evaluate the nearest neighbor kernel at each neighboring support point
   /**
   \return The kernel evaluation at each support point
   */
   Eigen::VectorXd NearestNeighborKernel() const;
-
-  /// Transform into the local coordinate
-  /**
-  Given the global coordinate \f$y \in \Omega\f$ compute \f$\hat{x}(y) = (y-x)/\delta\f$.
-  @param[in] y The global coordinate \f$y \in \Omega\f$
-  \return The local coordinate \f$\hat{x}(y) = (y-x)/\delta\f$
-  */
-  Eigen::VectorXd LocalCoordinate(Eigen::VectorXd const& y) const;
-
-  /// Transform into the global coordinate
-  /**
-  Given the local coordinate \f$\hat{x} \in \mathbb{R}^{d}\f$ compute \f$y = \delta \hat{x} + x\f$.
-  @param[in] xhat The local coordinate \f$\hat{x} \in \mathbb{R}^{d}\f$
-  \return The global coordinate \f$y = \delta \hat{x} + x\f$
-  */
-  Eigen::VectorXd GlobalCoordinate(Eigen::VectorXd const& xhat) const;
 
   /// Set the nearest neighbors
   /**
@@ -112,22 +94,24 @@ public:
   */
   Eigen::VectorXd Operator(Eigen::VectorXd const& loc, Eigen::VectorXd const& coefficients) const;
 
+  /// Get the basis function
+  /**
+  \return Each component is the basis for the corresponding output
+  */
+  const std::vector<std::shared_ptr<const BasisFunctions> >& GetBasisFunctions() const;
+
+  /// Get the number of nearest neighbors
+  /**
+  \return The number of nearest neighbors
+  */
+  std::size_t NumNeighbors() const;
+
   /// The location of the support point \f$x\f$.
   const Eigen::VectorXd x;
 
   /// The model that defines the data/observations at this support point
   const std::shared_ptr<const Model> model;
 
-  /// The bases that defines this support point
-  /**
-  Each entry corresponds to one of the outputs. This vector has the same length as the number of outputs.
-
-  Evaluating the \f$j^{th}\f$ entry defines the vector \f$\phi_j(y) = [\phi^{(0)}(\hat{x}(y)),\, \phi^{(1)}(\hat{x}(y)),\, ...,\, \phi^{(q_j)}(\hat{x}(y))]^{\top}\f$.
-  */
-  const std::vector<std::shared_ptr<const BasisFunctions> > bases;
-
-  /// The number of nearest neighbors used to compute the coefficients for each output
-  const std::size_t numNeighbors;
 private:
 
   /// Determine the number of nearest nieghbors for each output
@@ -140,6 +124,7 @@ private:
 
   /// Create the basis functions from the given options
   /**
+  @param[in] center The point that defines the center of the local function ball \f$\mathcal{B}_{\delta}(y)\f$ (the parameter \f$y\f$)
   @param[in] indim The input dimension for the support point
   @param[in] outdim The output dimension for the support point
   @param[in] pt The options for the basis functions
@@ -155,11 +140,16 @@ private:
   */
   static std::shared_ptr<const BasisFunctions> CreateBasisFunctions(std::size_t const indim, boost::property_tree::ptree pt);
 
-  /// The parameter \f$\delta\f$ that defines the radius for which we expect this local function to be relatively accurate
+  /// The bases that defines this support point
   /**
-  The default value is \f$\delta=1\f$. This parameter defines the local coordinate transformation \f$\hat{x}(y) = (y-x)/\delta\f$.
+  Each entry corresponds to one of the outputs. This vector has the same length as the number of outputs.
+
+  Evaluating the \f$j^{th}\f$ entry defines the vector \f$\phi_j(y) = [\phi^{(0)}(\hat{x}(y)),\, \phi^{(1)}(\hat{x}(y)),\, ...,\, \phi^{(q_j)}(\hat{x}(y))]^{\top}\f$.
   */
-  double delta;
+  std::vector<std::shared_ptr<const BasisFunctions> > bases;
+
+  /// The number of nearest neighbors used to compute the coefficients for each output
+  std::size_t numNeighbors;
 
   /// The squared distances (Euclidean inner product) between the support point and its \f$j^{th}\f$ nearest neighbor
   std::vector<double> squaredNeighborDistances;

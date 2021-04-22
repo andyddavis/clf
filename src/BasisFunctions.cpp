@@ -53,7 +53,7 @@ double BasisFunctions::EvaluateBasisFunction(Eigen::VectorXd const& x, std::size
   double basisEval = 1.0;
   for( std::size_t i=0; i<x.size(); ++i ) {
     if( std::abs(basisEval)<1.0e-14 ) { return 0.0; }
-    basisEval *= ScalarBasisFunction(x(i), iota(i));
+    basisEval *= ScalarBasisFunction(x(i), iota(i), i);
   }
   return basisEval;
 }
@@ -85,9 +85,9 @@ double BasisFunctions::EvaluateBasisFunctionDerivative(Eigen::VectorXd const& x,
   for( std::size_t i=0; i<x.size(); ++i ) {
     if( std::abs(basisEval)<1.0e-14 ) { return 0.0; }
     if( i==p ) {
-      basisEval *= ScalarBasisFunctionDerivative(x(i), iota(i), k);
+      basisEval *= ScalarBasisFunctionDerivative(x(i), iota(i), i, k);
     } else {
-      basisEval *= ScalarBasisFunction(x(i), iota(i));
+      basisEval *= ScalarBasisFunction(x(i), iota(i), i);
     }
   }
   return basisEval;

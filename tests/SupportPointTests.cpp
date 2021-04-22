@@ -56,29 +56,6 @@ protected:
   std::shared_ptr<SupportPoint> point;
 };
 
-TEST_F(SupportPointTests, LocalCoordinateTransformation) {
-  // create the support point
-  pt.put("BasisFunctions", "Basis1, Basis2, Basis3");
-  pt.put("Basis1.Type", "TotalOrderPolynomials");
-  pt.put("Basis2.Type", "TotalOrderPolynomials");
-  pt.put("Basis3.Type", "TotalOrderPolynomials");
-  point = std::make_shared<SupportPoint>(x, model, pt);
-
-  // the default delta is 1.0
-  EXPECT_DOUBLE_EQ(point->Radius(), 1.0);
-
-  // reset delta
-  const double newdelta = 0.5;
-  point->Radius() = newdelta;
-  EXPECT_DOUBLE_EQ(point->Radius(), newdelta);
-
-  // chose a nearby point and compute the local coordinate
-  const Eigen::VectorXd y = point->x + 0.1*newdelta*Eigen::VectorXd::Random(indim);
-  const Eigen::VectorXd yhat = point->LocalCoordinate(y);
-  EXPECT_NEAR(((y-point->x)/newdelta - yhat).norm(), 0.0, 1.0e-10);
-  EXPECT_NEAR((point->GlobalCoordinate(yhat) - y).norm(), 0.0, 1.0e-10);
-}
-
 TEST_F(SupportPointTests, TotalOrderPolynomials) {
   // the order of the total order polynomial basis
   const std::size_t order = 3;
@@ -91,14 +68,17 @@ TEST_F(SupportPointTests, TotalOrderPolynomials) {
   pt.put("Basis2.Order", order);
   pt.put("Basis3.Type", "TotalOrderPolynomials");
   pt.put("Basis3.Order", order);
-  point = std::make_shared<SupportPoint>(x, model, pt);
-  EXPECT_EQ(point->bases.size(), outdim);
-  EXPECT_EQ(point->numNeighbors, 36);
+  point = SupportPoint::Construct(x, model, pt);
+  const std::vector<std::shared_ptr<const BasisFunctions> >& bases = point->GetBasisFunctions();
+  EXPECT_EQ(bases.size(), outdim);
+  EXPECT_EQ(point->NumNeighbors(), 36);
   for( std::size_t i=0; i<outdim; ++i ) {
-    EXPECT_TRUE(point->bases[i]);
-    EXPECT_TRUE(std::dynamic_pointer_cast<const PolynomialBasis>(point->bases[i]));
+    EXPECT_TRUE(bases[i]);
+    auto pointBasis = std::dynamic_pointer_cast<const SupportPointBasis>(bases[i]);
+    EXPECT_TRUE(pointBasis);
+    EXPECT_TRUE(std::dynamic_pointer_cast<const PolynomialBasis>(pointBasis->basis));
     // the formula for the expected number of basis functions: [dimension]+[order] choose [dimension], in this case the answer is 35 so we hard code it
-    EXPECT_EQ(point->bases[i]->NumBasisFunctions(), 35);
+    EXPECT_EQ(bases[i]->NumBasisFunctions(), 35);
   }
 }
 
@@ -114,14 +94,17 @@ TEST_F(SupportPointTests, TotalOrderSineCosine) {
   pt.put("Basis2.Order", order);
   pt.put("Basis3.Type", "TotalOrderSinCos");
   pt.put("Basis3.Order", order);
-  point = std::make_shared<SupportPoint>(x, model, pt);
-  EXPECT_EQ(point->bases.size(), outdim);
-  EXPECT_EQ(point->numNeighbors, 71);
+  point = SupportPoint::Construct(x, model, pt);
+  const std::vector<std::shared_ptr<const BasisFunctions> >& bases = point->GetBasisFunctions();
+  EXPECT_EQ(bases.size(), outdim);
+  EXPECT_EQ(point->NumNeighbors(), 71);
   for( std::size_t i=0; i<outdim; ++i ) {
-    EXPECT_TRUE(point->bases[i]);
-    EXPECT_TRUE(std::dynamic_pointer_cast<const SinCosBasis>(point->bases[i]));
+    EXPECT_TRUE(bases[i]);
+    auto pointBasis = std::dynamic_pointer_cast<const SupportPointBasis>(bases[i]);
+    EXPECT_TRUE(pointBasis);
+    EXPECT_TRUE(std::dynamic_pointer_cast<const SinCosBasis>(pointBasis->basis));
     // the formula for the expected number of basis functions: [dimension]+[2*order] choose [dimension], in this case the answer is 70 so we hard code it
-    EXPECT_EQ(point->bases[i]->NumBasisFunctions(), 70);
+    EXPECT_EQ(bases[i]->NumBasisFunctions(), 70);
   }
 }
 
@@ -137,19 +120,24 @@ TEST_F(SupportPointTests, MixedBasisTypes) {
   pt.put("Basis2.Order", orderPoly);
   pt.put("Basis3.Type", "TotalOrderSinCos");
   pt.put("Basis3.Order", orderSinCos);
-  point = std::make_shared<SupportPoint>(x, model, pt);
-  EXPECT_EQ(point->bases.size(), outdim);
-  EXPECT_EQ(point->numNeighbors, 71);
+  point = SupportPoint::Construct(x, model, pt);
+  const std::vector<std::shared_ptr<const BasisFunctions> >& bases = point->GetBasisFunctions();
+  EXPECT_EQ(bases.size(), outdim);
+  EXPECT_EQ(point->NumNeighbors(), 71);
   for( std::size_t i=0; i<outdim; ++i ) {
-    EXPECT_TRUE(point->bases[i]);
+    EXPECT_TRUE(bases[i]);
     if( i==1 ) {
-      EXPECT_TRUE(std::dynamic_pointer_cast<const PolynomialBasis>(point->bases[i]));
+      auto pointBasis = std::dynamic_pointer_cast<const SupportPointBasis>(bases[i]);
+      EXPECT_TRUE(pointBasis);
+      EXPECT_TRUE(std::dynamic_pointer_cast<const PolynomialBasis>(pointBasis->basis));
       // the formula for the expected number of basis functions: [dimension]+[order] choose [dimension], in this case the answer is 35 so we hard code it
-      EXPECT_EQ(point->bases[i]->NumBasisFunctions(), 35);
+      EXPECT_EQ(bases[i]->NumBasisFunctions(), 35);
     } else {
-      EXPECT_TRUE(std::dynamic_pointer_cast<const SinCosBasis>(point->bases[i]));
+      auto pointBasis = std::dynamic_pointer_cast<const SupportPointBasis>(bases[i]);
+      EXPECT_TRUE(pointBasis);
+      EXPECT_TRUE(std::dynamic_pointer_cast<const SinCosBasis>(pointBasis->basis));
       // the formula for the expected number of basis functions: [dimension]+[2*order] choose [dimension], in this case the answer is 70 so we hard code it
-      EXPECT_EQ(point->bases[i]->NumBasisFunctions(), 70);
+      EXPECT_EQ(bases[i]->NumBasisFunctions(), 70);
     }
   }
 }
@@ -164,8 +152,8 @@ TEST_F(SupportPointTests, CustomNearestNeighborsWithDefault) {
   pt.put("Basis2.Type", "TotalOrderPolynomials");
   pt.put("Basis3.Type", "TotalOrderSinCos");
   pt.put("NumNeighbors", 85);
-  point = std::make_shared<SupportPoint>(x, model, pt);
-  EXPECT_EQ(point->numNeighbors, 85);
+  point = SupportPoint::Construct(x, model, pt);
+  EXPECT_EQ(point->NumNeighbors(), 85);
 }
 
 TEST_F(SupportPointTests, CustomNearestNeighbors) {
@@ -178,8 +166,8 @@ TEST_F(SupportPointTests, CustomNearestNeighbors) {
   pt.put("Basis2.Type", "TotalOrderPolynomials");
   pt.put("Basis3.Type", "TotalOrderSinCos");
   pt.put("NumNeighbors", 85);
-  point = std::make_shared<SupportPoint>(x, model, pt);
-  EXPECT_EQ(point->numNeighbors, 85);
+  point = SupportPoint::Construct(x, model, pt);
+  EXPECT_EQ(point->NumNeighbors(), 85);
 }
 
 TEST(SupportPointExceptionHandlingTests, WrongNumberOfNearestNeighbors) {
@@ -203,7 +191,7 @@ TEST(SupportPointExceptionHandlingTests, WrongNumberOfNearestNeighbors) {
 
   // not enough bases
   try {
-    auto point = std::make_shared<SupportPoint>(x, model, pt);
+    auto point = SupportPoint::Construct(x, model, pt);
   } catch( exceptions::SupportPointWrongNumberOfNearestNeighbors const& exc ) {
     EXPECT_EQ(exc.output, 0);
     EXPECT_EQ(exc.required, 15);
@@ -230,7 +218,7 @@ TEST(SupportPointExceptionHandlingTests, WrongNumberOfBases) {
   // not enough bases
   try {
     pt.put("BasisFunctions", "Basis1, Basis2");
-    auto point = std::make_shared<SupportPoint>(x, model, pt);
+    auto point = SupportPoint::Construct(x, model, pt);
   } catch( exceptions::SupportPointWrongNumberOfBasesConstructed const& exc ) {
     EXPECT_EQ(exc.outdim, outdim);
     EXPECT_NE(exc.givendim, outdim);
@@ -240,7 +228,7 @@ TEST(SupportPointExceptionHandlingTests, WrongNumberOfBases) {
   // too many bases
   try {
     pt.put("BasisFunctions", "Basis1, Basis2, Basis3, Basis4");
-    auto point = std::make_shared<SupportPoint>(x, model, pt);
+    auto point = SupportPoint::Construct(x, model, pt);
   } catch( exceptions::SupportPointWrongNumberOfBasesConstructed const& exc ) {
     EXPECT_EQ(exc.outdim, outdim);
     EXPECT_NE(exc.givendim, outdim);
@@ -250,7 +238,7 @@ TEST(SupportPointExceptionHandlingTests, WrongNumberOfBases) {
   // leading comma
   try {
     pt.put("BasisFunctions", " , Basis1, Basis2");
-    auto point = std::make_shared<SupportPoint>(x, model, pt);
+    auto point = SupportPoint::Construct(x, model, pt);
   } catch( exceptions::SupportPointWrongNumberOfBasesConstructed const& exc ) {
     EXPECT_EQ(exc.outdim, outdim);
     EXPECT_NE(exc.givendim, outdim);
@@ -260,7 +248,7 @@ TEST(SupportPointExceptionHandlingTests, WrongNumberOfBases) {
   // trailing comma
   try {
     pt.put("BasisFunctions", "Basis1, Basis2, ");
-    auto point = std::make_shared<SupportPoint>(x, model, pt);
+    auto point = SupportPoint::Construct(x, model, pt);
   } catch( exceptions::SupportPointWrongNumberOfBasesConstructed const& exc ) {
     EXPECT_EQ(exc.outdim, outdim);
     EXPECT_NE(exc.givendim, outdim);
@@ -286,7 +274,7 @@ TEST(SupportPointExceptionHandlingTests, InvalidBasisCheck) {
 
   // create the support point
   try {
-    auto point = std::make_shared<SupportPoint>(x, model, pt);
+    auto point = SupportPoint::Construct(x, model, pt);
   } catch( exceptions::SupportPointInvalidBasisException const& exc ) {
     EXPECT_EQ(exc.basisType, UtilityFunctions::ToUpper(basisName));
   }

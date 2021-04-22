@@ -14,11 +14,11 @@ double UncoupledCost::CostImpl(muq::Modeling::ref_vector<Eigen::VectorXd> const&
 
   // get the kernel evaluation
   const Eigen::VectorXd kernel = pnt->NearestNeighborKernel();
-  assert(kernel.size()==pnt->numNeighbors);
+  assert(kernel.size()==pnt->NumNeighbors());
 
   // loop through the neighbors
   double cost = 0.0;
-  for( std::size_t i=0; i<pnt->numNeighbors; ++i ) {
+  for( std::size_t i=0; i<pnt->NumNeighbors(); ++i ) {
     // the location of the neighbor
     const Eigen::VectorXd& neighx = pnt->NearestNeighbor(i);
 
@@ -29,7 +29,7 @@ double UncoupledCost::CostImpl(muq::Modeling::ref_vector<Eigen::VectorXd> const&
     cost += kernel(i)*diff.dot(diff);
   }
 
-  return cost/(2.0*pnt->numNeighbors);
+  return cost/(2.0*pnt->NumNeighbors());
 }
 
  void UncoupledCost::GradientImpl(unsigned int const inputDimWrt, muq::Modeling::ref_vector<Eigen::VectorXd> const& input, Eigen::VectorXd const& sensitivity) {
@@ -39,11 +39,11 @@ double UncoupledCost::CostImpl(muq::Modeling::ref_vector<Eigen::VectorXd> const&
 
    // get the kernel evaluation
    const Eigen::VectorXd kernel = pnt->NearestNeighborKernel();
-   assert(kernel.size()==pnt->numNeighbors);
+   assert(kernel.size()==pnt->NumNeighbors());
 
    // loop through the neighbors
    double cost = 0.0;
-   for( std::size_t i=0; i<pnt->numNeighbors; ++i ) {
+   for( std::size_t i=0; i<pnt->NumNeighbors(); ++i ) {
      // the location of the neighbor
      const Eigen::VectorXd& neighx = pnt->NearestNeighbor(i);
    }

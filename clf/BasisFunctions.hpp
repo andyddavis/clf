@@ -13,7 +13,10 @@
 
 namespace clf {
 
-/// Evaluate the basis functions \f$\phi(x) = [\phi_1(x),\, \phi_2(x),\, ...,\, \phi_q(x)]\f$
+/// Forward declaration of SupportPointBasis
+class SupportPointBasis;
+
+/// Evaluate the basis functions \f$\phi(x) = [\phi_1(\hat{x}(x)),\, \phi_2(\hat{x}(x)),\, ...,\, \phi_q(x)]\f$
 /**
 We need basis functions \f$\{\phi^{(i)}: \mathbb{R}^{d} \mapsto \mathbb{R} \}_{i=1}^{q}\f$ that define the local function \f$\ell: \mathbb{R}^{d} \mapsto \mathbb{R}\f$. We evaluate the local function \f$\ell(x) = c \cdot \phi(x)\f$, where \f$c \in \mathbb{R}^{q}\f$ are basis coefficients and \f$\phi(x) = [\phi_1(x),\, \phi_2(x),\, ...,\, \phi_q(x)]\f$.
 
@@ -25,6 +28,9 @@ where we have implicitly defined a one-to-one mapping between the index \f$i\f$ 
 */
 class BasisFunctions {
 public:
+  /// Declar the clf::SupportPointBasis as a friend
+  friend SupportPointBasis;
+
   /**
   @param[in] multis The multi-index set---each multi-index corresponds to a basis function
   @param[in] pt The options for the basis functions
@@ -139,21 +145,24 @@ protected:
   The basis function is defined by the product of these scalar functions. This must be implemented by a child.
   @param[in] x The point where we are evaluating the scalar basis function
   @param[in] ind The index of the \f$i^{th}\f$ scalar basis function
+  @param[in] coordinate The index of the coordinate (the parameter \$x\f$ is the \f$i^{th}\f$ input)
   \return The scalar basis function evaluation
   */
-  virtual double ScalarBasisFunction(double const x, std::size_t const ind) const = 0;
+  virtual double ScalarBasisFunction(double const x, std::size_t const ind, std::size_t const coordinate) const = 0;
 
   /// Evaluate the \f$k^{th}\f$ derivative of the scalar basis function \f$\frac{d^k l_i}{d x^{k}}\f$.
   /**
   This must be implemented by a child.
   @param[in] x The point where we are evaluating the scalar basis function
   @param[in] ind The index of the \f$i^{th}\f$ scalar basis function
+  @param[in] coordinate The index of the coordinate (the parameter \$x\f$ is the \f$i^{th}\f$ input)
   @param[in] k We want the \f$k^{th}\f$ derivative
   \return The scalar basis function evaluation
   */
-  virtual double ScalarBasisFunctionDerivative(double const x, std::size_t const ind, std::size_t const k) const = 0;
+  virtual double ScalarBasisFunctionDerivative(double const x, std::size_t const ind, std::size_t const coordinate, std::size_t const k) const = 0;
 
 private:
+
   /// The multi-index set---each multi-index corresponds to a basis function
   std::shared_ptr<muq::Utilities::MultiIndexSet> multis;
 };

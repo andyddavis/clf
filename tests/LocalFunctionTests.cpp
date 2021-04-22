@@ -37,7 +37,7 @@ TEST(LocalFunctionTests, Construction) {
 
   // create the support points
   std::vector<std::shared_ptr<SupportPoint> > supportPoints(points.size());
-  for( std::size_t i=0; i<points.size(); ++i ) { supportPoints[i] = std::make_shared<SupportPoint>(points.row(i), model, ptSupportPoints); }
+  for( std::size_t i=0; i<points.size(); ++i ) { supportPoints[i] = SupportPoint::Construct(points.row(i), model, ptSupportPoints); }
 
   // create the support point cloud
   pt::ptree ptSupportPointCloud;

@@ -71,6 +71,7 @@ set(CLF_SOURCE
     src/BasisFunctions.cpp
     src/SinCosBasis.cpp
     src/PolynomialBasis.cpp
+    src/SupportPointBasis.cpp
 
     src/ModelExceptions.cpp
     src/Model.cpp
@@ -128,6 +129,7 @@ if( NOT CLF_BUILD_FROM_PIP )
         tests/BasisFunctionsTests.cpp
         tests/SinCosBasisTests.cpp
         tests/PolynomialBasisTests.cpp
+        tests/SupportPointBasisTests.cpp
 
         tests/ModelTests.cpp
 

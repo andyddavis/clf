@@ -45,7 +45,7 @@ TEST(UncoupledCostTests, Construction) {
   suppOptions.put("Basis1.Order", orderSinCos);
   suppOptions.put("Basis2.Type", "TotalOrderPolynomials");
   suppOptions.put("Basis2.Order", orderPoly);
-  auto point = std::make_shared<SupportPoint>(
+  auto point = SupportPoint::Construct(
     Eigen::VectorXd::Random(indim),
     std::make_shared<ExampleIdentityModelForUncoupledCostTests>(modelOptions),
     suppOptions);
@@ -54,7 +54,7 @@ TEST(UncoupledCostTests, Construction) {
   std::vector<std::shared_ptr<SupportPoint> > supportPoints(75);
   supportPoints[0] = point;
   for( std::size_t i=1; i<supportPoints.size(); ++i ) {
-    supportPoints[i] = std::make_shared<SupportPoint>(
+    supportPoints[i] = SupportPoint::Construct(
       Eigen::VectorXd::Random(indim),
       std::make_shared<ExampleIdentityModelForUncoupledCostTests>(modelOptions),
       suppOptions);

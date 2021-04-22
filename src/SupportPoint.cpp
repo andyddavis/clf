@@ -9,15 +9,23 @@ namespace pt = boost::property_tree;
 using namespace muq::Modeling;
 using namespace clf;
 
-SupportPoint::SupportPoint(Eigen::VectorXd const& x, std::shared_ptr<const Model> const& model, pt::ptree const& pt) :
-x(x),
-model(model),
-bases(CreateBasisFunctions(model->inputDimension, model->outputDimension, pt)),
-numNeighbors(DetermineNumNeighbors(bases, pt)),
-delta(pt.get<double>("InitialRadius", 1.0))
-{
+SupportPoint::SupportPoint(Eigen::VectorXd const& x, std::shared_ptr<const Model> const& model, pt::ptree const& pt) : x(x), model(model) {}
+
+std::shared_ptr<SupportPoint> SupportPoint::Construct(Eigen::VectorXd const& x, std::shared_ptr<const Model> const& model, boost::property_tree::ptree const& pt) {
+  // create the support point (the bases are unset)
+  auto point = std::shared_ptr<SupportPoint>(new SupportPoint(x, model, pt));
+
+  // create the SupportPointBasis
+  std::vector<std::shared_ptr<const BasisFunctions> > bases = CreateBasisFunctions(point->model->inputDimension, point->model->outputDimension, pt);
   assert(bases.size()==model->outputDimension);
+  for( auto& basis : bases ) { basis = std::make_shared<SupportPointBasis>(point, basis, pt); }
+
+  // reset the basis functions as SupportPointBasis
   for( const auto& it : bases ) { assert(it); }
+  point->bases = bases;
+  point->numNeighbors = DetermineNumNeighbors(bases, pt);
+
+  return point;
 }
 
 std::size_t SupportPoint::DetermineNumNeighbors(std::vector<std::shared_ptr<const BasisFunctions> > const& bases, pt::ptree const& pt) {
@@ -84,20 +92,6 @@ std::shared_ptr<const BasisFunctions> SupportPoint::CreateBasisFunctions(std::si
   return nullptr;
 }
 
-double SupportPoint::Radius() const { return delta; }
-
-double& SupportPoint::Radius() { return delta; }
-
-Eigen::VectorXd SupportPoint::LocalCoordinate(Eigen::VectorXd const& y) const {
-  assert(y.size()==x.size());
-  return (y-x)/delta;
-}
-
-Eigen::VectorXd SupportPoint::GlobalCoordinate(Eigen::VectorXd const& xhat) const {
-  assert(xhat.size()==x.size());
-  return delta*xhat + x;
-}
-
 void SupportPoint::SetNearestNeighbors(std::shared_ptr<const SupportPointCloud> const& newcloud, std::vector<std::size_t> const& neighInd, std::vector<double> const& neighDist) {
   assert(neighInd.size()==neighDist.size());
   assert(neighInd.size()==numNeighbors);
@@ -119,7 +113,11 @@ void SupportPoint::SetNearestNeighbors(std::shared_ptr<const SupportPointCloud> 
   }
 
   // reset the scaling parameter for the squared neighbor distance
-  delta = std::sqrt(*(squaredNeighborDistances.end()-1));
+  for( const auto& basis : bases ) {
+    auto suppBasis = std::dynamic_pointer_cast<const SupportPointBasis>(basis);
+    assert(suppBasis);
+    suppBasis->SetRadius(std::sqrt(*(squaredNeighborDistances.end()-1)));
+  }
 }
 
 std::vector<std::size_t> SupportPoint::GlobalNeighborIndices() const { return globalNeighorIndices; }
@@ -141,17 +139,21 @@ Eigen::VectorXd SupportPoint::NearestNeighbor(std::size_t const jnd) const {
 
 Eigen::VectorXd SupportPoint::NearestNeighborKernel() const {
   Eigen::VectorXd kernel(squaredNeighborDistances.size());
-  const double delta2 = delta*delta;
-  for( std::size_t i=0; i<kernel.size(); ++i ) { kernel(i) = model->NearestNeighborKernel(squaredNeighborDistances[i]/delta2); }
+
+  for( std::size_t i=0; i<kernel.size(); ++i ) { kernel(i) = model->NearestNeighborKernel(squaredNeighborDistances[i]/(*(squaredNeighborDistances.end()-1))); }
   return kernel;
 }
 
 Eigen::VectorXd SupportPoint::Operator(Eigen::VectorXd const& loc, Eigen::VectorXd const& coefficients) const {
   assert(loc.size()==model->inputDimension);
   assert(coefficients.size()==NumCoefficients());
-  return model->Operator(LocalCoordinate(loc), coefficients, bases);
+  return model->Operator(loc, coefficients, bases);
 }
 
 void SupportPoint::MinimizeUncoupledCost() {
   std::cout << "Minimize uncoupled cost" << std::endl;
 }
+
+const std::vector<std::shared_ptr<const BasisFunctions> >& SupportPoint::GetBasisFunctions() const { return bases; }
+
+std::size_t SupportPoint::NumNeighbors() const { return numNeighbors; }

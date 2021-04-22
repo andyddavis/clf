@@ -16,7 +16,7 @@ std::shared_ptr<SinCosBasis> SinCosBasis::TotalOrderBasis(boost::property_tree::
   return std::make_shared<SinCosBasis>(multis, pt);
 }
 
-double SinCosBasis::ScalarBasisFunction(double const x, std::size_t const ind) const {
+double SinCosBasis::ScalarBasisFunction(double const x, std::size_t const ind, std::size_t const coordinate) const {
   // constant basis
   if( ind==0 ) { return 1.0; }
 
@@ -27,7 +27,7 @@ double SinCosBasis::ScalarBasisFunction(double const x, std::size_t const ind) c
   return std::sin(M_PI*(ind/2+1)*x);
 }
 
-double SinCosBasis::ScalarBasisFunctionDerivative(double const x, std::size_t const ind, std::size_t const k) const {
+double SinCosBasis::ScalarBasisFunctionDerivative(double const x, std::size_t const ind, std::size_t const coordinate, std::size_t const k) const {
   // constant basis
   if( ind==0 ) { return 0.0; }
 
