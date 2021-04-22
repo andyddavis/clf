@@ -94,6 +94,13 @@ public:
   */
   Eigen::VectorXd Operator(Eigen::VectorXd const& loc, Eigen::VectorXd const& coefficients) const;
 
+  /// Evaluate the Jacobian of the operator applied to the local function at a given point
+  /**
+  @param[in] loc The location where we are evaluating the action of the operator
+  @param[in] coefficients The coefficients that define the local function
+  */
+  Eigen::MatrixXd OperatorJacobian(Eigen::VectorXd const& loc, Eigen::VectorXd const& coefficients) const;
+
   /// Get the basis function
   /**
   \return Each component is the basis for the corresponding output

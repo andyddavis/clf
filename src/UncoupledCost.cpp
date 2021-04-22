@@ -46,6 +46,9 @@ double UncoupledCost::CostImpl(muq::Modeling::ref_vector<Eigen::VectorXd> const&
    for( std::size_t i=0; i<pnt->NumNeighbors(); ++i ) {
      // the location of the neighbor
      const Eigen::VectorXd& neighx = pnt->NearestNeighbor(i);
+
+     // the Jacobian of the operator
+     //const Eigen::MatrixXd 
    }
 
    this->gradient = Eigen::VectorXd::Zero(inputSizes(0));

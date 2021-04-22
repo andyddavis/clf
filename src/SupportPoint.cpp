@@ -150,6 +150,12 @@ Eigen::VectorXd SupportPoint::Operator(Eigen::VectorXd const& loc, Eigen::Vector
   return model->Operator(loc, coefficients, bases);
 }
 
+Eigen::MatrixXd SupportPoint::OperatorJacobian(Eigen::VectorXd const& loc, Eigen::VectorXd const& coefficients) const {
+  assert(loc.size()==model->inputDimension);
+  assert(coefficients.size()==NumCoefficients());
+  return model->OperatorJacobian(loc, coefficients, bases);
+}
+
 void SupportPoint::MinimizeUncoupledCost() {
   std::cout << "Minimize uncoupled cost" << std::endl;
 }
