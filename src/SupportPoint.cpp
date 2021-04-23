@@ -28,8 +28,8 @@ std::shared_ptr<SupportPoint> SupportPoint::Construct(Eigen::VectorXd const& x, 
   point->bases = bases;
   point->numNeighbors = DetermineNumNeighbors(bases, pt);
 
-  // set the coefficients to zero
-  point->coefficients = Eigen::VectorXd::Zero(point->NumCoefficients());
+  // set the coefficients to ones
+  point->coefficients = Eigen::VectorXd::Ones(point->NumCoefficients());
 
   // create the uncoupled cost
   point->uncoupledCost = std::make_shared<UncoupledCost>(point, pt);
@@ -174,6 +174,50 @@ std::vector<Eigen::MatrixXd> SupportPoint::OperatorHessian(Eigen::VectorXd const
 double SupportPoint::MinimizeUncoupledCost() {
   assert(uncoupledCost);
 
+  const bool gaussNewtonHessian = true;
+
+  double prevCost = uncoupledCost->Cost(coefficients);
+  std::cout << "cost before: " << prevCost << std::endl;
+  for( std::size_t iter=0; iter<25; ++iter ) {
+    // compute the cost function gradient
+    const Eigen::VectorXd grad = uncoupledCost->Gradient(0, std::vector<Eigen::VectorXd>(1, coefficients), Eigen::VectorXd::Ones(1).eval());
+
+    // compute the Hessian
+    const Eigen::MatrixXd hess = uncoupledCost->Hessian(coefficients, gaussNewtonHessian);
+    assert(hess.rows()==coefficients.size());
+    assert(hess.cols()==coefficients.size());
+
+    //std::cout << grad.transpose() << std::endl;
+    //std::cout << std::endl;
+
+    //std::cout << hess << std::endl;
+    //std::cout << std::endl;
+
+    // step direction xk-xkp1 = H^{-1} g
+    //Eigen::PartialPivLU<Eigen::MatrixXd> solver;
+    Eigen::ColPivHouseholderQR<Eigen::MatrixXd> solver;
+    solver.compute(hess);
+    //assert(solver.info()==Eigen::Success);
+    const Eigen::VectorXd stepDir = solver.solve(grad);
+
+    //std::cout << stepDir.transpose() << std::endl;
+
+    double alpha = 1.0;
+    double newCost = uncoupledCost->Cost((coefficients-alpha*stepDir).eval());
+    //std::cout << "prev cost: " << prevCost << " new cost: " << newCost << std::endl;
+    std::size_t lineSearchIter = 0;
+    while( newCost>prevCost || lineSearchIter++>10 ) {
+      alpha /= 2.0;
+      newCost = uncoupledCost->Cost((coefficients-alpha*stepDir).eval());
+      //std::cout << "prev cost: " << prevCost << " new cost: " << newCost << std::endl;
+    }
+
+    prevCost = newCost;
+    coefficients -= alpha*stepDir;
+
+    //std::cout << "--------------------" << std::endl;
+  }
+
   pt::ptree optimizationOptions;
   optimizationOptions.put("Ftol.AbsoluteTolerance", 1.0e-15);
   optimizationOptions.put("Ftol.RelativeTolerance", 1.0e-15);
@@ -184,14 +228,13 @@ double SupportPoint::MinimizeUncoupledCost() {
 
   auto opt = std::make_shared<NLoptOptimizer>(uncoupledCost, optimizationOptions);
 
-  std::cout << "cost before: " << uncoupledCost->Cost(coefficients) << std::endl;
-
   double costVal;
   std::tie(coefficients, costVal) = opt->Solve(std::vector<Eigen::VectorXd>(1, coefficients));
 
-  std::cout << "soln: " << coefficients.transpose() << std::endl;
+  //std::cout << "soln: " << coefficients.transpose() << std::endl;
 
   std::cout << "cost after: " << costVal << std::endl;
+  std::cout << std::endl;
 
   return costVal;
 }

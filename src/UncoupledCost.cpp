@@ -60,7 +60,7 @@ double UncoupledCost::CostImpl(muq::Modeling::ref_vector<Eigen::VectorXd> const&
    this->gradient *= sensitivity(0)/pnt->NumNeighbors();
  }
 
- Eigen::MatrixXd UncoupledCost::Hessian(Eigen::VectorXd const& coefficients, bool const gaussNewtonHessian) const {
+Eigen::MatrixXd UncoupledCost::Hessian(Eigen::VectorXd const& coefficients, bool const gaussNewtonHessian) const {
    assert(coefficients.size()==inputSizes(0));
 
    // get the support point

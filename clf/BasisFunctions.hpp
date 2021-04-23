@@ -16,7 +16,7 @@ namespace clf {
 /// Forward declaration of SupportPointBasis
 class SupportPointBasis;
 
-/// Evaluate the basis functions \f$\phi(x) = [\phi_1(\hat{x}(x)),\, \phi_2(\hat{x}(x)),\, ...,\, \phi_q(x)]\f$
+/// Evaluate the basis functions \f$\phi(x) = [\phi_1(x),\, \phi_2(x),\, ...,\, \phi_q(x)]\f$
 /**
 We need basis functions \f$\{\phi^{(i)}: \mathbb{R}^{d} \mapsto \mathbb{R} \}_{i=1}^{q}\f$ that define the local function \f$\ell: \mathbb{R}^{d} \mapsto \mathbb{R}\f$. We evaluate the local function \f$\ell(x) = c \cdot \phi(x)\f$, where \f$c \in \mathbb{R}^{q}\f$ are basis coefficients and \f$\phi(x) = [\phi_1(x),\, \phi_2(x),\, ...,\, \phi_q(x)]\f$.
 
