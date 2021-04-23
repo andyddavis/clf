@@ -25,10 +25,24 @@ public:
   LocalFunction(std::shared_ptr<SupportPointCloud> const& cloud, boost::property_tree::ptree const& pt);
 
   virtual ~LocalFunction() = default;
+
+  /// The cost associated with the coefficients
+  /**
+  The cost is infinite if we have not yet run the optimization
+  */
+  double CoefficientCost() const;
+
+  /// Evaluate the local function at a point
+  /**
+  @param[in] x The point where we are evaluating the local function
+  \return The local function evaluation at the nearest support point
+  */
+  Eigen::VectorXd Evaluate(Eigen::VectorXd const& x) const;
+
 private:
 
   /// Compute the optimal coefficients for each support point
-  void ComputeOptimalCoefficients() const;
+  void ComputeOptimalCoefficients();
 
   /// Compute the optimal coefficients for each support point given that their is no coupling
   /**
@@ -38,10 +52,16 @@ private:
   \f}
   where \f$\mathcal{L}_i\f$ and \f$f_i\f$ are the model operator and right hand side associated with support point \f$i\f$, \f$K_i\f$ is a compact kernel function, and \f$a_i \geq 0\f$ is a regulatory parameter.
   */
-  void IndependentSupportPoints() const;
+  void IndependentSupportPoints();
 
   /// The support point cloud that stores all of the support points
   std::shared_ptr<SupportPointCloud> cloud;
+
+  /// The cost after optimizing the coefficients for each ceoffcient
+  /**
+  Uncoupled case: this is the average cost over all of the support points
+  */
+  double cost = std::numeric_limits<double>::infinity();
 };
 
 } // namespace clf

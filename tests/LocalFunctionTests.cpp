@@ -44,10 +44,9 @@ TEST(LocalFunctionTests, Construction) {
   pt::ptree suppOptions;
   suppOptions.put("NumNeighbors", 75);
   suppOptions.put("BasisFunctions", "Basis1, Basis2");
-  //suppOptions.put("Basis1.Type", "TotalOrderSinCos");
-  //suppOptions.put("Basis1.Order", orderSinCos);
-  suppOptions.put("Basis1.Type", "TotalOrderPolynomials");
-  suppOptions.put("Basis1.Order", orderPoly);
+  suppOptions.put("Basis1.Type", "TotalOrderSinCos");
+  suppOptions.put("Basis1.Order", orderSinCos);
+  suppOptions.put("Basis1.LocalBasis", false);
   suppOptions.put("Basis2.Type", "TotalOrderPolynomials");
   suppOptions.put("Basis2.Order", orderPoly);
 
@@ -60,15 +59,23 @@ TEST(LocalFunctionTests, Construction) {
   auto cloud = SupportPointCloud::Construct(supportPoints, ptSupportPointCloud);
 
   // create the local function
-  /*pt::ptree ptFunc;
+  pt::ptree ptFunc;
   auto localFunction = std::make_shared<LocalFunction>(cloud, ptFunc);
+
+  // the cost of the optimial coefficients
+  const double cost = localFunction->CoefficientCost();
+  EXPECT_NEAR(cost, 0.0, 1.0e-8);
 
   for( const auto& it : supportPoints ) {
     const Eigen::VectorXd eval = it->EvaluateLocalFunction(it->x);
     const Eigen::VectorXd expected = Eigen::Vector2d(std::sin(M_PI*it->x(0))*std::cos(2.0*M_PI*it->x(2)) + std::cos(M_PI*it->x(2)), it->x(1)*it->x(0) + it->x(0) + 1.0);
+    EXPECT_NEAR((eval-expected).norm(), 0.0, 10.0*std::sqrt(cost));
+  }
 
-    std::cout << "eval: " << eval.transpose() << std::endl;
-    std::cout << "expected: " << expected.transpose() << std::endl;
-    std::cout << std::endl;
-  }*/
+  for( std::size_t i=0; i<10; ++i ) {
+    const Eigen::VectorXd x = 0.1*Eigen::VectorXd::Random(indim);
+    const Eigen::VectorXd eval = localFunction->Evaluate(x);
+    const Eigen::VectorXd expected = Eigen::Vector2d(std::sin(M_PI*x(0))*std::cos(2.0*M_PI*x(2)) + std::cos(M_PI*x(2)), x(1)*x(0) + x(0) + 1.0);
+    EXPECT_NEAR((eval-expected).norm(), 0.0, 10.0*std::sqrt(cost));
+  }
 }
