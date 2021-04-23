@@ -82,7 +82,7 @@ Eigen::MatrixXd UncoupledCost::Hessian(Eigen::VectorXd const& coefficients, bool
      assert(modelJac.rows()==pnt->model->outputDimension);
      assert(modelJac.cols()==inputSizes(0));
 
-     hess += modelJac.transpose()*modelJac;
+     hess += kernel(i)*modelJac.transpose()*modelJac;
 
      if( !gaussNewtonHessian ) {
        const std::vector<Eigen::MatrixXd> modelHess = pnt->OperatorHessian(neighx, coefficients);
@@ -92,7 +92,7 @@ Eigen::MatrixXd UncoupledCost::Hessian(Eigen::VectorXd const& coefficients, bool
        for( std::size_t j=0; j<diff.size(); ++j ) {
          assert(modelHess[j].rows()==inputSizes(0));
          assert(modelHess[j].cols()==inputSizes(0));
-         hess += modelHess[j]*diff(j);
+         hess += diff(j)*kernel(i)*modelHess[j];
        }
      }
    }

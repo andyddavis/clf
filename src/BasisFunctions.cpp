@@ -3,7 +3,7 @@
 namespace pt = boost::property_tree;
 using namespace clf;
 
-BasisFunctions::BasisFunctions(std::shared_ptr<muq::Utilities::MultiIndexSet> const& multis, pt::ptree const& pt) : multis(multis) {}
+BasisFunctions::BasisFunctions(std::shared_ptr<muq::Utilities::MultiIndexSet> const& multis, pt::ptree const& pt) : constantIndex(pt.get<std::size_t>("ConstantFunctionIndex", 0)), multis(multis) {}
 
 std::shared_ptr<BasisFunctions> BasisFunctions::Construct(std::shared_ptr<muq::Utilities::MultiIndexSet> const& multis, pt::ptree const& pt) {
   // get the name of the basis function

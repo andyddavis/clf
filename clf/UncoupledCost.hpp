@@ -37,6 +37,7 @@ public:
   /**
   @param[in] coefficients The coefficients for the basis functions
   @param[in] gaussNewtonHessian <tt>true</tt>: compute the Gauss-Newton Hessian, <tt>false</tt>: compute the Hessian
+  \return The Hessian matrix (or the Gauss-Newton Hessian matrix)
   */
   Eigen::MatrixXd Hessian(Eigen::VectorXd const& coefficients, bool const gaussNewtonHessian) const;
 

@@ -12,24 +12,34 @@ using namespace muq::Modeling;
 using namespace muq::Optimization;
 using namespace clf;
 
-SupportPoint::SupportPoint(Eigen::VectorXd const& x, std::shared_ptr<const Model> const& model, pt::ptree const& pt) : x(x), model(model) {}
+SupportPoint::SupportPoint(Eigen::VectorXd const& x, std::shared_ptr<const Model> const& model, pt::ptree const& pt) : x(x), model(model), optimizationOptions(GetOptimizationOptions(pt)) {}
+
+pt::ptree SupportPoint::GetOptimizationOptions(pt::ptree const& pt) {
+  auto opt = pt.get_child_optional("Optimization");
+  if( !opt ) { return pt::ptree(); }
+  return opt.get();
+}
 
 std::shared_ptr<SupportPoint> SupportPoint::Construct(Eigen::VectorXd const& x, std::shared_ptr<const Model> const& model, boost::property_tree::ptree const& pt) {
   // create the support point (the bases are unset)
   auto point = std::shared_ptr<SupportPoint>(new SupportPoint(x, model, pt));
 
   // create the SupportPointBasis
-  std::vector<std::shared_ptr<const BasisFunctions> > bases = CreateBasisFunctions(point->model->inputDimension, point->model->outputDimension, pt);
+  std::vector<std::shared_ptr<const BasisFunctions> > bases = CreateBasisFunctions(point, point->model->inputDimension, point->model->outputDimension, pt);
   assert(bases.size()==model->outputDimension);
-  for( auto& basis : bases ) { basis = std::make_shared<SupportPointBasis>(point, basis, pt); }
 
   // reset the basis functions as SupportPointBasis
   for( const auto& it : bases ) { assert(it); }
   point->bases = bases;
   point->numNeighbors = DetermineNumNeighbors(bases, pt);
 
-  // set the coefficients to ones
-  point->coefficients = Eigen::VectorXd::Ones(point->NumCoefficients());
+  // set the coefficients so the local function is constant
+  point->coefficients = Eigen::VectorXd::Zero(point->NumCoefficients());
+  std::size_t ind = 0;
+  for( const auto& it : bases ) {
+    //point->coefficients(ind+it->constantIndex) = 1.0;
+    ind += it->NumBasisFunctions();
+  }
 
   // create the uncoupled cost
   point->uncoupledCost = std::make_shared<UncoupledCost>(point, pt);
@@ -52,7 +62,7 @@ std::size_t SupportPoint::DetermineNumNeighbors(std::vector<std::shared_ptr<cons
   return numNeighs;
 }
 
-std::vector<std::shared_ptr<const BasisFunctions> > SupportPoint::CreateBasisFunctions(std::size_t const indim, std::size_t const outdim, pt::ptree pt) {
+std::vector<std::shared_ptr<const BasisFunctions> > SupportPoint::CreateBasisFunctions(std::shared_ptr<SupportPoint> const& point, std::size_t const indim, std::size_t const outdim, pt::ptree pt) {
   // get the names of each child tree that contains the options for each basis
   std::string basisOptionNames = pt.get<std::string>("BasisFunctions");
   // remove spaces
@@ -73,7 +83,7 @@ std::vector<std::shared_ptr<const BasisFunctions> > SupportPoint::CreateBasisFun
     const std::string basisOptionName = basisOptionNames.substr(0, pos);
 
     // create the basis
-    bases.push_back(CreateBasisFunctions(indim, pt.get_child(basisOptionName)));
+    bases.push_back(CreateBasisFunctions(point, indim, pt.get_child(basisOptionName)));
 
     // remove this basis from the list of options
     basisOptionNames.erase(0, pos==std::string::npos? pos : pos+1);
@@ -82,23 +92,27 @@ std::vector<std::shared_ptr<const BasisFunctions> > SupportPoint::CreateBasisFun
   return bases;
 }
 
-std::shared_ptr<const BasisFunctions> SupportPoint::CreateBasisFunctions(std::size_t const indim, pt::ptree pt) {
+std::shared_ptr<const BasisFunctions> SupportPoint::CreateBasisFunctions(std::shared_ptr<SupportPoint> const& point, std::size_t const indim, pt::ptree pt) {
   // find the time we are trying to create and make sure it is a valid option
   const std::string type = UtilityFunctions::ToUpper(pt.get<std::string>("Type"));
   if( std::find(exceptions::SupportPointInvalidBasisException::options.begin(), exceptions::SupportPointInvalidBasisException::options.end(), type)==exceptions::SupportPointInvalidBasisException::options.end() ) { throw exceptions::SupportPointInvalidBasisException(type); }
 
   // create the basis and return it
+  std::shared_ptr<const BasisFunctions> basis;
   if( type=="TOTALORDERPOLYNOMIALS" ) {
     pt.put("InputDimension", indim);
-    return PolynomialBasis::TotalOrderBasis(pt);
+    basis = PolynomialBasis::TotalOrderBasis(pt);
   } else if( type=="TOTALORDERSINCOS" ) {
     pt.put("InputDimension", indim);
-    return SinCosBasis::TotalOrderBasis(pt);
+    basis = SinCosBasis::TotalOrderBasis(pt);
   }
 
-  // invalid basis type, throw and exception
-  throw exceptions::SupportPointInvalidBasisException(type);
-  return nullptr;
+  // check for invalid basis type, throw an exception
+  if( !basis ) { throw exceptions::SupportPointInvalidBasisException(type); }
+
+  if( pt.get<bool>("LocalBasis", true) ) { basis = std::make_shared<SupportPointBasis>(point, basis, pt); }
+
+  return basis;
 }
 
 void SupportPoint::SetNearestNeighbors(std::shared_ptr<const SupportPointCloud> const& newcloud, std::vector<std::size_t> const& neighInd, std::vector<double> const& neighDist) {
@@ -124,8 +138,7 @@ void SupportPoint::SetNearestNeighbors(std::shared_ptr<const SupportPointCloud> 
   // reset the scaling parameter for the squared neighbor distance
   for( const auto& basis : bases ) {
     auto suppBasis = std::dynamic_pointer_cast<const SupportPointBasis>(basis);
-    assert(suppBasis);
-    suppBasis->SetRadius(std::sqrt(*(squaredNeighborDistances.end()-1)));
+    if( suppBasis ) { suppBasis->SetRadius(std::sqrt(*(squaredNeighborDistances.end()-1))); }
   }
 }
 
@@ -143,7 +156,12 @@ Eigen::VectorXd SupportPoint::NearestNeighbor(std::size_t const jnd) const {
   assert(cld);
 
   assert(jnd<globalNeighorIndices.size());
-  return cld->GetSupportPoint(globalNeighorIndices[jnd])->x;
+  return cld->GetSupportPoint(GlobalNeighborIndex(jnd))->x;
+}
+
+std::size_t SupportPoint::GlobalNeighborIndex(std::size_t const localInd) const {
+  assert(localInd<globalNeighorIndices.size());
+  return globalNeighorIndices[localInd];
 }
 
 Eigen::VectorXd SupportPoint::NearestNeighborKernel() const {
@@ -171,72 +189,75 @@ std::vector<Eigen::MatrixXd> SupportPoint::OperatorHessian(Eigen::VectorXd const
   return model->OperatorHessian(loc, coefficients, bases);
 }
 
-double SupportPoint::MinimizeUncoupledCost() {
-  assert(uncoupledCost);
-
-  const bool gaussNewtonHessian = true;
-
+double SupportPoint::MinimizeUncoupledCostNLOPT() {
   double prevCost = uncoupledCost->Cost(coefficients);
-  std::cout << "cost before: " << prevCost << std::endl;
-  for( std::size_t iter=0; iter<25; ++iter ) {
-    // compute the cost function gradient
-    const Eigen::VectorXd grad = uncoupledCost->Gradient(0, std::vector<Eigen::VectorXd>(1, coefficients), Eigen::VectorXd::Ones(1).eval());
 
-    // compute the Hessian
-    const Eigen::MatrixXd hess = uncoupledCost->Hessian(coefficients, gaussNewtonHessian);
-    assert(hess.rows()==coefficients.size());
-    assert(hess.cols()==coefficients.size());
+  pt::ptree options;
+  options.put("Ftol.AbsoluteTolerance", optimizationOptions.atol_function);
+  options.put("Ftol.RelativeTolerance", optimizationOptions.rtol_function);
+  options.put("Xtol.AbsoluteTolerance", optimizationOptions.atol_step);
+  options.put("Xtol.RelativeTolerance", optimizationOptions.rtol_step);
+  options.put("MaxEvaluations", optimizationOptions.maxEvals);
+  options.put("Algorithm", "LBFGS");
 
-    //std::cout << grad.transpose() << std::endl;
-    //std::cout << std::endl;
-
-    //std::cout << hess << std::endl;
-    //std::cout << std::endl;
-
-    // step direction xk-xkp1 = H^{-1} g
-    //Eigen::PartialPivLU<Eigen::MatrixXd> solver;
-    Eigen::ColPivHouseholderQR<Eigen::MatrixXd> solver;
-    solver.compute(hess);
-    //assert(solver.info()==Eigen::Success);
-    const Eigen::VectorXd stepDir = solver.solve(grad);
-
-    //std::cout << stepDir.transpose() << std::endl;
-
-    double alpha = 1.0;
-    double newCost = uncoupledCost->Cost((coefficients-alpha*stepDir).eval());
-    //std::cout << "prev cost: " << prevCost << " new cost: " << newCost << std::endl;
-    std::size_t lineSearchIter = 0;
-    while( newCost>prevCost || lineSearchIter++>10 ) {
-      alpha /= 2.0;
-      newCost = uncoupledCost->Cost((coefficients-alpha*stepDir).eval());
-      //std::cout << "prev cost: " << prevCost << " new cost: " << newCost << std::endl;
-    }
-
-    prevCost = newCost;
-    coefficients -= alpha*stepDir;
-
-    //std::cout << "--------------------" << std::endl;
-  }
-
-  pt::ptree optimizationOptions;
-  optimizationOptions.put("Ftol.AbsoluteTolerance", 1.0e-15);
-  optimizationOptions.put("Ftol.RelativeTolerance", 1.0e-15);
-  optimizationOptions.put("Xtol.AbsoluteTolerance", 1.0e-15);
-  optimizationOptions.put("Xtol.RelativeTolerance", 1.0e-15);
-  optimizationOptions.put("MaxEvaluations", 1000000); // max number of cost function evaluations
-  optimizationOptions.put("Algorithm", "LBFGS");
-
-  auto opt = std::make_shared<NLoptOptimizer>(uncoupledCost, optimizationOptions);
+  auto opt = std::make_shared<NLoptOptimizer>(uncoupledCost, options);
 
   double costVal;
   std::tie(coefficients, costVal) = opt->Solve(std::vector<Eigen::VectorXd>(1, coefficients));
 
-  //std::cout << "soln: " << coefficients.transpose() << std::endl;
-
-  std::cout << "cost after: " << costVal << std::endl;
-  std::cout << std::endl;
-
   return costVal;
+}
+
+double SupportPoint::MinimizeUncoupledCostNewton() {
+  const double initCost = uncoupledCost->Cost(coefficients);
+  double prevCost = initCost;
+  for( std::size_t iter=0; iter<optimizationOptions.maxEvals; ++iter ) {
+    // compute the cost function gradient
+    const Eigen::VectorXd grad = uncoupledCost->Gradient(0, std::vector<Eigen::VectorXd>(1, coefficients), Eigen::VectorXd::Ones(1).eval());
+
+    // if the gradient is small, break
+    if( grad.norm()<optimizationOptions.atol_grad ) { break; }
+
+    // compute the Hessian
+    const Eigen::MatrixXd hess = uncoupledCost->Hessian(coefficients, optimizationOptions.useGaussNewtonHessian);
+    assert(hess.rows()==coefficients.size());
+    assert(hess.cols()==coefficients.size());
+
+    // step direction xk-xkp1 = H^{-1} g
+    Eigen::ColPivHouseholderQR<Eigen::MatrixXd> solver;
+    solver.compute(hess);
+    Eigen::VectorXd stepDir = solver.solve(grad);
+
+    // do the line search
+    double alpha = optimizationOptions.maxStepSizeScale;
+    double newCost = uncoupledCost->Cost((coefficients-alpha*stepDir).eval());
+    std::size_t lineSearchIter = 0;
+    while( newCost>prevCost || lineSearchIter++>optimizationOptions.maxLineSearchIterations ) {
+      alpha *= optimizationOptions.lineSearchFactor;
+      newCost = uncoupledCost->Cost((coefficients-alpha*stepDir).eval());
+    }
+
+    // make a step
+    if( alpha<1.0-1.0e-10 ) { stepDir *= alpha; }
+    const double stepsize = stepDir.norm();
+    prevCost = newCost;
+    coefficients -= stepDir;
+
+    // check convergence
+    if(
+      prevCost<optimizationOptions.atol_function |
+      prevCost/std::max(1.0e-10, initCost)<optimizationOptions.rtol_function |
+      stepsize<optimizationOptions.atol_step |
+      stepsize/std::max(1.0e-10, coefficients.norm())<optimizationOptions.rtol_step
+    ) { break; }
+  }
+
+  return prevCost;
+}
+
+double SupportPoint::MinimizeUncoupledCost() {
+  assert(uncoupledCost);
+  return optimizationOptions.useNLOPT? MinimizeUncoupledCostNLOPT() : MinimizeUncoupledCostNewton();
 }
 
 Eigen::VectorXd SupportPoint::EvaluateLocalFunction(Eigen::VectorXd const& loc) const {

@@ -12,6 +12,12 @@ fdEps(pt.get<double>("FiniteDifferenceStep", 1.0e-6))
 double Model::NearestNeighborKernel(double const delta) const {
   assert(delta>-1.0e-10);
   if( delta>1.0+1.0e-10 ) { return 0.0; }
+
+  const double scale = std::pow(delta, 0.0);
+
+  //std::cout << 2.0/(1.0+scale)-1.0 << std::endl;
+
+  //return 2.0/(1.0+scale)-1.0;
   return 1.0;
 }
 

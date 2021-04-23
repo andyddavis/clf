@@ -76,6 +76,8 @@ set(CLF_SOURCE
     src/ModelExceptions.cpp
     src/Model.cpp
 
+    src/OptimizationOptions.cpp
+
     src/SupportPointExceptions.cpp
     src/SupportPoint.cpp
 

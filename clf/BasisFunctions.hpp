@@ -18,13 +18,20 @@ class SupportPointBasis;
 
 /// Evaluate the basis functions \f$\phi(x) = [\phi_1(x),\, \phi_2(x),\, ...,\, \phi_q(x)]\f$
 /**
-We need basis functions \f$\{\phi^{(i)}: \mathbb{R}^{d} \mapsto \mathbb{R} \}_{i=1}^{q}\f$ that define the local function \f$\ell: \mathbb{R}^{d} \mapsto \mathbb{R}\f$. We evaluate the local function \f$\ell(x) = c \cdot \phi(x)\f$, where \f$c \in \mathbb{R}^{q}\f$ are basis coefficients and \f$\phi(x) = [\phi_1(x),\, \phi_2(x),\, ...,\, \phi_q(x)]\f$.
+We need basis functions \f$\{\phi_i: \mathbb{R}^{d} \mapsto \mathbb{R} \}_{i=1}^{q}\f$ that define the local function \f$\ell: \mathbb{R}^{d} \mapsto \mathbb{R}\f$. We evaluate the local function \f$\ell(x) = c \cdot \phi(x)\f$, where \f$c \in \mathbb{R}^{q}\f$ are basis coefficients and \f$\phi(x) = [\phi_1(x),\, \phi_2(x),\, ...,\, \phi_q(x)]\f$.
 
-In general, we define the basis functions by frist defining scalar functions \f$l_i: \mathbb{R} \mapsto \mathbb{R}\f$. Let \f$\iota = (i_0,\, i_1,\, ...,\, i_d)\f$ define a multi-index. The \f$i^{th}\f$ basis function \f$\phi^{(i)}: \mathbb{R}^{d} \mapsto \mathbb{R}\f$ is
+In general, we define the basis functions by frist defining scalar functions \f$l_i: \mathbb{R} \mapsto \mathbb{R}\f$. Let \f$\iota = (i_0,\, i_1,\, ...,\, i_d)\f$ define a multi-index. The \f$i^{th}\f$ basis function \f$\phi_{i}: \mathbb{R}^{d} \mapsto \mathbb{R}\f$ is
 \f{equation*}{
-    \phi^{(i(\iota))}(x) = \prod_{j=1}^{d} l_{i_j}(x_j),
+    \phi_{i(\iota)}(x) = \prod_{j=1}^{d} l_{i_j}(x_j),
 \f}
 where we have implicitly defined a one-to-one mapping between the index \f$i\f$ and the multi-index \f$\iota\f$.
+
+We assume there is one index that corresponds to a constant function \f$\phi_i(x) = c\f$ (typically, \f$c=1\f$).
+
+<B>Configuration Parameters:</B>
+Parameter Key | Type | Default Value | Description |
+------------- | ------------- | ------------- | ------------- |
+"ConstantFunctionIndex"   | <tt>std::size_t</tt> | <tt>0</tt> | The index of the constant basis function. |
 */
 class BasisFunctions {
 public:
@@ -138,6 +145,9 @@ public:
   */
   std::size_t NumBasisFunctions() const;
 
+  /// The index of the constant basis function.
+  const std::size_t constantIndex;
+
 protected:
 
   /// Evaluate the scalar basis function \f$l_i: \mathbb{R} \mapsto \mathbb{R}\f$.
@@ -165,6 +175,7 @@ private:
 
   /// The multi-index set---each multi-index corresponds to a basis function
   std::shared_ptr<muq::Utilities::MultiIndexSet> multis;
+
 };
 
 } // namespace clf

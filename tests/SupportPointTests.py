@@ -36,8 +36,9 @@ class TestSupportPoint(unittest.TestCase):
             self.assertAlmostEqual(point.x[i], x[i], places=12)
 
         # make sure the basis was created
-        self.assertEqual(len(point.bases), 1)
-        self.assertEqual(point.bases[0].NumBasisFunctions(), 35)
-        self.assertEqual(point.numNeighbors, 40)
+        bases = point.GetBasisFunctions()
+        self.assertEqual(len(bases), 1)
+        self.assertEqual(bases[0].NumBasisFunctions(), 35)
+        self.assertEqual(point.NumNeighbors(), 40)
         self.assertEqual(point.model.inputDimension, len(x))
         self.assertEqual(point.model.outputDimension, 1)

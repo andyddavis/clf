@@ -1,6 +1,7 @@
 #ifndef SUPPORTPOINT_HPP_
 #define SUPPORTPOINT_HPP_
 
+#include "clf/OptimizationOptions.hpp"
 #include "clf/SupportPointBasis.hpp"
 #include "clf/Model.hpp"
 #include "clf/UncoupledCost.hpp"
@@ -28,7 +29,8 @@ Parameter Key | Type | Default Value | Description |
 "Radius"   | <tt>double</tt> | <tt>1.0</tt> | The initial value of the \f$\delta\f$ parameter. |
 "RegularizationParameter"   | <tt>double</tt> | <tt>0.0</tt> | The regularization parameter for the uncoupled cost (see clf::UncoupledCost). |
 "BasisFunctions"   | <tt>std::string</tt> |--- | The options to make the basis functions for each output, separated by commas (see SupportPoint::CreateBasisFunctions) |
-"NumNeighbors"   | <tt>std::string</tt> | <tt>""</tt> | A comma-seperated list of the number of nearest neighbors to use to compute the coefficients for each output (if empty, use the number required to interpolate plus one) |
+"NumNeighbors"   | <tt>std::size_t</tt> | The number required to interpolate plus one | The number of nearest neighbors to use to compute the coefficients for each output. |
+"Optimization"   | <tt>boost::property_tree::ptree</tt> | see clf::OptimizationOptions | The options for the uncoupled cost minimization |
 */
 class SupportPoint {
 // make the constructors private because we will always want to wrap the basis in a SupportPointBasis
@@ -132,6 +134,13 @@ public:
   */
   Eigen::VectorXd EvaluateLocalFunction(Eigen::VectorXd const& loc) const;
 
+  /// The global index of a neighbor given its local index
+  /**
+  @param[in] localInd The local neighbor index
+  \return The global neighbor index
+  */
+  std::size_t GlobalNeighborIndex(std::size_t const localInd) const;
+
   /// The location of the support point \f$x\f$.
   const Eigen::VectorXd x;
 
@@ -142,6 +151,10 @@ private:
 
   /// Determine the number of nearest nieghbors for each output
   /**
+  <B>Additional Configuration Parameters:</B>
+  Parameter Key | Type | Default Value | Description |
+  ------------- | ------------- | ------------- | ------------- |
+  "LocalBasis"   | <tt>bool</tt> | <tt>true</tt> | Should we rescale the basis into local coordinates around the support point? |
   @param[in] bases The bases used for each output
   @param[in] pt The options for the support point
   \return The number of nearest neighbors used to compute the coefficients
@@ -156,7 +169,7 @@ private:
   @param[in] pt The options for the basis functions
   \return The bases used for each output
   */
-  static std::vector<std::shared_ptr<const BasisFunctions> > CreateBasisFunctions(std::size_t const indim, std::size_t const outdim, boost::property_tree::ptree pt);
+  static std::vector<std::shared_ptr<const BasisFunctions> > CreateBasisFunctions(std::shared_ptr<SupportPoint> const& point, std::size_t const indim, std::size_t const outdim, boost::property_tree::ptree pt);
 
   /// Create the basis functions from the given options
   /**
@@ -164,7 +177,29 @@ private:
   @param[in] pt The options for the basis functions
   \return The basis created given the options
   */
-  static std::shared_ptr<const BasisFunctions> CreateBasisFunctions(std::size_t const indim, boost::property_tree::ptree pt);
+  static std::shared_ptr<const BasisFunctions> CreateBasisFunctions(std::shared_ptr<SupportPoint> const& point, std::size_t const indim, boost::property_tree::ptree pt);
+
+  /// Get the (optional) child ptree for the optimization options
+  /**
+  @param[in] pt The options given to this support point
+  \return If specified, returns the options for minimizing the upcoupled cost. Otherwise, return an empty ptree and use the default options (see clf::OptimizationOptions)
+  */
+  static boost::property_tree::ptree GetOptimizationOptions(boost::property_tree::ptree const& pt);
+
+  /// Minimize the uncoupled cost function for this support point using NLOPT
+  /**
+  \return The uncoupled cost at the optimal coefficients value
+  */
+  double MinimizeUncoupledCostNLOPT();
+
+  /// Minimize the uncoupled cost function for this support point using Newton's method
+  /**
+  \return The uncoupled cost at the optimal coefficients value
+  */
+  double MinimizeUncoupledCostNewton();
+
+  /// Optimization for the uncoupled cost minimization
+  const OptimizationOptions optimizationOptions;
 
   /// The bases that defines this support point
   /**

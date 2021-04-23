@@ -21,12 +21,17 @@ protected:
   @param[in] x The point \f$x \in \Omega \f$
   \return The evaluation of \f$f(x)\f$
   */
-  inline virtual Eigen::VectorXd RightHandSideVectorImpl(Eigen::VectorXd const& x) const override { return Eigen::VectorXd::Constant(outputDimension, x.prod()); }
+  inline virtual Eigen::VectorXd RightHandSideVectorImpl(Eigen::VectorXd const& x) const override {
+    return Eigen::Vector2d(
+      std::sin(2.0*M_PI*x(0))*std::cos(M_PI*x(1)) + std::cos(x(0)),
+      x.prod()
+    );
+  }
 
   inline virtual Eigen::VectorXd OperatorImpl(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases) const override {
     assert(bases.size()==outputDimension);
     Eigen::VectorXd output = IdentityOperator(x, coefficients, bases);
-    output += (output.array()*output.array()).matrix();
+    output(1) += output(1)*output(1);
 
     return output;
   }
@@ -40,7 +45,11 @@ protected:
       const Eigen::VectorXd phi = bases[i]->EvaluateBasisFunctions(x);
       assert(phi.size()==basisSize);
 
-      jac.row(i).segment(ind, basisSize) = 2.0*phi.dot(coefficients.segment(ind, basisSize))*phi + phi;
+      if( i==1 ) {
+        jac.row(i).segment(ind, basisSize) = phi + 2.0*phi.dot(coefficients.segment(ind, basisSize))*phi;
+      } else {
+        jac.row(i).segment(ind, basisSize) = phi;
+      }
 
       ind += basisSize;
     }
@@ -52,8 +61,8 @@ protected:
   inline std::vector<Eigen::MatrixXd> OperatorHessianImpl(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases) const {
     std::vector<Eigen::MatrixXd> hess(outputDimension, Eigen::MatrixXd::Zero(coefficients.size(), coefficients.size()));
 
-    std::size_t ind = 0;
-    for( std::size_t i=0; i<outputDimension; ++i ) {
+    std::size_t ind = bases[0]->NumBasisFunctions();
+    for( std::size_t i=1; i<outputDimension; ++i ) {
       Eigen::VectorXd phi = bases[i]->EvaluateBasisFunctions(x);
       for( std::size_t k=0; k<phi.size(); ++k ) {
         for( std::size_t j=0; j<phi.size(); ++j ) {
@@ -72,45 +81,67 @@ private:
 class UncoupledCostTests : public::testing::Test {
 public:
   /// Set up information to test the support point
-  virtual void SetUp() override {
-    // the input and output dimensions
-    const std::size_t indim = 3, outdim = 2;
+  virtual void SetUp() override {}
 
+  /// Create the support point cloud given optimization opertions
+  void CreateCloud(pt::ptree const& optimization = pt::ptree()) {
     pt::ptree modelOptions;
     modelOptions.put("InputDimension", indim);
     modelOptions.put("OutputDimension", outdim);
 
     // the order of the total order polynomial and sin/cos bases
-    const std::size_t orderPoly = 5, orderSinCos = 2;
+    const std::size_t orderPoly = 4, orderSinCos = 2;
 
     // options for the support point
     pt::ptree suppOptions;
-    suppOptions.put("NumNeighbors", 75);
+    suppOptions.put("NumNeighbors", 25);
     suppOptions.put("BasisFunctions", "Basis1, Basis2");
     suppOptions.put("Basis1.Type", "TotalOrderSinCos");
     suppOptions.put("Basis1.Order", orderSinCos);
+    suppOptions.put("Basis1.LocalBasis", false);
     suppOptions.put("Basis2.Type", "TotalOrderPolynomials");
     suppOptions.put("Basis2.Order", orderPoly);
+    suppOptions.add_child("Optimization", optimization);
     point = SupportPoint::Construct(
       Eigen::VectorXd::Random(indim),
       std::make_shared<ExampleIdentityModelForUncoupledCostTests>(modelOptions),
       suppOptions);
 
     // create a support point cloud so that this point has nearest neighbors
-    supportPoints.resize(75);
+    supportPoints.resize(suppOptions.get<std::size_t>("NumNeighbors"));
     supportPoints[0] = point;
     for( std::size_t i=1; i<supportPoints.size(); ++i ) {
       supportPoints[i] = SupportPoint::Construct(
         point->x + 0.1*Eigen::VectorXd::Random(indim), // choose a bunch of points that are close to the point we care about
         std::make_shared<ExampleIdentityModelForUncoupledCostTests>(modelOptions),
         suppOptions);
-      }
-      pt::ptree ptSupportPointCloud;
-      cloud = SupportPointCloud::Construct(supportPoints, ptSupportPointCloud);
     }
+    pt::ptree ptSupportPointCloud;
+    cloud = SupportPointCloud::Construct(supportPoints, ptSupportPointCloud);
+  }
+
+  void CheckMinimization(double const costtol) const {
+    const double cost = point->MinimizeUncoupledCost();
+    const double tol = 10.0*std::sqrt(cost);
+    EXPECT_TRUE(cost<costtol);
+
+    for( const auto& it : supportPoints ) {
+      const Eigen::VectorXd eval = point->EvaluateLocalFunction(it->x);
+      const Eigen::VectorXd operatorEval = Eigen::Vector2d(eval(0), eval(1)+eval(1)*eval(1));
+      const Eigen::VectorXd expectedRHS = Eigen::Vector2d(
+        std::sin(2.0*M_PI*it->x(0))*std::cos(M_PI*it->x(1)) + std::cos(it->x(0)),
+        it->x.prod()
+      );
+      EXPECT_EQ(eval.size(), point->model->outputDimension);
+      for( std::size_t i=0; i<eval.size(); ++i ) { EXPECT_NEAR(expectedRHS(i), operatorEval(i), tol); }
+    }
+  }
 
   /// Make sure everything is what we expect
   virtual void TearDown() override {}
+
+  /// The input and output dimensions
+  const std::size_t indim = 2, outdim = 2;
 
   std::vector<std::shared_ptr<SupportPoint> > supportPoints;
 
@@ -123,6 +154,8 @@ private:
 };
 
 TEST_F(UncoupledCostTests, CostEvaluationAndDerivatives) {
+  CreateCloud();
+
   // create the uncoupled cost
   pt::ptree costOptions;
   costOptions.put("RegularizationParameter", regularizationScale);
@@ -143,7 +176,8 @@ TEST_F(UncoupledCostTests, CostEvaluationAndDerivatives) {
     const Eigen::VectorXd kernel = point->NearestNeighborKernel();
     EXPECT_EQ(kernel.size(), supportPoints.size());
     for( std::size_t i=0; i<supportPoints.size(); ++i ) {
-      const Eigen::VectorXd diff = point->Operator(supportPoints[i]->x, coefficients) - point->model->RightHandSide(supportPoints[i]->x);
+      const Eigen::VectorXd diff = point->Operator(supportPoints[point->GlobalNeighborIndex(i)]->x, coefficients) - point->model->RightHandSide(supportPoints[point->GlobalNeighborIndex(i)]->x);
+
       trueCost += kernel(i)*diff.dot(diff);
     }
     trueCost += regularizationScale*coefficients.dot(coefficients);
@@ -176,16 +210,32 @@ TEST_F(UncoupledCostTests, CostEvaluationAndDerivatives) {
   EXPECT_NEAR((hessFD-hess).norm()/hessFD.norm(), 0.0, 1.0e-5);
 }
 
-TEST_F(UncoupledCostTests, MinimizeOnePoint) {
-  point->MinimizeUncoupledCost();
+TEST_F(UncoupledCostTests, MinimizeOnePointNLOPT) {
+  pt::ptree optimization;
+  optimization.put("UseNLOPT", true);
+  optimization.put("AbsoluteFunctionTol", 0.0);
+  optimization.put("RelativeFunctionTol", 0.0);
+  optimization.put("AbsoluteStepSizeTol", 0.0);
+  optimization.put("RelativeStepSizeTol", 0.0);
+  CreateCloud(optimization);
 
-  for( const auto& it : supportPoints ) {
-    const Eigen::VectorXd eval = point->EvaluateLocalFunction(it->x);
-    const Eigen::VectorXd operatorEval = (eval.array()*eval.array()).matrix()+eval;
-    EXPECT_EQ(eval.size(), point->model->outputDimension);
-    std::cout << it->x.prod() << std::endl;
-    std::cout << operatorEval.transpose() << std::endl;
-    std::cout << std::endl;
-    //for( std::size_t i=0; i<eval.size(); ++i ) { EXPECT_NEAR(it->x.prod(), operatorEval(i), 1.0e-12); }
-  }
+  CheckMinimization(1.0e-8);
+}
+
+TEST_F(UncoupledCostTests, MinimizeOnePointNewtonsMethod_GaussNewtonHessian) {
+  pt::ptree optimization;
+  optimization.put("UseNLOPT", false);
+  optimization.put("UseGaussNewtonHessian", true);
+  CreateCloud(optimization);
+
+  CheckMinimization(1.0e-8);
+}
+
+TEST_F(UncoupledCostTests, MinimizeOnePointNewtonsMethod_TrueHessian) {
+  pt::ptree optimization;
+  optimization.put("UseNLOPT", false);
+  optimization.put("UseGaussNewtonHessian", false);
+  CreateCloud(optimization);
+
+  CheckMinimization(1.0e-8);
 }

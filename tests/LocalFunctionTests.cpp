@@ -60,7 +60,7 @@ TEST(LocalFunctionTests, Construction) {
   auto cloud = SupportPointCloud::Construct(supportPoints, ptSupportPointCloud);
 
   // create the local function
-  pt::ptree ptFunc;
+  /*pt::ptree ptFunc;
   auto localFunction = std::make_shared<LocalFunction>(cloud, ptFunc);
 
   for( const auto& it : supportPoints ) {
@@ -70,5 +70,5 @@ TEST(LocalFunctionTests, Construction) {
     std::cout << "eval: " << eval.transpose() << std::endl;
     std::cout << "expected: " << expected.transpose() << std::endl;
     std::cout << std::endl;
-  }
+  }*/
 }

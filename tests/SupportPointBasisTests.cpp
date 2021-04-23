@@ -31,7 +31,7 @@ TEST(SupportPointBasisTests, Construct) {
   pt::ptree suppPointOptions;
   suppPointOptions.put("BasisFunctions", "Basis");
   suppPointOptions.put("Basis.Type", "TotalOrderPolynomials");
-  suppPointOptions.put("Radius", 0.5);
+  suppPointOptions.put("Basis.Radius", 0.5);
   auto point = SupportPoint::Construct(x, model, suppPointOptions);
 
   // the basis is a support point basis
