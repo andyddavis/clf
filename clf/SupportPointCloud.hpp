@@ -17,13 +17,16 @@ Parameter Key | Type | Default Value | Description |
 "RequireConnectedGraphs"   | <tt>bool</tt> | <tt>false</tt> | <tt>true</tt>: The graphs associated with each output must be connected, <tt>false</tt>: The graphs associated with each output need not be connected |
 */
 class SupportPointCloud : public std::enable_shared_from_this<SupportPointCloud> {
-public:
+// make the constructors protected because we will always need to find the nearest neighbors after construction
+protected:
 
   /**
   @param[in] supportPoints The \f$i^{th}\f$ entry is the support point associated with \f$x^{(i)}\f$
   @param[in] pt The options for the support point cloud
   */
   SupportPointCloud(std::vector<std::shared_ptr<SupportPoint> > const& supportPoints, boost::property_tree::ptree const& pt);
+
+public:
 
   virtual ~SupportPointCloud() = default;
 
@@ -84,9 +87,6 @@ public:
   */
   std::size_t OutputDimension() const;
 
-  /// Find the required nearest neighbors for each support point
-  void FindNearestNeighbors() const;
-
   /// Find the \f$k\f$ nearest neighbors
   /**
   @param[in] point We want to find the nearest neighbors of this point
@@ -96,11 +96,24 @@ public:
   */
   void FindNearestNeighbors(Eigen::VectorXd const& point, std::size_t const k, std::vector<std::size_t>& neighInd, std::vector<double>& neighDist) const;
 
+  /// Find the \f$k\f$ nearest neighbors
+  /**
+  @param[in] point We want to find the nearest neighbors of this point
+  @param[in] k We want to find this many nearest neighbors
+  \return First: The indices of the nearest neighbors, Second: The squared distances from the input point to its nearest neighbors
+  */
+  std::pair<std::vector<std::size_t>, std::vector<double> > FindNearestNeighbors(Eigen::VectorXd const& point, std::size_t const k) const;
+
   /// An iterator to the first support point
   std::vector<std::shared_ptr<SupportPoint> >::const_iterator Begin() const;
 
   /// An iterator to the last support point
   std::vector<std::shared_ptr<SupportPoint> >::const_iterator End() const;
+
+protected:
+
+  /// Find the required nearest neighbors for each support point
+  void FindNearestNeighbors() const;
 
 private:
 

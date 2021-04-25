@@ -8,4 +8,5 @@ PYBIND11_MODULE(CoupledLocalFunctions, module) {
   clf::python::ModelWrapper(module);
   clf::python::SupportPointWrapper(module);
   clf::python::SupportPointCloudWrapper(module);
+  clf::python::LocalFunctionWrapper(module);
 }

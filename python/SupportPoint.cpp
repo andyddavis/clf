@@ -17,4 +17,5 @@ void clf::python::SupportPointWrapper(pybind11::module& mod) {
   suppPt.def_readonly("model", &SupportPoint::model);
   suppPt.def("GetBasisFunctions", &SupportPoint::GetBasisFunctions);
   suppPt.def("NumNeighbors", &SupportPoint::NumNeighbors);
+  suppPt.def("EvaluateLocalFunction", &SupportPoint::EvaluateLocalFunction);
 }

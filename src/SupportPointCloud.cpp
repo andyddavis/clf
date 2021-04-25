@@ -13,7 +13,7 @@ SupportPointCloud::SupportPointCloud(std::vector<std::shared_ptr<SupportPoint> >
 
 std::shared_ptr<SupportPointCloud> SupportPointCloud::Construct(std::vector<std::shared_ptr<SupportPoint> > const& supportPoints, boost::property_tree::ptree const& pt) {
   // make the cloud
-  auto cloud = std::make_shared<SupportPointCloud>(supportPoints, pt);
+  auto cloud = std::shared_ptr<SupportPointCloud>(new SupportPointCloud(supportPoints, pt));
 
   // find the required nearest neighbors for each support point
   cloud->FindNearestNeighbors();
@@ -114,6 +114,12 @@ void SupportPointCloud::FindNearestNeighbors(Eigen::VectorXd const& point, std::
   const std::size_t nfound = kdtree->knnSearch(point.data(), k, neighInd.data(), neighDist.data());
   assert(nfound==k);
 }
+
+std::pair<std::vector<std::size_t>, std::vector<double> > SupportPointCloud::FindNearestNeighbors(Eigen::VectorXd const& point, std::size_t const k) const {
+    std::pair<std::vector<std::size_t>, std::vector<double> > result;
+    SupportPointCloud::FindNearestNeighbors(point, k, result.first, result.second);
+    return result;
+  }
 
 std::vector<std::shared_ptr<SupportPoint> >::const_iterator SupportPointCloud::Begin() const { return supportPoints.begin(); }
 

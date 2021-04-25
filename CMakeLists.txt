@@ -103,6 +103,8 @@ if( CLF_BUILD_FROM_PIP )
         python/SupportPoint.cpp
 
         python/SupportPointCloud.cpp
+
+        python/LocalFunction.cpp
     )
 endif()
 

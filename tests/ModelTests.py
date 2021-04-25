@@ -46,4 +46,4 @@ class TestModel(unittest.TestCase):
         rhs = model.RightHandSide(x)
         self.assertEqual(len(rhs), outdim)
         for i in range(outdim):
-            self.assertAlmostEqual(rhs[i], x[0], 1.0e-12)
+            self.assertAlmostEqual(rhs[i], x[0], places=12)

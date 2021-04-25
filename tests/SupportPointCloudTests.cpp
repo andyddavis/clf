@@ -71,8 +71,7 @@ TEST_F(SupportPointCloudTests, Construction) {
   for( std::size_t i=0; i<n; ++i ) { supportPoints[i] = SupportPoint::Construct(dist->Sample(), model, ptSupportPoints); }
 
   // create the support point cloud
-  cloud = std::make_shared<SupportPointCloud>(supportPoints, ptSupportPointCloud);
-  cloud->FindNearestNeighbors();
+  cloud = SupportPointCloud::Construct(supportPoints, ptSupportPointCloud);
 }
 
 TEST_F(SupportPointCloudTests, NearestNeighborSearch) {
@@ -137,7 +136,7 @@ TEST(SupportPointCloudErrorTests, InputDimensionCheck) {
   // try to create a support point cloud
   try {
     pt::ptree ptSupportPointCloud;
-    SupportPointCloud cloud(supportPoints, ptSupportPointCloud);
+    auto cloud = SupportPointCloud::Construct(supportPoints, ptSupportPointCloud);
   } catch( exceptions::SupportPointCloudDimensionException const& exc ) {
     EXPECT_EQ(exc.type, exceptions::SupportPointCloudDimensionException::Type::INPUT);
     EXPECT_NE(exc.ind1, exc.ind2);
@@ -175,7 +174,7 @@ TEST(SupportPointCloudErrorTests, OutputDimensionCheck) {
   // try to create a support point cloud
   try {
     pt::ptree ptSupportPointCloud;
-    SupportPointCloud cloud(supportPoints, ptSupportPointCloud);
+    auto cloud = SupportPointCloud::Construct(supportPoints, ptSupportPointCloud);
   } catch( exceptions::SupportPointCloudDimensionException const& exc ) {
     EXPECT_EQ(exc.type, exceptions::SupportPointCloudDimensionException::Type::OUTPUT);
     EXPECT_NE(exc.ind1, exc.ind2);
@@ -201,7 +200,7 @@ TEST(SupportPointCloudErrorTests, NotEnoughPoints) {
   // try to create a support point cloud
   try {
     pt::ptree ptSupportPointCloud;
-    SupportPointCloud cloud(supportPoints, ptSupportPointCloud);
+    auto cloud = SupportPointCloud::Construct(supportPoints, ptSupportPointCloud);
   } catch( exceptions::SupportPointCloudNotEnoughPointsException const& exc ) {
     EXPECT_EQ(exc.numPoints, supportPoints.size());
     EXPECT_EQ(exc.required, 10);
@@ -231,6 +230,6 @@ TEST(SupportPointCloudErrorTests, NotConnected) {
   try {
     pt::ptree ptSupportPointCloud;
     ptSupportPointCloud.put("RequireConnectedGraphs", true);
-    SupportPointCloud cloud(supportPoints, ptSupportPointCloud);
+    auto cloud = SupportPointCloud::Construct(supportPoints, ptSupportPointCloud);
   } catch( exceptions::SupportPointCloudNotConnected const& exc ) {}
 }
