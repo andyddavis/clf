@@ -1,16 +1,16 @@
 #include <gtest/gtest.h>
 
-#include "clf/LocalFunction.hpp"
+#include "clf/LocalFunctions.hpp"
 
 namespace pt = boost::property_tree;
 using namespace clf;
 
-class ExampleModelForLocalFunctionTests : public Model {
+class ExampleModelForLocalFunctionsTests : public Model {
 public:
 
-  inline ExampleModelForLocalFunctionTests(pt::ptree const& pt) : Model(pt) {}
+  inline ExampleModelForLocalFunctionsTests(pt::ptree const& pt) : Model(pt) {}
 
-  virtual ~ExampleModelForLocalFunctionTests() = default;
+  virtual ~ExampleModelForLocalFunctionsTests() = default;
 
 protected:
 
@@ -28,14 +28,14 @@ protected:
 private:
 };
 
-TEST(LocalFunctionTests, Evaluation) {
+TEST(LocalFunctionsTests, Evaluation) {
   // the input and output dimensions
   const std::size_t indim = 3, outdim = 2;
 
   pt::ptree modelOptions;
   modelOptions.put("InputDimension", indim);
   modelOptions.put("OutputDimension", outdim);
-  auto model = std::make_shared<ExampleModelForLocalFunctionTests>(modelOptions);
+  auto model = std::make_shared<ExampleModelForLocalFunctionsTests>(modelOptions);
 
   // the order of the total order polynomial and sin/cos bases
   const std::size_t orderPoly = 5, orderSinCos = 2;
@@ -60,10 +60,10 @@ TEST(LocalFunctionTests, Evaluation) {
 
   // create the local function
   pt::ptree ptFunc;
-  auto localFunction = std::make_shared<LocalFunction>(cloud, ptFunc);
+  auto func = std::make_shared<LocalFunctions>(cloud, ptFunc);
 
   // the cost of the optimial coefficients
-  const double cost = localFunction->CoefficientCost();
+  const double cost = func->CoefficientCost();
   EXPECT_NEAR(cost, 0.0, 1.0e-8);
 
   for( const auto& it : supportPoints ) {
@@ -78,11 +78,11 @@ TEST(LocalFunctionTests, Evaluation) {
 
     // find the nearest support point and the squared distance to it
     std::size_t ind; double dist;
-    std::tie(ind, dist)  = localFunction->NearestNeighbor(x);
+    std::tie(ind, dist) = func->NearestNeighbor(x);
     for( const auto& it : supportPoints ) { EXPECT_TRUE(dist<=(x-it->x).dot(x-it->x)+1.0e-10); }
 
     // evaluate the support point
-    const Eigen::VectorXd eval = localFunction->Evaluate(x);
+    const Eigen::VectorXd eval = func->Evaluate(x);
     const Eigen::VectorXd expected = Eigen::Vector2d(std::sin(M_PI*x(0))*std::cos(2.0*M_PI*x(2)) + std::cos(M_PI*x(2)), x(1)*x(0) + x(0) + 1.0);
     EXPECT_NEAR((eval-expected).norm(), 0.0, 10.0*std::sqrt(cost));
   }

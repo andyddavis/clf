@@ -86,7 +86,7 @@ set(CLF_SOURCE
 
     src/UncoupledCost.cpp
 
-    src/LocalFunction.cpp
+    src/LocalFunctions.cpp
 )
 
 # if we are building for python, include the pybind11
@@ -104,7 +104,7 @@ if( CLF_BUILD_FROM_PIP )
 
         python/SupportPointCloud.cpp
 
-        python/LocalFunction.cpp
+        python/LocalFunctions.cpp
     )
 endif()
 
@@ -143,7 +143,7 @@ if( NOT CLF_BUILD_FROM_PIP )
 
         tests/SupportPointCloudTests.cpp
 
-        tests/LocalFunctionTests.cpp
+        tests/LocalFunctionsTests.cpp
     )
 
     include_directories(${GTEST_INCLUDE_DIR})

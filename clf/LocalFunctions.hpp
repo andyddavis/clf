@@ -1,5 +1,5 @@
-#ifndef LOCALFUNCTION_HPP_
-#define LOCALFUNCTION_HPP_
+#ifndef LOCALFUNCTIONS_HPP_
+#define LOCALFUNCTIONS_HPP_
 
 #include "clf/SupportPointCloud.hpp"
 
@@ -15,16 +15,16 @@ The local function is \f$\hat{u}:\Omega \mapsto \mathbb{R}^{m}\f$ for \f$\Omega 
 
 If \f$I(x)\f$ is the index of the nearest support point to a point \f$x \in \Omega\f$, then  The local function evaluation is \f$\hat{u}(x) = [\ell_{I(x)}^{(1)}(x), \ell_{I(x)}^{(2)}(x), ..., \ell_{I(x)}^{(m)}(x)]^{\top}\f$
 */
-class LocalFunction {
+class LocalFunctions {
 public:
 
   /**
   @param[in] cloud The support point cloud that stores all of the support points
   @param[in] options Options for the local function
   */
-  LocalFunction(std::shared_ptr<SupportPointCloud> const& cloud, boost::property_tree::ptree const& pt);
+  LocalFunctions(std::shared_ptr<SupportPointCloud> const& cloud, boost::property_tree::ptree const& pt);
 
-  virtual ~LocalFunction() = default;
+  virtual ~LocalFunctions() = default;
 
   /// The cost associated with the coefficients
   /**

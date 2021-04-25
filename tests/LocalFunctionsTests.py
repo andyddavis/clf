@@ -16,7 +16,7 @@ class Observations(clf.Model):
         else:
             return 0.0
 
-class TestLocalFunction(unittest.TestCase):
+class TestLocalFunctions(unittest.TestCase):
     def test_create(self):
         indim = 3
         outdim = 2
@@ -50,7 +50,7 @@ class TestLocalFunction(unittest.TestCase):
 
         # create the local function
         funcOptions = dict()
-        func = clf.LocalFunction(cloud, funcOptions)
+        func = clf.LocalFunctions(cloud, funcOptions)
 
         # the cost of the optimial coefficients
         cost = func.CoefficientCost()

@@ -34,7 +34,7 @@ void SupportPointCloudWrapper(pybind11::module& mod);
 /**
 @param[in] mod The module that holds the python interface
 */
-void LocalFunctionWrapper(pybind11::module& mod);
+void LocalFunctionsWrapper(pybind11::module& mod);
 
 } // namespace python
 } // namespace clf

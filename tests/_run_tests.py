@@ -9,7 +9,7 @@ from BasisFunctionsTests import *
 from ModelTests import *
 from SupportPointTests import *
 from SupportPointCloudTests import *
-from LocalFunctionTests import *
+from LocalFunctionsTests import *
 
 class TestCLFInstall(unittest.TestCase):
     def test_load_clf(self):
