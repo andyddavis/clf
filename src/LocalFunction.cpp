@@ -21,11 +21,16 @@ void LocalFunction::IndependentSupportPoints() {
 
 double LocalFunction::CoefficientCost() const { return cost; }
 
-Eigen::VectorXd LocalFunction::Evaluate(Eigen::VectorXd const& x) const {
+Eigen::VectorXd LocalFunction::Evaluate(Eigen::VectorXd const& x) const { return cloud->GetSupportPoint(NearestNeighborIndex(x))->EvaluateLocalFunction(x); }
+
+std::size_t LocalFunction::NearestNeighborIndex(Eigen::VectorXd const& x) const { return NearestNeighbor(x).first; }
+
+double LocalFunction::NearestNeighborDistance(Eigen::VectorXd const& x) const { return NearestNeighbor(x).second; }
+
+std::pair<std::size_t, double> LocalFunction::NearestNeighbor(Eigen::VectorXd const& x) const {
   // find the closest point to the input point
   std::vector<std::size_t> ind;
   std::vector<double> dist;
   cloud->FindNearestNeighbors(x, 1, ind, dist);
-
-  return cloud->GetSupportPoint(ind[0])->EvaluateLocalFunction(x);
+  return std::pair<std::size_t, double>(ind[0], dist[0]);
 }

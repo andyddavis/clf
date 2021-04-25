@@ -28,7 +28,7 @@ protected:
 private:
 };
 
-TEST(LocalFunctionTests, Construction) {
+TEST(LocalFunctionTests, Evaluation) {
   // the input and output dimensions
   const std::size_t indim = 3, outdim = 2;
 
@@ -73,7 +73,15 @@ TEST(LocalFunctionTests, Construction) {
   }
 
   for( std::size_t i=0; i<10; ++i ) {
+    // pick a random point
     const Eigen::VectorXd x = 0.1*Eigen::VectorXd::Random(indim);
+
+    // find the nearest support point and the squared distance to it
+    std::size_t ind; double dist;
+    std::tie(ind, dist)  = localFunction->NearestNeighbor(x);
+    for( const auto& it : supportPoints ) { EXPECT_TRUE(dist<=(x-it->x).dot(x-it->x)+1.0e-10); }
+
+    // evaluate the support point
     const Eigen::VectorXd eval = localFunction->Evaluate(x);
     const Eigen::VectorXd expected = Eigen::Vector2d(std::sin(M_PI*x(0))*std::cos(2.0*M_PI*x(2)) + std::cos(M_PI*x(2)), x(1)*x(0) + x(0) + 1.0);
     EXPECT_NEAR((eval-expected).norm(), 0.0, 10.0*std::sqrt(cost));

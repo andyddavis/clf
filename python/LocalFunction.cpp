@@ -15,4 +15,7 @@ void clf::python::LocalFunctionWrapper(pybind11::module& mod) {
   func.def(py::init( [] (std::shared_ptr<SupportPointCloud> const& cloud, py::dict const& d) { return new LocalFunction(cloud, ConvertDictToPtree(d)); }));
   func.def("CoefficientCost", &LocalFunction::CoefficientCost);
   func.def("Evaluate", &LocalFunction::Evaluate);
+  func.def("NearestNeighbor", &LocalFunction::NearestNeighbor);
+  func.def("NearestNeighborIndex", &LocalFunction::NearestNeighborIndex);
+  func.def("NearestNeighborDistance", &LocalFunction::NearestNeighborDistance);
 }

@@ -39,6 +39,28 @@ public:
   */
   Eigen::VectorXd Evaluate(Eigen::VectorXd const& x) const;
 
+  /// Determine which support point is the nearest neighbor to an input point
+  /**
+  @param[in] x We want the closest support point to this point
+  \return The index of the closest support point
+  */
+  std::size_t NearestNeighborIndex(Eigen::VectorXd const& x) const;
+
+  /// Determine the squared distance to the nearest support point
+  /**
+  @param[in] x We want the closest support point to this point
+  \return The squared distance to the closest support point
+  */
+  double NearestNeighborDistance(Eigen::VectorXd const& x) const;
+
+  /// Determine cloest support point and the squared distance to that point
+  /**
+  @param[in] x We want the closest support point to this point
+  \return First: The index of the closest support point, Second: The squared distance to the closest support point
+  */
+  std::pair<std::size_t, double> NearestNeighbor(Eigen::VectorXd const& x) const;
+
+
 private:
 
   /// Compute the optimal coefficients for each support point
