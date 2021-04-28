@@ -12,7 +12,11 @@ using namespace muq::Modeling;
 using namespace muq::Optimization;
 using namespace clf;
 
-SupportPoint::SupportPoint(Eigen::VectorXd const& x, std::shared_ptr<const Model> const& model, pt::ptree const& pt) : x(x), model(model), optimizationOptions(GetOptimizationOptions(pt)) {}
+SupportPoint::SupportPoint(Eigen::VectorXd const& x, std::shared_ptr<const Model> const& model, pt::ptree const& pt) :
+x(x),
+model(model),
+optimizationOptions(GetOptimizationOptions(pt))
+{}
 
 pt::ptree SupportPoint::GetOptimizationOptions(pt::ptree const& pt) {
   auto opt = pt.get_child_optional("Optimization");
@@ -33,13 +37,12 @@ std::shared_ptr<SupportPoint> SupportPoint::Construct(Eigen::VectorXd const& x, 
   point->bases = bases;
   point->numNeighbors = DetermineNumNeighbors(bases, pt);
 
+  point->numCoefficients = ComputeNumCoefficients(bases);
+
   // set the coefficients so the local function is constant
-  point->coefficients = Eigen::VectorXd::Zero(point->NumCoefficients());
+  point->coefficients = Eigen::VectorXd::Zero(point->numCoefficients);
   std::size_t ind = 0;
-  for( const auto& it : bases ) {
-    //point->coefficients(ind+it->constantIndex) = 1.0;
-    ind += it->NumBasisFunctions();
-  }
+  for( const auto& it : bases ) { ind += it->NumBasisFunctions(); }
 
   // create the uncoupled cost
   point->uncoupledCost = std::make_shared<UncoupledCost>(point, pt);
@@ -115,6 +118,14 @@ std::shared_ptr<const BasisFunctions> SupportPoint::CreateBasisFunctions(std::sh
   return basis;
 }
 
+std::size_t SupportPoint::ComputeNumCoefficients(std::vector<std::shared_ptr<const BasisFunctions> > const& bases) {
+  std::size_t num = 0;
+  for( const auto& it : bases ) { num += it->NumBasisFunctions(); }
+  return num;
+}
+
+std::size_t SupportPoint::NumCoefficients() const { return numCoefficients; }
+
 void SupportPoint::SetNearestNeighbors(std::shared_ptr<const SupportPointCloud> const& newcloud, std::vector<std::size_t> const& neighInd, std::vector<double> const& neighDist) {
   assert(neighInd.size()==neighDist.size());
   assert(neighInd.size()==numNeighbors);
@@ -127,6 +138,7 @@ void SupportPoint::SetNearestNeighbors(std::shared_ptr<const SupportPointCloud> 
   for( std::size_t i=0; i<indices.size(); ++i ) { indices[i] = i; }
   std::sort(indices.begin(), indices.end(), [neighDist](std::size_t const i, std::size_t const j) { return neighDist[i]<neighDist[j]; } );
   assert(neighDist[indices[0]]<1.0e-12); // the first neighbor should itself
+  if( neighDist.size()>1 ) { assert(neighDist[indices[1]]>0.0); } // the other neighbors should be farther away
 
   squaredNeighborDistances.resize(indices.size());
   globalNeighorIndices.resize(indices.size());
@@ -142,12 +154,16 @@ void SupportPoint::SetNearestNeighbors(std::shared_ptr<const SupportPointCloud> 
   }
 }
 
+std::size_t SupportPoint::GlobalIndex() const { return (globalNeighorIndices.size()==0? std::numeric_limits<std::size_t>::max() : globalNeighorIndices[0]); }
+
 std::vector<std::size_t> SupportPoint::GlobalNeighborIndices() const { return globalNeighorIndices; }
 
-std::size_t SupportPoint::NumCoefficients() const {
-  std::size_t num = 0;
-  for( const auto& it : bases ) { num += it->NumBasisFunctions(); }
-  return num;
+bool SupportPoint::IsNeighbor(std::size_t const& globalInd) const { return std::find(globalNeighorIndices.begin(), globalNeighorIndices.end(), globalInd)!=globalNeighorIndices.end(); }
+
+std::size_t SupportPoint::LocalIndex(std::size_t const globalInd) const {
+  const auto localInd = std::find(globalNeighorIndices.begin(), globalNeighorIndices.end(), globalInd);
+  if( localInd==globalNeighorIndices.end() ) { return std::numeric_limits<std::size_t>::max(); }
+  return std::distance(globalNeighorIndices.begin(), localInd);
 }
 
 Eigen::VectorXd SupportPoint::NearestNeighbor(std::size_t const jnd) const {
@@ -173,19 +189,19 @@ Eigen::VectorXd SupportPoint::NearestNeighborKernel() const {
 
 Eigen::VectorXd SupportPoint::Operator(Eigen::VectorXd const& loc, Eigen::VectorXd const& coefficients) const {
   assert(loc.size()==model->inputDimension);
-  assert(coefficients.size()==NumCoefficients());
+  assert(coefficients.size()==numCoefficients);
   return model->Operator(loc, coefficients, bases);
 }
 
 Eigen::MatrixXd SupportPoint::OperatorJacobian(Eigen::VectorXd const& loc, Eigen::VectorXd const& coefficients) const {
   assert(loc.size()==model->inputDimension);
-  assert(coefficients.size()==NumCoefficients());
+  assert(coefficients.size()==numCoefficients);
   return model->OperatorJacobian(loc, coefficients, bases);
 }
 
 std::vector<Eigen::MatrixXd> SupportPoint::OperatorHessian(Eigen::VectorXd const& loc, Eigen::VectorXd const& coefficients) const {
   assert(loc.size()==model->inputDimension);
-  assert(coefficients.size()==NumCoefficients());
+  assert(coefficients.size()==numCoefficients);
   return model->OperatorHessian(loc, coefficients, bases);
 }
 
@@ -260,18 +276,21 @@ double SupportPoint::MinimizeUncoupledCost() {
   return optimizationOptions.useNLOPT? MinimizeUncoupledCostNLOPT() : MinimizeUncoupledCostNewton();
 }
 
-Eigen::VectorXd SupportPoint::EvaluateLocalFunction(Eigen::VectorXd const& loc) const {
+Eigen::VectorXd SupportPoint::EvaluateLocalFunction(Eigen::VectorXd const& loc, Eigen::VectorXd const& coeffs) const {
+  assert(coeffs.size()==numCoefficients);
   assert(loc.size()==model->inputDimension);
   Eigen::VectorXd output(model->outputDimension);
   std::size_t ind = 0;
   for( std::size_t i=0; i<model->outputDimension; ++i ) {
     const std::size_t basisSize = bases[i]->NumBasisFunctions();
-    output(i) = coefficients.segment(ind, basisSize).dot(bases[i]->EvaluateBasisFunctions(loc));
+    output(i) = coeffs.segment(ind, basisSize).dot(bases[i]->EvaluateBasisFunctions(loc));
     ind += basisSize;
   }
 
   return output;
 }
+
+Eigen::VectorXd SupportPoint::EvaluateLocalFunction(Eigen::VectorXd const& loc) const { return EvaluateLocalFunction(loc, coefficients); }
 
 const std::vector<std::shared_ptr<const BasisFunctions> >& SupportPoint::GetBasisFunctions() const { return bases; }
 

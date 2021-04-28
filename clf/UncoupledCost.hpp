@@ -21,6 +21,7 @@ p_i = \mbox{arg min}_{p \in \mathbb{R}^{\bar{q}_i}} J(p) = \sum_{j=1}^{k_{nn}} \
 Parameter Key | Type | Default Value | Description |
 ------------- | ------------- | ------------- | ------------- |
 "RegularizationParameter"   | <tt>double</tt> | <tt>0.0</tt> | The regularization parameter \f$a_i\f$. |
+"UncoupledScale"   | <tt>double</tt> | <tt>1.0</tt> | The scale parameter \f$m_i\f$. |
 */
 class UncoupledCost : public muq::Optimization::CostFunction {
 public:
@@ -43,6 +44,12 @@ public:
 
   /// The point that is associated with this cost
   std::weak_ptr<const SupportPoint> point;
+
+  /// The parameter that scales the uncoupled cost
+  /**
+  Defaults to \f$1.0\f$.
+  */
+  double uncoupledScale;
 
   /// The parameter that scales the regularizing term
   /**

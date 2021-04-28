@@ -8,12 +8,12 @@ using namespace muq::Modeling;
 using namespace muq::Optimization;
 using namespace clf;
 
-class ExampleIdentityModelForUncoupledCostTests : public Model {
+class ExampleModelForUncoupledCostTests : public Model {
 public:
 
-  inline ExampleIdentityModelForUncoupledCostTests(pt::ptree const& pt) : Model(pt) {}
+  inline ExampleModelForUncoupledCostTests(pt::ptree const& pt) : Model(pt) {}
 
-  virtual ~ExampleIdentityModelForUncoupledCostTests() = default;
+  virtual ~ExampleModelForUncoupledCostTests() = default;
 
 protected:
 
@@ -92,9 +92,12 @@ public:
     // the order of the total order polynomial and sin/cos bases
     const std::size_t orderPoly = 4, orderSinCos = 2;
 
+    // must be odd so that the randomly selected center is not a point on the grid
+    const std::size_t npoints = 7;
+
     // options for the support point
     pt::ptree suppOptions;
-    suppOptions.put("NumNeighbors", 25);
+    suppOptions.put("NumNeighbors", npoints*npoints+1);
     suppOptions.put("BasisFunctions", "Basis1, Basis2");
     suppOptions.put("Basis1.Type", "TotalOrderSinCos");
     suppOptions.put("Basis1.Order", orderSinCos);
@@ -104,17 +107,20 @@ public:
     suppOptions.add_child("Optimization", optimization);
     point = SupportPoint::Construct(
       Eigen::VectorXd::Random(indim),
-      std::make_shared<ExampleIdentityModelForUncoupledCostTests>(modelOptions),
+      std::make_shared<ExampleModelForUncoupledCostTests>(modelOptions),
       suppOptions);
 
     // create a support point cloud so that this point has nearest neighbors
     supportPoints.resize(suppOptions.get<std::size_t>("NumNeighbors"));
     supportPoints[0] = point;
-    for( std::size_t i=1; i<supportPoints.size(); ++i ) {
-      supportPoints[i] = SupportPoint::Construct(
-        point->x + 0.1*Eigen::VectorXd::Random(indim), // choose a bunch of points that are close to the point we care about
-        std::make_shared<ExampleIdentityModelForUncoupledCostTests>(modelOptions),
-        suppOptions);
+    // add points on a grid so we know that they are well-poised
+    for( std::size_t i=0; i<npoints; ++i ) {
+      for( std::size_t j=0; j<npoints; ++j ) {
+        supportPoints[i*npoints+j+1] = SupportPoint::Construct(
+          point->x+0.1*Eigen::Vector2d((double)i/npoints-0.5, (double)j/npoints-0.5),
+          std::make_shared<ExampleModelForUncoupledCostTests>(modelOptions),
+          suppOptions);
+      }
     }
     pt::ptree ptSupportPointCloud;
     cloud = SupportPointCloud::Construct(supportPoints, ptSupportPointCloud);
@@ -150,6 +156,8 @@ public:
   std::shared_ptr<SupportPointCloud> cloud;
 
   const double regularizationScale = 0.5;
+
+  const double uncoupledScale = 0.25;
 private:
 };
 
@@ -159,9 +167,11 @@ TEST_F(UncoupledCostTests, CostEvaluationAndDerivatives) {
   // create the uncoupled cost
   pt::ptree costOptions;
   costOptions.put("RegularizationParameter", regularizationScale);
+  costOptions.put("UncoupledScale", uncoupledScale);
   auto cost = std::make_shared<UncoupledCost>(point, costOptions);
   EXPECT_EQ(cost->inputSizes(0), point->NumCoefficients());
   EXPECT_DOUBLE_EQ(cost->regularizationScale, regularizationScale);
+  EXPECT_DOUBLE_EQ(cost->uncoupledScale, uncoupledScale);
 
   // the points should be the same
   auto costPt = cost->point.lock();
@@ -178,7 +188,7 @@ TEST_F(UncoupledCostTests, CostEvaluationAndDerivatives) {
     for( std::size_t i=0; i<supportPoints.size(); ++i ) {
       const Eigen::VectorXd diff = point->Operator(supportPoints[point->GlobalNeighborIndex(i)]->x, coefficients) - point->model->RightHandSide(supportPoints[point->GlobalNeighborIndex(i)]->x);
 
-      trueCost += kernel(i)*diff.dot(diff);
+      trueCost += uncoupledScale*kernel(i)*diff.dot(diff);
     }
     trueCost += regularizationScale*coefficients.dot(coefficients);
     trueCost /= (2.0*supportPoints.size());

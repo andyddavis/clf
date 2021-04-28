@@ -48,9 +48,6 @@ message(STATUS "External libraries: " ${CLF_EXTERNAL_LIBRARIES})
 message(STATUS "External includes: " ${CLF_EXTERNAL_INCLUDE_DIRS})
 message(STATUS "")
 
-#find_package(MUQ HINTS ~/Software/install/muq2/CMake/MUQ REQUIRED)
-#find_package(MUQ HINTS ${CLF_MUQ_DIR} REQUIRED)
-
 include_directories(${CLF_EXTERNAL_INCLUDE_DIRS} .)
 
 if( CLF_BUILD_FROM_PIP )
@@ -76,6 +73,9 @@ set(CLF_SOURCE
     src/ModelExceptions.cpp
     src/Model.cpp
 
+    src/UncoupledCost.cpp
+    src/CoupledCost.cpp
+
     src/OptimizationOptions.cpp
 
     src/SupportPointExceptions.cpp
@@ -83,8 +83,6 @@ set(CLF_SOURCE
 
     src/SupportPointCloudExceptions.cpp
     src/SupportPointCloud.cpp
-
-    src/UncoupledCost.cpp
 
     src/LocalFunctions.cpp
 )
@@ -137,9 +135,10 @@ if( NOT CLF_BUILD_FROM_PIP )
 
         tests/ModelTests.cpp
 
-        tests/SupportPointTests.cpp
-
         tests/UncoupledCostTests.cpp
+        tests/CoupledCostTests.cpp
+
+        tests/SupportPointTests.cpp
 
         tests/SupportPointCloudTests.cpp
 

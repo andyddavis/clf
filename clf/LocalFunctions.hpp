@@ -53,18 +53,26 @@ public:
   */
   double NearestNeighborDistance(Eigen::VectorXd const& x) const;
 
-  /// Determine cloest support point and the squared distance to that point
+  /// Determine the closest support point and the squared distance to that point
   /**
   @param[in] x We want the closest support point to this point
   \return First: The index of the closest support point, Second: The squared distance to the closest support point
   */
   std::pair<std::size_t, double> NearestNeighbor(Eigen::VectorXd const& x) const;
 
+  /// Determine if the coefficients for the support points are coupled
+  /**
+  \return <tt>true</tt>: Support points are coupled and we need to compute them simultaneously, <tt>false</tt>: Support points are independent and we can compute the coefficients separatly
+  */
+  bool IndependentSupportPoints() const;
 
 private:
 
   /// Compute the optimal coefficients for each support point
-  void ComputeOptimalCoefficients();
+  /**
+  \return The cost associated with the optimal cupport points
+  */
+  double ComputeOptimalCoefficients();
 
   /// Compute the optimal coefficients for each support point given that their is no coupling
   /**
@@ -73,8 +81,20 @@ private:
   p_i = \mbox{arg min}_{p \in \mathbb{R}^{\bar{q}_i}} J(p) = \sum_{j=1}^{k_{nn}} \frac{m_i}{2} \| \mathcal{L}_i(\hat{u}(x_{I(i,j)}, p)) - f_i(x_{I(i,j)}) \|^2 {K_i(x_i, x_{I(i,j)})} + \frac{a_i}{2} \|p\|^2,
   \f}
   where \f$\mathcal{L}_i\f$ and \f$f_i\f$ are the model operator and right hand side associated with support point \f$i\f$, \f$K_i\f$ is a compact kernel function, and \f$a_i \geq 0\f$ is a regulatory parameter.
+  \return The cost associated with the optimal cupport points (average cost of all the support points)
   */
-  void IndependentSupportPoints();
+  double ComputeIndependentSupportPoints();
+
+  /// Compute the optimal coefficients for each support point given that their is no coupling
+  /**
+  This function assumes that each support point solves the problem
+  \f{equation*}{
+  p_i = \mbox{arg min}_{p \in \mathbb{R}^{\bar{q}_i}} J(p) = \sum_{j=1}^{k_{nn}} \frac{m_i}{2} \| \mathcal{L}_i(\hat{u}(x_{I(i,j)}, p)) - f_i(x_{I(i,j)}) \|^2 {K_i(x_i, x_{I(i,j)})} + \frac{a_i}{2} \|p\|^2,
+  \f}
+  where \f$\mathcal{L}_i\f$ and \f$f_i\f$ are the model operator and right hand side associated with support point \f$i\f$, \f$K_i\f$ is a compact kernel function, and \f$a_i \geq 0\f$ is a regulatory parameter.
+  \return The cost associated with the optimal cupport points
+  */
+  double ComputeCoupledSupportPoints();
 
   /// The support point cloud that stores all of the support points
   std::shared_ptr<SupportPointCloud> cloud;

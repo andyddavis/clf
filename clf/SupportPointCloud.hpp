@@ -110,12 +110,24 @@ public:
   /// An iterator to the last support point
   std::vector<std::shared_ptr<SupportPoint> >::const_iterator End() const;
 
+  /// The total number of coefficients
+  /**
+  The sum of all of the number coefficients required by each support point.
+  */
+  const std::size_t numCoefficients;
+
 protected:
 
   /// Find the required nearest neighbors for each support point
   void FindNearestNeighbors() const;
 
 private:
+
+  /// The total number of basis function coefficients
+  /**
+  \return The sum of the number of basis coefficients over all of the support point
+  */
+  static std::size_t NumCoefficients(std::vector<std::shared_ptr<SupportPoint> > const& supportPoints);
 
   /// Make sure the support points all have the same input/output dimension
   void CheckSupportPoints() const;

@@ -3,12 +3,22 @@
 namespace pt = boost::property_tree;
 using namespace clf;
 
-SupportPointCloud::SupportPointCloud(std::vector<std::shared_ptr<SupportPoint> > const& supportPoints, pt::ptree const& pt) : supportPoints(supportPoints), requireConnectedGraphs(pt.get<bool>("RequireConnectedGraphs", false)) {
+SupportPointCloud::SupportPointCloud(std::vector<std::shared_ptr<SupportPoint> > const& supportPoints, pt::ptree const& pt) :
+supportPoints(supportPoints),
+numCoefficients(NumCoefficients(supportPoints)),
+requireConnectedGraphs(pt.get<bool>("RequireConnectedGraphs", false))
+{
   // make sure the support points all of the same in/output dimensions
   CheckSupportPoints();
 
   // build the kd tree
   BuildKDTree(pt.get<std::size_t>("MaxLeaf", 10));
+}
+
+std::size_t SupportPointCloud::NumCoefficients(std::vector<std::shared_ptr<SupportPoint> > const& supportPoints) {
+  std::size_t numCoeffs = 0;
+  for( const auto& it : supportPoints ) { numCoeffs += it->NumCoefficients(); }
+  return numCoeffs;
 }
 
 std::shared_ptr<SupportPointCloud> SupportPointCloud::Construct(std::vector<std::shared_ptr<SupportPoint> > const& supportPoints, boost::property_tree::ptree const& pt) {
@@ -116,10 +126,10 @@ void SupportPointCloud::FindNearestNeighbors(Eigen::VectorXd const& point, std::
 }
 
 std::pair<std::vector<std::size_t>, std::vector<double> > SupportPointCloud::FindNearestNeighbors(Eigen::VectorXd const& point, std::size_t const k) const {
-    std::pair<std::vector<std::size_t>, std::vector<double> > result;
-    SupportPointCloud::FindNearestNeighbors(point, k, result.first, result.second);
-    return result;
-  }
+  std::pair<std::vector<std::size_t>, std::vector<double> > result;
+  SupportPointCloud::FindNearestNeighbors(point, k, result.first, result.second);
+  return result;
+}
 
 std::vector<std::shared_ptr<SupportPoint> >::const_iterator SupportPointCloud::Begin() const { return supportPoints.begin(); }
 

@@ -6,7 +6,14 @@ namespace pt = boost::property_tree;
 using namespace muq::Optimization;
 using namespace clf;
 
-UncoupledCost::UncoupledCost(std::shared_ptr<SupportPoint> const& point, pt::ptree const& pt) : CostFunction(Eigen::VectorXi::Constant(1, point->NumCoefficients())), point(point), regularizationScale(pt.get<double>("RegularizationParameter", 0.0)) {}
+UncoupledCost::UncoupledCost(std::shared_ptr<SupportPoint> const& point, pt::ptree const& pt) :
+CostFunction(Eigen::VectorXi::Constant(1, point->NumCoefficients())),
+point(point),
+uncoupledScale(pt.get<double>("UncoupledScale", 1.0)),
+regularizationScale(pt.get<double>("RegularizationParameter", 0.0))
+{
+  assert(uncoupledScale>-1.0e-10); assert(regularizationScale>-1.0e-10);
+}
 
 double UncoupledCost::CostImpl(muq::Modeling::ref_vector<Eigen::VectorXd> const& input) {
   // get the support point
@@ -30,7 +37,7 @@ double UncoupledCost::CostImpl(muq::Modeling::ref_vector<Eigen::VectorXd> const&
     cost += kernel(i)*diff.dot(diff);
   }
 
-  return (cost + (regularizationScale>0.0? regularizationScale*input[0].get().dot(input[0].get()) : 0.0))/(2.0*pnt->NumNeighbors());
+  return (uncoupledScale*cost + (regularizationScale>0.0? regularizationScale*input[0].get().dot(input[0].get()) : 0.0))/(2.0*pnt->NumNeighbors());
 }
 
  void UncoupledCost::GradientImpl(unsigned int const inputDimWrt, muq::Modeling::ref_vector<Eigen::VectorXd> const& input, Eigen::VectorXd const& sensitivity) {
@@ -56,6 +63,7 @@ double UncoupledCost::CostImpl(muq::Modeling::ref_vector<Eigen::VectorXd> const&
      this->gradient += kernel(i)*modelJac.transpose()*(pnt->Operator(neighx, input[0]) - pnt->model->RightHandSide(neighx));
    }
 
+   this->gradient *= uncoupledScale;
    if( regularizationScale>0.0 ) { this->gradient += regularizationScale*input[0]; }
    this->gradient *= sensitivity(0)/pnt->NumNeighbors();
  }
@@ -97,6 +105,7 @@ Eigen::MatrixXd UncoupledCost::Hessian(Eigen::VectorXd const& coefficients, bool
      }
    }
 
+   hess *= uncoupledScale;
    if( regularizationScale>0.0 ) { hess += regularizationScale*Eigen::MatrixXd::Identity(inputSizes(0), inputSizes(0)); }
    return hess/pnt->NumNeighbors();
  }

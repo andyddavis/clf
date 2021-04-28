@@ -74,6 +74,28 @@ public:
   */
   std::vector<std::size_t> GlobalNeighborIndices() const;
 
+  /// Return the global index of this support point
+  /**
+  If the number of nearest neighbors is zero, then return the maximum possible integer to indicate an invalid index.
+  \return The global index of this support point
+  */
+  std::size_t GlobalIndex() const;
+
+  /// Get the local index given the global index
+  /**
+  If the global index corresponds to one of the nearest neighbors, return the local index (this is the \f$j^{th}\f$ nearest neighbor). If the global index does <em>not</em> correspond to a nearest neighbor, return the maximum possible integer to indicate an invalid index.
+  @param[in] globalInd The global index
+  \return The local index (if the global index corresponds to a nearest neighbor)
+  */
+  std::size_t LocalIndex(std::size_t const globalInd) const;
+
+  /// Check if a point (indexed by a global ID) is a nearest neighbor
+  /**
+  @param[in] globalInd The global index of a support point
+  \return <tt>true</tt>: It is a nearest neighbor, <tt>false</tt>: It is not a nearest neighbor
+  */
+  bool IsNeighbor(std::size_t const& globalInd) const;
+
   /// The number of coefficients associated with this support point
   /**
   The total number of coefficients is the sum of the coefficients associated with each basis.
@@ -127,12 +149,20 @@ public:
   */
   std::size_t NumNeighbors() const;
 
-  /// Evaluate the local function associated with this support point
+  /// Evaluate the local function associated with this support point using the stored coefficients
   /**
   @param[in] loc The point where we want to evaluate the local function
   \return The function evaluation
   */
   Eigen::VectorXd EvaluateLocalFunction(Eigen::VectorXd const& loc) const;
+
+  /// Evaluate the local function associated with this support point with given coefficients
+  /**
+  @param[in] loc The point where we want to evaluate the local function
+  @param[in] coeffs The coefficients of the basis functions
+  \return The function evaluation
+  */
+  Eigen::VectorXd EvaluateLocalFunction(Eigen::VectorXd const& loc, Eigen::VectorXd const& coeffs) const;
 
   /// The global index of a neighbor given its local index
   /**
@@ -186,6 +216,13 @@ private:
   */
   static boost::property_tree::ptree GetOptimizationOptions(boost::property_tree::ptree const& pt);
 
+  /// The number of coefficients associated with this support point
+  /**
+  The total number of coefficients is the sum of the coefficients associated with each basis.
+  \return The number of coefficients associated with this support point
+  */
+  static std::size_t ComputeNumCoefficients(std::vector<std::shared_ptr<const BasisFunctions> > const& bases);
+
   /// Minimize the uncoupled cost function for this support point using NLOPT
   /**
   \return The uncoupled cost at the optimal coefficients value
@@ -197,6 +234,9 @@ private:
   \return The uncoupled cost at the optimal coefficients value
   */
   double MinimizeUncoupledCostNewton();
+
+  /// The number of coefficients associated with this support point
+  std::size_t numCoefficients;
 
   /// Optimization for the uncoupled cost minimization
   const OptimizationOptions optimizationOptions;

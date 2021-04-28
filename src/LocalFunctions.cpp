@@ -7,16 +7,22 @@ LocalFunctions::LocalFunctions(std::shared_ptr<SupportPointCloud> const& cloud, 
   ComputeOptimalCoefficients();
 }
 
-void LocalFunctions::ComputeOptimalCoefficients() {
-  IndependentSupportPoints();
+double LocalFunctions::ComputeOptimalCoefficients() {
+  if( IndependentSupportPoints() ) { return ComputeIndependentSupportPoints(); }
+  return ComputeCoupledSupportPoints();
 }
 
-void LocalFunctions::IndependentSupportPoints() {
+double LocalFunctions::ComputeCoupledSupportPoints() {
+  assert(false);
+  return cost;
+}
+
+
+double LocalFunctions::ComputeIndependentSupportPoints() {
   cost = 0.0;
-  for( auto point=cloud->Begin(); point!=cloud->End(); ++point ) {
-    cost += (*point)->MinimizeUncoupledCost();
-  }
+  for( auto point=cloud->Begin(); point!=cloud->End(); ++point ) { cost += (*point)->MinimizeUncoupledCost(); }
   cost /= cloud->NumSupportPoints();
+  return cost;
 }
 
 double LocalFunctions::CoefficientCost() const { return cost; }
@@ -34,3 +40,5 @@ std::pair<std::size_t, double> LocalFunctions::NearestNeighbor(Eigen::VectorXd c
   cloud->FindNearestNeighbors(x, 1, ind, dist);
   return std::pair<std::size_t, double>(ind[0], dist[0]);
 }
+
+bool LocalFunctions::IndependentSupportPoints() const { return true; }

@@ -40,6 +40,10 @@ protected:
     EXPECT_EQ(cloud->kdtree_get_point_count(), n);
     EXPECT_EQ(cloud->InputDimension(), indim);
     EXPECT_EQ(cloud->OutputDimension(), outdim);
+
+    std::size_t totCoeffs = 0;
+    for( auto it=cloud->Begin(); it!=cloud->End(); ++it ) { totCoeffs += (*it)->NumCoefficients(); }
+    EXPECT_EQ(cloud->numCoefficients, totCoeffs);
   }
 
   /// The domain dimension
@@ -72,6 +76,12 @@ TEST_F(SupportPointCloudTests, Construction) {
 
   // create the support point cloud
   cloud = SupportPointCloud::Construct(supportPoints, ptSupportPointCloud);
+
+  // the first local index point of each point should be itself (it is its own zeroth neighbor)
+  for( const auto& it : supportPoints ) {
+    const std::size_t ind = it->GlobalNeighborIndex(0);
+    EXPECT_TRUE(cloud->GetSupportPoint(ind)==it);
+  }
 }
 
 TEST_F(SupportPointCloudTests, NearestNeighborSearch) {
