@@ -10,8 +10,15 @@ CostFunction(Eigen::VectorXi::Constant(1, point->NumCoefficients()+neighbor->Num
 coupledScale(pt.get<double>("CoupledScale", 1.0)),
 point(point),
 neighbor(neighbor),
+pointBasisEvals(point->EvaluateBasisFunctions(neighbor->x)),
+neighborBasisEvals(neighbor->EvaluateBasisFunctions(neighbor->x)),
 localNeighborInd(LocalIndex(point, neighbor))
-{}
+{
+  assert(pointBasisEvals.size()==neighborBasisEvals.size());
+
+  // resize the gradient
+  this->gradient.resize(inputSizes(0));
+}
 
 bool CoupledCost::Coupled() const { return localNeighborInd!=std::numeric_limits<std::size_t>::max(); }
 
@@ -31,7 +38,36 @@ double CoupledCost::CostImpl(muq::Modeling::ref_vector<Eigen::VectorXd> const& i
   const Eigen::Map<const Eigen::VectorXd> neighCoeffs(&input[0] (pnt->NumCoefficients()), neigh->NumCoefficients());
 
   // the difference in the support point output (evaluated at the neighbor point)
-  const Eigen::VectorXd diff = pnt->EvaluateLocalFunction(neigh->x, pointCoeffs) - neigh->EvaluateLocalFunction(neigh->x, neighCoeffs);
+  const Eigen::VectorXd diff = pnt->EvaluateLocalFunction(neigh->x, pointCoeffs, pointBasisEvals) - neigh->EvaluateLocalFunction(neigh->x, neighCoeffs, neighborBasisEvals);
 
-  return coupledScale*diff.dot(diff)/2.0;
+  return coupledScale*pnt->NearestNeighborKernel(localNeighborInd)*diff.dot(diff)/2.0;
+}
+
+void CoupledCost::GradientImpl(unsigned int const inputDimWrt, muq::Modeling::ref_vector<Eigen::VectorXd> const& input, Eigen::VectorXd const& sensitivity) {
+  if( !Coupled() ) {
+    this->gradient = Eigen::VectorXd::Zero(inputSizes(0));
+    return;
+  }
+
+  auto pnt = point.lock();
+  auto neigh = neighbor.lock();
+
+  // coefficients for the point and the neighbor point
+  const Eigen::Map<const Eigen::VectorXd> pointCoeffs(&input[0] (0), pnt->NumCoefficients());
+  const Eigen::Map<const Eigen::VectorXd> neighCoeffs(&input[0] (pnt->NumCoefficients()), neigh->NumCoefficients());
+
+  // the difference in the support point output (evaluated at the neighbor point)
+  const Eigen::VectorXd diff = pnt->EvaluateLocalFunction(neigh->x, pointCoeffs, pointBasisEvals) - neigh->EvaluateLocalFunction(neigh->x, neighCoeffs, neighborBasisEvals);
+
+  // loop through each output
+  std::size_t indPoint = 0, indNeigh = pnt->NumCoefficients();
+  for( std::size_t i=0; i<diff.size(); ++i ) {
+    this->gradient.segment(indPoint, pointBasisEvals[i].size()) = diff(i)*pointBasisEvals[i];
+    indPoint += pointBasisEvals[i].size();
+
+    this->gradient.segment(indNeigh, neighborBasisEvals[i].size()) = -diff(i)*neighborBasisEvals[i];
+    indNeigh += neighborBasisEvals[i].size();
+  }
+
+  this->gradient *= coupledScale*pnt->NearestNeighborKernel(localNeighborInd)*sensitivity(0);
 }

@@ -54,11 +54,18 @@ public:
 
   virtual ~SupportPoint() = default;
 
-  /// Evaluate the nearest neighbor kernel at each neighboring support point
+  /// The nearest neighbor kernel at each neighboring support point
   /**
   \return The kernel evaluation at each support point
   */
   Eigen::VectorXd NearestNeighborKernel() const;
+
+  /// The nearest neighbor kernel at the \f$j^{th}\f$ closest support point
+  /**
+  @param[in] ind The local index of the neighboring support point
+  \return The kernel evaluation at between this support point and its \f$j^{th}\f$ closest neighbor
+  */
+  double NearestNeighborKernel(std::size_t const ind) const;
 
   /// Set the nearest neighbors
   /**
@@ -149,6 +156,13 @@ public:
   */
   std::size_t NumNeighbors() const;
 
+  /// Evaluate the basis functions at a point
+  /**
+  @param[in] loc The point where we want evaluate the basis function
+  \return Each component are the basis function evaluations for the corresponding output
+  */
+  std::vector<Eigen::VectorXd> EvaluateBasisFunctions(Eigen::VectorXd const& loc) const;
+
   /// Evaluate the local function associated with this support point using the stored coefficients
   /**
   @param[in] loc The point where we want to evaluate the local function
@@ -163,6 +177,16 @@ public:
   \return The function evaluation
   */
   Eigen::VectorXd EvaluateLocalFunction(Eigen::VectorXd const& loc, Eigen::VectorXd const& coeffs) const;
+
+  /// Evaluate the local function associated with this support point with given coefficients and previously evaluated basis functions
+  /**
+  Since we often have to repeatedly evaluate the local function at the same point with different coefficients, this allows us to precompute the basis evaluations.
+  @param[in] loc The point where we want to evaluate the local function
+  @param[in] coeffs The coefficients of the basis functions
+  @param[in] basisEvals The basis functions evaluated for each output at the location loc
+  \return The function evaluation
+  */
+  Eigen::VectorXd EvaluateLocalFunction(Eigen::VectorXd const& loc, Eigen::VectorXd const& coeffs, std::vector<Eigen::VectorXd> const& basisEvals) const;
 
   /// The global index of a neighbor given its local index
   /**
@@ -219,9 +243,16 @@ private:
   /// The number of coefficients associated with this support point
   /**
   The total number of coefficients is the sum of the coefficients associated with each basis.
+  @param[in] bases The bases functions for each output
   \return The number of coefficients associated with this support point
   */
   static std::size_t ComputeNumCoefficients(std::vector<std::shared_ptr<const BasisFunctions> > const& bases);
+
+  /// Evaluate the nearest neighbor kernel at each neighboring support point
+  /**
+  Stores the evaluations in SupportPoint::nearestNeighborKernel.
+  */
+  void ComputeNearestNeighborKernel();
 
   /// Minimize the uncoupled cost function for this support point using NLOPT
   /**
@@ -237,6 +268,9 @@ private:
 
   /// The number of coefficients associated with this support point
   std::size_t numCoefficients;
+
+  /// The nearest neighbor kernel at each neighboring support point
+  Eigen::VectorXd nearestNeighborKernel;
 
   /// Optimization for the uncoupled cost minimization
   const OptimizationOptions optimizationOptions;

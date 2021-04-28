@@ -103,12 +103,20 @@ TEST_F(CoupledCostTests, CostEvaluationAndDerivatives) {
     if( !cost->Coupled() ) {
       EXPECT_DOUBLE_EQ(cst, 0.0);
     } else {
-      { // compute the expected cost
-        const Eigen::VectorXd pntEval = point->EvaluateLocalFunction((*it)->x, coefficients.head(point->NumCoefficients()));
-        const Eigen::VectorXd neighEval = (*it)->EvaluateLocalFunction((*it)->x, coefficients.tail((*it)->NumCoefficients()));
-        const Eigen::VectorXd diff = pntEval - neighEval;
-        EXPECT_NEAR(cst, coupledScale*diff.dot(diff)/2.0, 1.0e-10);
-      }
+      const Eigen::VectorXd pntEval = point->EvaluateLocalFunction((*it)->x, coefficients.head(point->NumCoefficients()));
+      const Eigen::VectorXd neighEval = (*it)->EvaluateLocalFunction((*it)->x, coefficients.tail((*it)->NumCoefficients()));
+      const Eigen::VectorXd diff = pntEval - neighEval;
+      EXPECT_NEAR(cst, coupledScale*diff.dot(diff)*point->NearestNeighborKernel(point->LocalIndex((*it)->GlobalIndex()))/2.0, 1.0e-10);
+    }
+
+    // compute the coupling gradient
+    const Eigen::VectorXd grad = cost->Gradient(0, std::vector<Eigen::VectorXd>(1, coefficients), (0.75*Eigen::VectorXd::Ones(1)).eval());
+    EXPECT_EQ(grad.size(), coefficients.size());
+    if( !cost->Coupled() ) {
+      EXPECT_DOUBLE_EQ(grad.norm(), 0.0);
+    } else {
+      const Eigen::VectorXd gradFD = cost->GradientByFD(0, 0, ref_vector<Eigen::VectorXd>(1, coefficients), 0.75*Eigen::VectorXd::Ones(1));
+      EXPECT_NEAR((gradFD-grad).norm()/gradFD.norm(), 0.0, 1.0e-6);
     }
   }
 }

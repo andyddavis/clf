@@ -37,6 +37,7 @@ std::shared_ptr<SupportPoint> SupportPoint::Construct(Eigen::VectorXd const& x, 
   point->bases = bases;
   point->numNeighbors = DetermineNumNeighbors(bases, pt);
 
+  // compute and store the number of coefficients
   point->numCoefficients = ComputeNumCoefficients(bases);
 
   // set the coefficients so the local function is constant
@@ -147,6 +148,9 @@ void SupportPoint::SetNearestNeighbors(std::shared_ptr<const SupportPointCloud> 
     globalNeighorIndices[i] = neighInd[indices[i]];
   }
 
+  // compute and store the kernel evaluations
+  ComputeNearestNeighborKernel();
+
   // reset the scaling parameter for the squared neighbor distance
   for( const auto& basis : bases ) {
     auto suppBasis = std::dynamic_pointer_cast<const SupportPointBasis>(basis);
@@ -180,11 +184,17 @@ std::size_t SupportPoint::GlobalNeighborIndex(std::size_t const localInd) const 
   return globalNeighorIndices[localInd];
 }
 
-Eigen::VectorXd SupportPoint::NearestNeighborKernel() const {
-  Eigen::VectorXd kernel(squaredNeighborDistances.size());
+void SupportPoint::ComputeNearestNeighborKernel() {
+  nearestNeighborKernel.resize(squaredNeighborDistances.size());
 
-  for( std::size_t i=0; i<kernel.size(); ++i ) { kernel(i) = model->NearestNeighborKernel(squaredNeighborDistances[i]/(*(squaredNeighborDistances.end()-1))); }
-  return kernel;
+  for( std::size_t i=0; i<nearestNeighborKernel.size(); ++i ) { nearestNeighborKernel(i) = model->NearestNeighborKernel(squaredNeighborDistances[i]/(*(squaredNeighborDistances.end()-1))); }
+}
+
+Eigen::VectorXd SupportPoint::NearestNeighborKernel() const { return nearestNeighborKernel; }
+
+double SupportPoint::NearestNeighborKernel(std::size_t const ind) const {
+  assert(ind<nearestNeighborKernel.size());
+  return nearestNeighborKernel(ind);
 }
 
 Eigen::VectorXd SupportPoint::Operator(Eigen::VectorXd const& loc, Eigen::VectorXd const& coefficients) const {
@@ -274,6 +284,27 @@ double SupportPoint::MinimizeUncoupledCostNewton() {
 double SupportPoint::MinimizeUncoupledCost() {
   assert(uncoupledCost);
   return optimizationOptions.useNLOPT? MinimizeUncoupledCostNLOPT() : MinimizeUncoupledCostNewton();
+}
+
+std::vector<Eigen::VectorXd> SupportPoint::EvaluateBasisFunctions(Eigen::VectorXd const& loc) const {
+  std::vector<Eigen::VectorXd> basisEvals(model->outputDimension);
+  for( std::size_t i=0; i<model->outputDimension; ++i ) { basisEvals[i] = bases[i]->EvaluateBasisFunctions(loc); }
+  return basisEvals;
+}
+
+Eigen::VectorXd SupportPoint::EvaluateLocalFunction(Eigen::VectorXd const& loc, Eigen::VectorXd const& coeffs, std::vector<Eigen::VectorXd> const& basisEvals) const {
+  assert(coeffs.size()==numCoefficients);
+  assert(loc.size()==model->inputDimension);
+  Eigen::VectorXd output(model->outputDimension);
+  std::size_t ind = 0;
+  for( std::size_t i=0; i<model->outputDimension; ++i ) {
+    const std::size_t basisSize = bases[i]->NumBasisFunctions();
+    assert(basisEvals[i].size()==basisSize);
+    output(i) = coeffs.segment(ind, basisSize).dot(basisEvals[i]);
+    ind += basisSize;
+  }
+
+  return output;
 }
 
 Eigen::VectorXd SupportPoint::EvaluateLocalFunction(Eigen::VectorXd const& loc, Eigen::VectorXd const& coeffs) const {

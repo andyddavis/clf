@@ -59,6 +59,14 @@ protected:
   */
   virtual double CostImpl(muq::Modeling::ref_vector<Eigen::VectorXd> const& input) override;
 
+  /// Compute the cost function gradient
+  /**
+  @param[in] inputDimWrt Since there is only one input, this should always be zero
+  @param[in] input There is only one input: the basis function coefficients
+  @param[in] sensitivity A scaling for the gradient
+  */
+  virtual void GradientImpl(unsigned int const inputDimWrt, muq::Modeling::ref_vector<Eigen::VectorXd> const& input, Eigen::VectorXd const& sensitivity) override;
+
 private:
 
   /// Determine the local nearest neighbor index
@@ -74,6 +82,12 @@ private:
 
   /// The nearest neighbor that (may be) coupled with the main support point
   std::weak_ptr<SupportPoint> neighbor;
+
+  /// The point's basis functions evaluated at the neighbor support point
+  const std::vector<Eigen::VectorXd> pointBasisEvals;
+
+  /// The neighbor's basis functions evaluated at the neighbor support point
+  const std::vector<Eigen::VectorXd> neighborBasisEvals;
 
   /// The local nearest neighbor index
   /**
