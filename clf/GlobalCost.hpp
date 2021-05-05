@@ -20,6 +20,10 @@ public:
   GlobalCost(std::shared_ptr<SupportPointCloud> const& cloud, boost::property_tree::ptree const& pt);
 
   virtual ~GlobalCost() = default;
+
+  /// Compute the Hessian
+  void Hessian() const;
+  
 protected:
 
   /// Compute the cost function

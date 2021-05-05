@@ -72,3 +72,7 @@ void GlobalCost::GradientImpl(unsigned int const inputDimWrt, muq::Modeling::ref
 
   this->gradient *= sensitivity(0);
 }
+
+void GlobalCost::Hessian() const {
+  
+}
