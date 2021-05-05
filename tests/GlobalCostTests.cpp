@@ -121,4 +121,12 @@ TEST_F(GlobalCostTests, CostEvaluationAndDerivatives) {
   const Eigen::VectorXd gradFD = cost->GradientByFD(0, 0, ref_vector<Eigen::VectorXd>(1, coefficients), 0.75*Eigen::VectorXd::Ones(1));
   const Eigen::VectorXd grad = cost->Gradient(0, std::vector<Eigen::VectorXd>(1, coefficients), (0.75*Eigen::VectorXd::Ones(1)).eval());
   EXPECT_NEAR((grad-gradFD).norm()/gradFD.norm(), 0.0, 1.0e-5);
+
+  // compute the Hessian
+  const Eigen::MatrixXd hessFD = cost->HessianByFD(0, std::vector<Eigen::VectorXd>(1, coefficients));
+  EXPECT_EQ(hessFD.rows(), coefficients.size()); EXPECT_EQ(hessFD.cols(), coefficients.size());
+  Eigen::SparseMatrix<double> hess;
+  cost->Hessian(coefficients, false, hess);
+  EXPECT_EQ(hess.rows(), hessFD.rows()); EXPECT_EQ(hess.cols(), hessFD.cols());
+  EXPECT_NEAR((hess-hessFD).norm()/hessFD.norm(), 0.0, 1.0e-6);
 }

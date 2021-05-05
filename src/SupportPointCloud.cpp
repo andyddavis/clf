@@ -48,6 +48,9 @@ void SupportPointCloud::FindNearestNeighbors() const {
     point->SetNearestNeighbors(shared_from_this(), neighInd, neighDist);
   }
 
+  // now that all of the points know their neighbors, we can create the coupling costs
+  for( const auto& point : supportPoints ) { point->CreateCoupledCosts(); }
+
   if( requireConnectedGraphs ) {
     // check to make sure the graph is connected
     if( !CheckConnected() ) { throw exceptions::SupportPointCloudNotConnected(); }

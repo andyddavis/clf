@@ -3,6 +3,8 @@
 
 #include <boost/property_tree/ptree.hpp>
 
+#include <Eigen/Sparse>
+
 #include <MUQ/Optimization/CostFunction.h>
 
 #include "clf/DOFIndices.hpp"
@@ -22,8 +24,13 @@ public:
   virtual ~GlobalCost() = default;
 
   /// Compute the Hessian
-  void Hessian() const;
-  
+  /**
+  @param[in] coefficients The basis function coefficients for <em>all</em> of the support points
+  @param[in] gaussNewtonHessian <tt>true</tt>: compute the Gauss-Newton Hessian, <tt>false</tt>: compute the Hessian
+  @param[out] hess The Hessian matrix
+  */
+  void Hessian(Eigen::VectorXd const& coefficients, bool const gaussNewtonHessian, Eigen::SparseMatrix<double>& hess) const;
+
 protected:
 
   /// Compute the cost function

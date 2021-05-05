@@ -80,6 +80,12 @@ public:
   */
   void SetNearestNeighbors(std::shared_ptr<const SupportPointCloud> const& newcloud, std::vector<std::size_t> const& neighInd, std::vector<double> const& neighDist);
 
+  /// Create the coupled cost functions
+  /**
+  Must be called after the nearest neighbors have been set for <em>all</em> of the support points.
+  */
+  void CreateCoupledCosts();
+
   /// Get the global indices of this support points nearest neighbors
   /**
   \return The global indices of this support points nearest neighbors

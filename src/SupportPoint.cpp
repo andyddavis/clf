@@ -157,15 +157,21 @@ void SupportPoint::SetNearestNeighbors(std::shared_ptr<const SupportPointCloud> 
     auto suppBasis = std::dynamic_pointer_cast<const SupportPointBasis>(basis);
     if( suppBasis ) { suppBasis->SetRadius(std::sqrt(*(squaredNeighborDistances.end()-1))); }
   }
+}
 
-  // if necessary, create the coupling costs
-  if( couplingScale>0.0 ) {
-    pt::ptree couplingOptions;
-    couplingOptions.put("CoupledScale", couplingScale);
-    coupledCost.resize(globalNeighorIndices.size()-1);
-    // create the coupling cost for each neighbor, don't couple with the first neighbor since it is this
-    for( std::size_t i=1; i<globalNeighorIndices.size(); ++i ) { coupledCost[i-1] = std::make_shared<CoupledCost>(shared_from_this(), newcloud->GetSupportPoint(globalNeighorIndices[i]), couplingOptions); }
-  }
+void SupportPoint::CreateCoupledCosts() {
+  // we might not need to create coupling costs
+  if( couplingScale<1.0e-12 ) { return; }
+
+  auto cld = cloud.lock();
+  assert(cld);
+
+  pt::ptree couplingOptions;
+  couplingOptions.put("CoupledScale", couplingScale);
+
+  coupledCost.resize(globalNeighorIndices.size()-1);
+  // create the coupling cost for each neighbor, don't couple with the first neighbor since it is this
+  for( std::size_t i=1; i<globalNeighorIndices.size(); ++i ) { coupledCost[i-1] = std::make_shared<CoupledCost>(shared_from_this(), cld->GetSupportPoint(globalNeighorIndices[i]), couplingOptions); }
 }
 
 std::size_t SupportPoint::GlobalIndex() const { return (globalNeighorIndices.size()==0? std::numeric_limits<std::size_t>::max() : globalNeighorIndices[0]); }
