@@ -15,6 +15,7 @@ using namespace clf;
 SupportPoint::SupportPoint(Eigen::VectorXd const& x, std::shared_ptr<const Model> const& model, pt::ptree const& pt) :
 x(x),
 model(model),
+couplingScale(pt.get<double>("CoupledScale", 0.0)),
 optimizationOptions(GetOptimizationOptions(pt))
 {}
 
@@ -155,6 +156,15 @@ void SupportPoint::SetNearestNeighbors(std::shared_ptr<const SupportPointCloud> 
   for( const auto& basis : bases ) {
     auto suppBasis = std::dynamic_pointer_cast<const SupportPointBasis>(basis);
     if( suppBasis ) { suppBasis->SetRadius(std::sqrt(*(squaredNeighborDistances.end()-1))); }
+  }
+
+  // if necessary, create the coupling costs
+  if( couplingScale>0.0 ) {
+    pt::ptree couplingOptions;
+    couplingOptions.put("CoupledScale", couplingScale);
+    coupledCost.resize(globalNeighorIndices.size()-1);
+    // create the coupling cost for each neighbor, don't couple with the first neighbor since it is this
+    for( std::size_t i=1; i<coupledCost.size(); ++i ) { coupledCost[i-1] = std::make_shared<CoupledCost>(shared_from_this(), newcloud->GetSupportPoint(globalNeighorIndices[i]), couplingOptions); }
   }
 }
 
@@ -326,3 +336,13 @@ Eigen::VectorXd SupportPoint::EvaluateLocalFunction(Eigen::VectorXd const& loc) 
 const std::vector<std::shared_ptr<const BasisFunctions> >& SupportPoint::GetBasisFunctions() const { return bases; }
 
 std::size_t SupportPoint::NumNeighbors() const { return numNeighbors; }
+
+Eigen::VectorXd SupportPoint::Coefficients() const { return coefficients; }
+
+Eigen::VectorXd& SupportPoint::Coefficients() { return coefficients; }
+
+double SupportPoint::ComputeUncoupledCost() const {
+  assert(uncoupledCost);
+  assert(coefficients.size()==uncoupledCost->inputSizes(0));
+  return uncoupledCost->Cost(coefficients);
+}

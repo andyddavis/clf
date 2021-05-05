@@ -5,6 +5,7 @@
 #include "clf/SupportPointBasis.hpp"
 #include "clf/Model.hpp"
 #include "clf/UncoupledCost.hpp"
+#include "clf/CoupledCost.hpp"
 #include "clf/SupportPointExceptions.hpp"
 
 namespace clf {
@@ -12,27 +13,28 @@ namespace clf {
 /// Forward declaration of the clf::SupportPointCloud
 class SupportPointCloud;
 
+/// Forward declaration of the clf::GlobalCost
+class GlobalCost;
+
 /// The local function \f$\ell\f$ associated with a support point \f$x\f$.
 /**
 Let \f$x \in \Omega \subseteq \mathbb{R}^{d}\f$ be a support point with an associated local function \f$\ell: \Omega \mapsto \mathbb{R}^{m}\f$. Suppose that we are building an approximation of the function \f$u:\Omega \mapsto \mathbb{R}^{m}\f$. Although \f$\ell\f$ is well-defined in the entire domain, we expect there is a smooth monotonic function \f$W: \Omega \mapsto \mathbb{R}^{+}\f$ with \f$W(0) \leq \epsilon\f$ and \f$W(r) \rightarrow \infty\f$ as \f$r \rightarrow \infty\f$ such that \f$\| \ell(y) - u(x) \|^2 \leq W(\|y-x\|^2)\f$. Therefore, we primarily care about the local function \f$\ell\f$ in a ball \f$\mathcal{B}_{\delta}(x)\f$ centered at \f$x\f$ with radius \f$\delta\f$.
 
-Define the local coordinate \f$\hat{x}(y) = (y-x)/\delta\f$ (parameterized by \f$\delta\f$) and the basis functions for the \f$j^{th}\f$ output
+The basis functions for the \f$j^{th}\f$ output are
 \f{equation*}{
-    \phi_j(y) = [\phi_1(\hat{x}(y)),\, \phi_2(\hat{x}(y)),\, ...,\, \phi_{q_j}(\hat{x}(y))]^{\top}.
+    \phi_j(x) = [\phi_1(x),\, \phi_2(x),\, ...,\, \phi_{q_j}(x)]^{\top}.
 \f}
-The \f$j^{th}\f$ output of the local function is defined by coordinates \f$p_j \in \mathbb{R}^{q_j}\f$ such that \f$\ell(y) = \phi_j(y)^{\top} p\f$.
+The \f$j^{th}\f$ output of the local function is defined by coordinates \f$p_j \in \mathbb{R}^{q_j}\f$ such that \f$\ell_j(x) = \phi_j(x)^{\top} p\f$.
 
 <B>Configuration Parameters:</B>
 Parameter Key | Type | Default Value | Description |
 ------------- | ------------- | ------------- | ------------- |
-"OutputDimension"   | <tt>std::size_t</tt> | <tt>1</tt> | The output dimension of the support point. |
-"Radius"   | <tt>double</tt> | <tt>1.0</tt> | The initial value of the \f$\delta\f$ parameter. |
-"RegularizationParameter"   | <tt>double</tt> | <tt>0.0</tt> | The regularization parameter for the uncoupled cost (see clf::UncoupledCost). |
-"BasisFunctions"   | <tt>std::string</tt> |--- | The options to make the basis functions for each output, separated by commas (see SupportPoint::CreateBasisFunctions) |
+"BasisFunctions"   | <tt>std::string</tt> | --- | The options to make the basis functions for each output, separated by commas (see SupportPoint::CreateBasisFunctions) |
+"CoupledScale"   | <tt>double</tt> | <tt>0.0</tt> | The scale parameter for the coupling cost term |
 "NumNeighbors"   | <tt>std::size_t</tt> | The number required to interpolate plus one | The number of nearest neighbors to use to compute the coefficients for each output. |
 "Optimization"   | <tt>boost::property_tree::ptree</tt> | see clf::OptimizationOptions | The options for the uncoupled cost minimization |
 */
-class SupportPoint {
+class SupportPoint : public std::enable_shared_from_this<SupportPoint> {
 // make the constructors private because we will always want to wrap the basis in a SupportPointBasis
 private:
   /**
@@ -43,6 +45,9 @@ private:
   SupportPoint(Eigen::VectorXd const& x, std::shared_ptr<const Model> const& model, boost::property_tree::ptree const& pt);
 
 public:
+
+  /// The global cost function is a friend
+  friend GlobalCost;
 
   /**
   @param[in] x The location of the support point \f$x\f$
@@ -83,7 +88,7 @@ public:
 
   /// Return the global index of this support point
   /**
-  If the number of nearest neighbors is zero, then return the maximum possible integer to indicate an invalid index.
+  Return the maximum possible integer to indicate an invalid index.
   \return The global index of this support point
   */
   std::size_t GlobalIndex() const;
@@ -195,11 +200,32 @@ public:
   */
   std::size_t GlobalNeighborIndex(std::size_t const localInd) const;
 
+  /// The stored coefficients that define the local function
+  /**
+  \return The stored coefficients that define the local function
+  */
+  Eigen::VectorXd Coefficients() const;
+
+  /// The stored coefficients that define the local function
+  /**
+  \return The stored coefficients that define the local function
+  */
+  Eigen::VectorXd& Coefficients();
+
+  /// Evaluate the uncoupled cost using the stored coefficients
+  /**
+  \return The uncoupled cost given the stored coefficients
+  */
+  double ComputeUncoupledCost() const;
+
   /// The location of the support point \f$x\f$.
   const Eigen::VectorXd x;
 
   /// The model that defines the data/observations at this support point
   const std::shared_ptr<const Model> model;
+
+  /// The scale parameter for the coupling cost term
+  const double couplingScale;
 
 private:
 
@@ -297,6 +323,9 @@ private:
 
   /// The uncoupled cost function
   std::shared_ptr<UncoupledCost> uncoupledCost;
+
+  /// The coupling cost function, if this point is coupled with its nearest neighbors
+  std::vector<std::shared_ptr<CoupledCost> > coupledCost;
 
   /// The coefficients used to evaluate the local function associated with this support point
   Eigen::VectorXd coefficients;

@@ -73,8 +73,11 @@ set(CLF_SOURCE
     src/ModelExceptions.cpp
     src/Model.cpp
 
+    src/DOFIndices.cpp
+
     src/UncoupledCost.cpp
     src/CoupledCost.cpp
+    src/GlobalCost.cpp
 
     src/OptimizationOptions.cpp
 
@@ -137,6 +140,7 @@ if( NOT CLF_BUILD_FROM_PIP )
 
         tests/UncoupledCostTests.cpp
         tests/CoupledCostTests.cpp
+        tests/GlobalCostTests.cpp
 
         tests/SupportPointTests.cpp
 

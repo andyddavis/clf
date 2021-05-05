@@ -116,12 +116,10 @@ public:
   */
   const std::size_t numCoefficients;
 
-protected:
+private:
 
   /// Find the required nearest neighbors for each support point
   void FindNearestNeighbors() const;
-
-private:
 
   /// The total number of basis function coefficients
   /**

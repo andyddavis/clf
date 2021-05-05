@@ -98,12 +98,6 @@ public:
   */
   void Hessian(std::vector<Eigen::MatrixXd>& ViVi, std::vector<Eigen::MatrixXd>& ViVj, std::vector<Eigen::MatrixXd>& VjVj) const;
 
-  /// The parameter that scales the coupling cost
-  /**
-  Defaults to \f$1.0\f$.
-  */
-  const double coupledScale;
-
 protected:
 
   /// Compute the cost function

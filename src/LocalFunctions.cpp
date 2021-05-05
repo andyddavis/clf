@@ -3,12 +3,15 @@
 namespace pt = boost::property_tree;
 using namespace clf;
 
-LocalFunctions::LocalFunctions(std::shared_ptr<SupportPointCloud> const& cloud, pt::ptree const& pt) : cloud(cloud) {
+LocalFunctions::LocalFunctions(std::shared_ptr<SupportPointCloud> const& cloud, pt::ptree const& pt) :
+cloud(cloud),
+independentSupportPoints(IndependentSupportPoints(cloud))
+{
   ComputeOptimalCoefficients();
 }
 
 double LocalFunctions::ComputeOptimalCoefficients() {
-  if( IndependentSupportPoints() ) { return ComputeIndependentSupportPoints(); }
+  if( independentSupportPoints ) { return ComputeIndependentSupportPoints(); }
   return ComputeCoupledSupportPoints();
 }
 
@@ -16,7 +19,6 @@ double LocalFunctions::ComputeCoupledSupportPoints() {
   assert(false);
   return cost;
 }
-
 
 double LocalFunctions::ComputeIndependentSupportPoints() {
   cost = 0.0;
@@ -41,4 +43,9 @@ std::pair<std::size_t, double> LocalFunctions::NearestNeighbor(Eigen::VectorXd c
   return std::pair<std::size_t, double>(ind[0], dist[0]);
 }
 
-bool LocalFunctions::IndependentSupportPoints() const { return true; }
+bool LocalFunctions::IndependentSupportPoints(std::shared_ptr<SupportPointCloud> const& cloud) {
+  for( auto point=cloud->Begin(); point!=cloud->End(); ++point ) {
+    if( (*point)->couplingScale>0.0 ) { return false; }
+  }
+  return true;
+}

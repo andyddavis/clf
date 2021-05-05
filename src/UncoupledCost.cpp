@@ -15,7 +15,7 @@ regularizationScale(pt.get<double>("RegularizationParameter", 0.0))
   assert(uncoupledScale>-1.0e-10); assert(regularizationScale>-1.0e-10);
 }
 
-double UncoupledCost::CostImpl(muq::Modeling::ref_vector<Eigen::VectorXd> const& input) {
+double UncoupledCost::Cost(Eigen::VectorXd const& coefficients) const {
   // get the support point
   auto pnt = point.lock();
   assert(pnt);
@@ -31,14 +31,16 @@ double UncoupledCost::CostImpl(muq::Modeling::ref_vector<Eigen::VectorXd> const&
     const Eigen::VectorXd& neighx = pnt->NearestNeighbor(i);
 
     // evaluate the difference between model operator and the right hand side
-    const Eigen::VectorXd diff = pnt->Operator(neighx, input[0]) - pnt->model->RightHandSide(neighx);
+    const Eigen::VectorXd diff = pnt->Operator(neighx, coefficients) - pnt->model->RightHandSide(neighx);
 
     // add to the cost
     cost += kernel(i)*diff.dot(diff);
   }
 
-  return (uncoupledScale*cost + (regularizationScale>0.0? regularizationScale*input[0].get().dot(input[0].get()) : 0.0))/(2.0*pnt->NumNeighbors());
+  return (uncoupledScale*cost + (regularizationScale>0.0? regularizationScale*coefficients.dot(coefficients) : 0.0))/(2.0*pnt->NumNeighbors());
 }
+
+double UncoupledCost::CostImpl(muq::Modeling::ref_vector<Eigen::VectorXd> const& input) { return Cost(input[0].get()); }
 
  void UncoupledCost::GradientImpl(unsigned int const inputDimWrt, muq::Modeling::ref_vector<Eigen::VectorXd> const& input, Eigen::VectorXd const& sensitivity) {
    // get the support point

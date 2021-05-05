@@ -60,13 +60,17 @@ public:
   */
   std::pair<std::size_t, double> NearestNeighbor(Eigen::VectorXd const& x) const;
 
-  /// Determine if the coefficients for the support points are coupled
-  /**
-  \return <tt>true</tt>: Support points are coupled and we need to compute them simultaneously, <tt>false</tt>: Support points are independent and we can compute the coefficients separatly
-  */
-  bool IndependentSupportPoints() const;
+  /// Are any of the support points coupled with its nearest neighbors?
+  const bool independentSupportPoints;
 
 private:
+
+  /// Determine if the coefficients for the support points are coupled
+  /**
+  @param[in] cloud The support point cloud
+  \return <tt>true</tt>: Support points are coupled and we need to compute them simultaneously, <tt>false</tt>: Support points are independent and we can compute the coefficients separatly
+  */
+  static bool IndependentSupportPoints(std::shared_ptr<SupportPointCloud> const& cloud);
 
   /// Compute the optimal coefficients for each support point
   /**

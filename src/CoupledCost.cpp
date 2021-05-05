@@ -7,7 +7,6 @@ using namespace clf;
 
 CoupledCost::CoupledCost(std::shared_ptr<SupportPoint> const& point, std::shared_ptr<SupportPoint> const& neighbor, pt::ptree const& pt) :
 CostFunction(Eigen::VectorXi::Constant(1, point->NumCoefficients()+neighbor->NumCoefficients())),
-coupledScale(pt.get<double>("CoupledScale", 1.0)),
 point(point),
 neighbor(neighbor),
 pointBasisEvals(point->EvaluateBasisFunctions(neighbor->x)),
@@ -40,7 +39,7 @@ double CoupledCost::CostImpl(muq::Modeling::ref_vector<Eigen::VectorXd> const& i
   // the difference in the support point output (evaluated at the neighbor point)
   const Eigen::VectorXd diff = pnt->EvaluateLocalFunction(neigh->x, pointCoeffs, pointBasisEvals) - neigh->EvaluateLocalFunction(neigh->x, neighCoeffs, neighborBasisEvals);
 
-  return coupledScale*pnt->NearestNeighborKernel(localNeighborInd)*diff.dot(diff)/2.0;
+  return pnt->couplingScale*pnt->NearestNeighborKernel(localNeighborInd)*diff.dot(diff)/2.0;
 }
 
 void CoupledCost::GradientImpl(unsigned int const inputDimWrt, muq::Modeling::ref_vector<Eigen::VectorXd> const& input, Eigen::VectorXd const& sensitivity) {
@@ -69,7 +68,7 @@ void CoupledCost::GradientImpl(unsigned int const inputDimWrt, muq::Modeling::re
     indNeigh += neighborBasisEvals[i].size();
   }
 
-  this->gradient *= coupledScale*pnt->NearestNeighborKernel(localNeighborInd)*sensitivity(0);
+  this->gradient *= pnt->couplingScale*pnt->NearestNeighborKernel(localNeighborInd)*sensitivity(0);
 }
 
 void CoupledCost::Hessian(std::vector<Eigen::MatrixXd>& ViVi, std::vector<Eigen::MatrixXd>& ViVj, std::vector<Eigen::MatrixXd>& VjVj) const {
@@ -83,7 +82,7 @@ void CoupledCost::Hessian(std::vector<Eigen::MatrixXd>& ViVi, std::vector<Eigen:
   assert(pnt->model->outputDimension==neigh->model->outputDimension);
 
   // the scaling constant
-  const double scale = coupledScale*pnt->NearestNeighborKernel(localNeighborInd);
+  const double scale = pnt->couplingScale*pnt->NearestNeighborKernel(localNeighborInd);
 
   // loop through each output
   ViVi.resize(pnt->model->outputDimension);

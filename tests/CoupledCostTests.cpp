@@ -5,7 +5,6 @@
 
 namespace pt = boost::property_tree;
 using namespace muq::Modeling;
-using namespace muq::Optimization;
 using namespace clf;
 
 class ExampleModelForCoupledCostTests : public Model {
@@ -23,10 +22,7 @@ private:
 class CoupledCostTests : public::testing::Test {
 public:
   /// Set up information to test the support point
-  virtual void SetUp() override {}
-
-  /// Create the support point cloud given optimization opertions
-  void CreateCloud(pt::ptree const& optimization = pt::ptree()) {
+  virtual void SetUp() override {
     pt::ptree modelOptions;
     modelOptions.put("InputDimension", indim);
     modelOptions.put("OutputDimension", outdim);
@@ -39,13 +35,13 @@ public:
     // options for the support point
     pt::ptree suppOptions;
     suppOptions.put("NumNeighbors", npoints*npoints+1);
+    suppOptions.put("CoupledScale", coupledScale);
     suppOptions.put("BasisFunctions", "Basis1, Basis2");
     suppOptions.put("Basis1.Type", "TotalOrderSinCos");
     suppOptions.put("Basis1.Order", orderSinCos);
     suppOptions.put("Basis1.LocalBasis", false);
     suppOptions.put("Basis2.Type", "TotalOrderPolynomials");
     suppOptions.put("Basis2.Order", orderPoly);
-    suppOptions.add_child("Optimization", optimization);
     point = SupportPoint::Construct(
       Eigen::VectorXd::Random(indim),
       std::make_shared<ExampleModelForCoupledCostTests>(modelOptions),
@@ -84,15 +80,13 @@ private:
 };
 
 TEST_F(CoupledCostTests, CostEvaluationAndDerivatives) {
-  CreateCloud();
-
   // create the uncoupled cost for each neighbor
   for( auto it=supportPoints.begin(); it!=supportPoints.end(); ++it ) {
     pt::ptree costOptions;
     costOptions.put("CoupledScale", coupledScale);
     auto cost = std::make_shared<CoupledCost>(point, *it, costOptions);
     EXPECT_EQ(cost->inputSizes(0), point->NumCoefficients()+(*it)->NumCoefficients());
-    EXPECT_DOUBLE_EQ(cost->coupledScale, coupledScale);
+    EXPECT_DOUBLE_EQ((*it)->couplingScale, coupledScale);
     EXPECT_EQ(cost->Coupled(), (*it)!=point & point->IsNeighbor((*it)->GlobalIndex()));
 
     // choose random coefficients
