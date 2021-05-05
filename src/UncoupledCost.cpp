@@ -42,33 +42,36 @@ double UncoupledCost::Cost(Eigen::VectorXd const& coefficients) const {
 
 double UncoupledCost::CostImpl(muq::Modeling::ref_vector<Eigen::VectorXd> const& input) { return Cost(input[0].get()); }
 
- void UncoupledCost::GradientImpl(unsigned int const inputDimWrt, muq::Modeling::ref_vector<Eigen::VectorXd> const& input, Eigen::VectorXd const& sensitivity) {
-   // get the support point
-   auto pnt = point.lock();
-   assert(pnt);
+Eigen::VectorXd UncoupledCost::Gradient(Eigen::VectorXd const& coefficients) const {
+  // get the support point
+  auto pnt = point.lock();
+  assert(pnt);
 
-   // get the kernel evaluation
-   const Eigen::VectorXd kernel = pnt->NearestNeighborKernel();
-   assert(kernel.size()==pnt->NumNeighbors());
+  // get the kernel evaluation
+  const Eigen::VectorXd kernel = pnt->NearestNeighborKernel();
+  assert(kernel.size()==pnt->NumNeighbors());
 
-   // loop through the neighbors
-   this->gradient = Eigen::VectorXd::Zero(inputSizes(0));
-   for( std::size_t i=0; i<pnt->NumNeighbors(); ++i ) {
-     // the location of the neighbor
-     const Eigen::VectorXd& neighx = pnt->NearestNeighbor(i);
+  // loop through the neighbors
+  Eigen::VectorXd grad = Eigen::VectorXd::Zero(inputSizes(0));
+  for( std::size_t i=0; i<pnt->NumNeighbors(); ++i ) {
+    // the location of the neighbor
+    const Eigen::VectorXd& neighx = pnt->NearestNeighbor(i);
 
-     // the Jacobian of the operator
-     const Eigen::MatrixXd modelJac = pnt->OperatorJacobian(neighx, input[0]);
-     assert(modelJac.rows()==pnt->model->outputDimension);
-     assert(modelJac.cols()==inputSizes(0));
+    // the Jacobian of the operator
+    const Eigen::MatrixXd modelJac = pnt->OperatorJacobian(neighx, coefficients);
+    assert(modelJac.rows()==pnt->model->outputDimension);
+    assert(modelJac.cols()==inputSizes(0));
 
-     this->gradient += kernel(i)*modelJac.transpose()*(pnt->Operator(neighx, input[0]) - pnt->model->RightHandSide(neighx));
-   }
+    grad += kernel(i)*modelJac.transpose()*(pnt->Operator(neighx, coefficients) - pnt->model->RightHandSide(neighx));
+  }
 
-   this->gradient *= uncoupledScale;
-   if( regularizationScale>0.0 ) { this->gradient += regularizationScale*input[0]; }
-   this->gradient *= sensitivity(0)/pnt->NumNeighbors();
- }
+  grad *= uncoupledScale;
+  if( regularizationScale>0.0 ) { grad += regularizationScale*coefficients; }
+
+  return grad/pnt->NumNeighbors();
+}
+
+void UncoupledCost::GradientImpl(unsigned int const inputDimWrt, muq::Modeling::ref_vector<Eigen::VectorXd> const& input, Eigen::VectorXd const& sensitivity) { this->gradient = sensitivity(0)*Gradient(input[0]); }
 
 Eigen::MatrixXd UncoupledCost::Hessian(Eigen::VectorXd const& coefficients, bool const gaussNewtonHessian) const {
    assert(coefficients.size()==inputSizes(0));

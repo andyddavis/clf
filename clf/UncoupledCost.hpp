@@ -34,12 +34,19 @@ public:
 
   virtual ~UncoupledCost() = default;
 
-  /// Compute the cost given a segment of the gobal coefficient vector
+  /// Compute the cost given the coefficients
   /**
   @param[in] coefficients The coefficients for the basis functions
   \return The uncoupled cost
   */
   double Cost(Eigen::VectorXd const& coefficients) const;
+
+  // Compute the gradient of the cost given the coefficients
+  /**
+  @param[in] coefficients The coefficients for the basis functions
+  \return The uncoupled cost gradient
+  */
+  Eigen::VectorXd Gradient(Eigen::VectorXd const& coefficients) const;
 
   /// Compute the Hessian of the cost function
   /**

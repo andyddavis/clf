@@ -164,7 +164,7 @@ void SupportPoint::SetNearestNeighbors(std::shared_ptr<const SupportPointCloud> 
     couplingOptions.put("CoupledScale", couplingScale);
     coupledCost.resize(globalNeighorIndices.size()-1);
     // create the coupling cost for each neighbor, don't couple with the first neighbor since it is this
-    for( std::size_t i=1; i<coupledCost.size(); ++i ) { coupledCost[i-1] = std::make_shared<CoupledCost>(shared_from_this(), newcloud->GetSupportPoint(globalNeighorIndices[i]), couplingOptions); }
+    for( std::size_t i=1; i<globalNeighorIndices.size(); ++i ) { coupledCost[i-1] = std::make_shared<CoupledCost>(shared_from_this(), newcloud->GetSupportPoint(globalNeighorIndices[i]), couplingOptions); }
   }
 }
 
@@ -249,7 +249,7 @@ double SupportPoint::MinimizeUncoupledCostNewton() {
   double prevCost = initCost;
   for( std::size_t iter=0; iter<optimizationOptions.maxEvals; ++iter ) {
     // compute the cost function gradient
-    const Eigen::VectorXd grad = uncoupledCost->Gradient(0, std::vector<Eigen::VectorXd>(1, coefficients), Eigen::VectorXd::Ones(1).eval());
+    const Eigen::VectorXd grad = uncoupledCost->Gradient(coefficients);
 
     // if the gradient is small, break
     if( grad.norm()<optimizationOptions.atol_grad ) { break; }
@@ -345,4 +345,16 @@ double SupportPoint::ComputeUncoupledCost() const {
   assert(uncoupledCost);
   assert(coefficients.size()==uncoupledCost->inputSizes(0));
   return uncoupledCost->Cost(coefficients);
+}
+
+double SupportPoint::ComputeCoupledCost() const {
+  double cost = 0.0;
+  for( const auto& coupled : coupledCost ) {
+    assert(coupled);
+    auto neigh = coupled->neighbor.lock();
+    assert(neigh);
+
+    cost += coupled->Cost(coefficients, neigh->Coefficients());
+  }
+  return cost;
 }

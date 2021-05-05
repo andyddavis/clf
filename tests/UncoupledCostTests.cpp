@@ -201,7 +201,7 @@ TEST_F(UncoupledCostTests, CostEvaluationAndDerivatives) {
   // compute the gradient
   const Eigen::VectorXd gradFD = cost->GradientByFD(0, 0, ref_vector<Eigen::VectorXd>(1, coefficients), 0.75*Eigen::VectorXd::Ones(1));
   EXPECT_EQ(gradFD.size(), coefficients.size());
-  const Eigen::VectorXd grad = cost->Gradient(0, std::vector<Eigen::VectorXd>(1, coefficients), (0.75*Eigen::VectorXd::Ones(1)).eval());
+  const Eigen::VectorXd grad = cost->CostFunction::Gradient(0, std::vector<Eigen::VectorXd>(1, coefficients), (0.75*Eigen::VectorXd::Ones(1)).eval());
   EXPECT_EQ(grad.size(), coefficients.size());
   EXPECT_NEAR((gradFD-grad).norm()/gradFD.norm(), 0.0, 1.0e-5);
 

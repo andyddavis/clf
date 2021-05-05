@@ -93,7 +93,7 @@ TEST_F(CoupledCostTests, CostEvaluationAndDerivatives) {
     const Eigen::VectorXd coefficients = Eigen::VectorXd::Random(cost->inputSizes(0));
 
     // compute the coupling cost
-    const double cst = cost->Cost(coefficients);
+    const double cst = cost->CostFunction::Cost(ref_vector<Eigen::VectorXd>(1, coefficients));
     if( !cost->Coupled() ) {
       EXPECT_DOUBLE_EQ(cst, 0.0);
     } else {
@@ -104,7 +104,7 @@ TEST_F(CoupledCostTests, CostEvaluationAndDerivatives) {
     }
 
     // compute the coupling gradient
-    const Eigen::VectorXd grad = cost->Gradient(0, std::vector<Eigen::VectorXd>(1, coefficients), (0.75*Eigen::VectorXd::Ones(1)).eval());
+    const Eigen::VectorXd grad = cost->CostFunction::Gradient(0, std::vector<Eigen::VectorXd>(1, coefficients), (0.75*Eigen::VectorXd::Ones(1)).eval());
     EXPECT_EQ(grad.size(), coefficients.size());
     if( !cost->Coupled() ) {
       EXPECT_DOUBLE_EQ(grad.norm(), 0.0);

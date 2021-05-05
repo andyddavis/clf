@@ -218,6 +218,13 @@ public:
   */
   double ComputeUncoupledCost() const;
 
+  /// Evaluate the coupled cost using the stored coefficients
+  /**
+  The coupled cost is the sum of the coupled cost with each point---returns zero if this point is not coupled with its nearest neighbors.
+  \return The coupled cost given the stored coefficients
+  */
+  double ComputeCoupledCost() const;
+
   /// The location of the support point \f$x\f$.
   const Eigen::VectorXd x;
 

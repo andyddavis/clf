@@ -28,6 +28,14 @@ protected:
   */
   virtual double CostImpl(muq::Modeling::ref_vector<Eigen::VectorXd> const& input) override;
 
+  /// Compute the cost function gradient
+  /**
+  @param[in] inputDimWrt Since there is only one input, this should always be zero
+  @param[in] input There is only one input: the basis function coefficients for <em>all</em> of the support points
+  @param[in] sensitivity A scaling for the gradient
+  */
+  virtual void GradientImpl(unsigned int const inputDimWrt, muq::Modeling::ref_vector<Eigen::VectorXd> const& input, Eigen::VectorXd const& sensitivity) override;
+
 private:
 
   /// The map from support point indices to the global degree of freedom indices

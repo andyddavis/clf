@@ -17,7 +17,7 @@ protected:
   inline virtual double RightHandSideComponentImpl(Eigen::VectorXd const& x, std::size_t const outind) const override {
     if( outind==0 ) {
       // a sin/cos function
-      return std::sin(M_PI*x(0))*std::cos(2.0*M_PI*x(2)) + std::cos(M_PI*x(2));
+      return std::sin(M_PI*x(0))*std::cos(2.0*M_PI*x(1)) + std::cos(M_PI*x(1));
     } else if( outind==1 ) {
       // a quadratic function
       return x(1)*x(0) + x(0) + 1.0;
@@ -42,9 +42,11 @@ protected:
     // the order of the total order polynomial and sin/cos bases
     const std::size_t orderPoly = 5, orderSinCos = 2;
 
+    const std::size_t npoints = 5;
+
     // options for the support point
     pt::ptree suppOptions;
-    suppOptions.put("NumNeighbors", 75);
+    suppOptions.put("NumNeighbors", npoints*npoints);
     suppOptions.put("CoupledScale", couplingScale);
     suppOptions.put("BasisFunctions", "Basis1, Basis2");
     suppOptions.put("Basis1.Type", "TotalOrderSinCos");
@@ -54,8 +56,17 @@ protected:
     suppOptions.put("Basis2.Order", orderPoly);
 
     // create a support point cloud so that this point has nearest neighbors
-    supportPoints.resize(150);
-    for( std::size_t i=0; i<supportPoints.size(); ++i ) { supportPoints[i] = SupportPoint::Construct(0.1*Eigen::VectorXd::Random(indim), model, suppOptions); }
+    supportPoints.resize(4*npoints*npoints);
+    // add points on a grid so we know that they are well-poised
+    for( std::size_t i=0; i<2*npoints; ++i ) {
+      for( std::size_t j=0; j<2*npoints; ++j ) {
+        supportPoints[2*npoints*i+j] = SupportPoint::Construct(
+          0.1*Eigen::Vector2d((double)i/(2*npoints-1)-0.5, (double)j/(2*npoints-1)-0.5),
+          std::make_shared<ExampleModelForLocalFunctionsTests>(modelOptions),
+          suppOptions);
+      }
+    }
+    //for( std::size_t i=0; i<supportPoints.size(); ++i ) { supportPoints[i] = SupportPoint::Construct(0.1*Eigen::VectorXd::Random(indim), model, suppOptions); }
 
     // create the support point cloud
     pt::ptree ptSupportPointCloud;
@@ -71,13 +82,13 @@ protected:
 
     for( const auto& it : supportPoints ) {
       const Eigen::VectorXd eval = it->EvaluateLocalFunction(it->x);
-      const Eigen::VectorXd expected = Eigen::Vector2d(std::sin(M_PI*it->x(0))*std::cos(2.0*M_PI*it->x(2)) + std::cos(M_PI*it->x(2)), it->x(1)*it->x(0) + it->x(0) + 1.0);
+      const Eigen::VectorXd expected = Eigen::Vector2d(std::sin(M_PI*it->x(0))*std::cos(2.0*M_PI*it->x(1)) + std::cos(M_PI*it->x(1)), it->x(1)*it->x(0) + it->x(0) + 1.0);
       EXPECT_NEAR((eval-expected).norm(), 0.0, 10.0*std::sqrt(cost));
     }
 
     for( std::size_t i=0; i<10; ++i ) {
       // pick a random point
-      const Eigen::VectorXd x = 0.1*Eigen::VectorXd::Random(indim);
+      const Eigen::VectorXd x = 0.01*Eigen::VectorXd::Random(indim);
 
       // find the nearest support point and the squared distance to it
       std::size_t ind; double dist;
@@ -86,7 +97,7 @@ protected:
 
       // evaluate the support point
       const Eigen::VectorXd eval = func->Evaluate(x);
-      const Eigen::VectorXd expected = Eigen::Vector2d(std::sin(M_PI*x(0))*std::cos(2.0*M_PI*x(2)) + std::cos(M_PI*x(2)), x(1)*x(0) + x(0) + 1.0);
+      const Eigen::VectorXd expected = Eigen::Vector2d(std::sin(M_PI*x(0))*std::cos(2.0*M_PI*x(1)) + std::cos(M_PI*x(1)), x(1)*x(0) + x(0) + 1.0);
       EXPECT_NEAR((eval-expected).norm(), 0.0, 10.0*std::sqrt(cost));
     }
   }
@@ -98,7 +109,7 @@ protected:
   std::shared_ptr<LocalFunctions> func;
 
   /// The input and output dimensions
-  const std::size_t indim = 3, outdim = 2;
+  const std::size_t indim = 2, outdim = 2;
 };
 
 TEST_F(LocalFunctionsTests, UncoupledComputation) {

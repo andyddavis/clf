@@ -38,9 +38,9 @@ public:
     modelOptions.put("OutputDimension", outdim);
 
     // the order of the total order polynomial and sin/cos bases
-    const std::size_t orderPoly = 4, orderSinCos = 2;
+    const std::size_t orderPoly = 2, orderSinCos = 1;
 
-    const std::size_t npoints = 6;
+    const std::size_t npoints = 3;
 
     // options for the support point
     pt::ptree suppOptions;
@@ -111,6 +111,14 @@ TEST_F(GlobalCostTests, CostEvaluationAndDerivatives) {
   // compute the global cost
   const double cst = cost->Cost(coefficients);
   double expectedCost = 0.0;
-  for( const auto& point : supportPoints ) { expectedCost += point->ComputeUncoupledCost(); }
+  for( const auto& point : supportPoints ) {
+    expectedCost += point->ComputeUncoupledCost();
+    expectedCost += point->ComputeCoupledCost();
+  }
   EXPECT_NEAR(cst, expectedCost, 1.0e-10);
+
+  // compute the gradient
+  const Eigen::VectorXd gradFD = cost->GradientByFD(0, 0, ref_vector<Eigen::VectorXd>(1, coefficients), 0.75*Eigen::VectorXd::Ones(1));
+  const Eigen::VectorXd grad = cost->Gradient(0, std::vector<Eigen::VectorXd>(1, coefficients), (0.75*Eigen::VectorXd::Ones(1)).eval());
+  EXPECT_NEAR((grad-gradFD).norm()/gradFD.norm(), 0.0, 1.0e-5);
 }

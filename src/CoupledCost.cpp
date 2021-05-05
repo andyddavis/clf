@@ -26,9 +26,19 @@ std::size_t CoupledCost::LocalIndex(std::shared_ptr<SupportPoint> const& point, 
   return (localInd==0? std::numeric_limits<std::size_t>::max() : localInd);
 }
 
-double CoupledCost::CostImpl(muq::Modeling::ref_vector<Eigen::VectorXd> const& input) {
+double CoupledCost::Cost(Eigen::VectorXd const& pointCoeffs, Eigen::VectorXd const& neighCoeffs) const {
   if( !Coupled() ) { return 0.0; }
 
+  auto pnt = point.lock();
+  auto neigh = neighbor.lock();
+
+  // the difference in the support point output (evaluated at the neighbor point)
+  const Eigen::VectorXd diff = pnt->EvaluateLocalFunction(neigh->x, pointCoeffs, pointBasisEvals) - neigh->EvaluateLocalFunction(neigh->x, neighCoeffs, neighborBasisEvals);
+
+  return pnt->couplingScale*pnt->NearestNeighborKernel(localNeighborInd)*diff.dot(diff)/2.0;
+}
+
+double CoupledCost::CostImpl(muq::Modeling::ref_vector<Eigen::VectorXd> const& input) {
   auto pnt = point.lock();
   auto neigh = neighbor.lock();
 
@@ -36,10 +46,30 @@ double CoupledCost::CostImpl(muq::Modeling::ref_vector<Eigen::VectorXd> const& i
   const Eigen::Map<const Eigen::VectorXd> pointCoeffs(&input[0] (0), pnt->NumCoefficients());
   const Eigen::Map<const Eigen::VectorXd> neighCoeffs(&input[0] (pnt->NumCoefficients()), neigh->NumCoefficients());
 
+  return Cost(pointCoeffs, neighCoeffs);
+}
+
+Eigen::VectorXd CoupledCost::Gradient(Eigen::VectorXd const& pointCoeffs, Eigen::VectorXd const& neighCoeffs) const {
+  if( !Coupled() ) { return Eigen::VectorXd::Zero(inputSizes(0)); }
+
+  auto pnt = point.lock();
+  auto neigh = neighbor.lock();
+
   // the difference in the support point output (evaluated at the neighbor point)
   const Eigen::VectorXd diff = pnt->EvaluateLocalFunction(neigh->x, pointCoeffs, pointBasisEvals) - neigh->EvaluateLocalFunction(neigh->x, neighCoeffs, neighborBasisEvals);
 
-  return pnt->couplingScale*pnt->NearestNeighborKernel(localNeighborInd)*diff.dot(diff)/2.0;
+  // loop through each output
+  std::size_t indPoint = 0, indNeigh = pnt->NumCoefficients();
+  Eigen::VectorXd grad = Eigen::VectorXd::Zero(inputSizes(0));
+  for( std::size_t i=0; i<diff.size(); ++i ) {
+    grad.segment(indPoint, pointBasisEvals[i].size()) = diff(i)*pointBasisEvals[i];
+    indPoint += pointBasisEvals[i].size();
+
+    grad.segment(indNeigh, neighborBasisEvals[i].size()) = -diff(i)*neighborBasisEvals[i];
+    indNeigh += neighborBasisEvals[i].size();
+  }
+
+  return pnt->couplingScale*pnt->NearestNeighborKernel(localNeighborInd)*grad;
 }
 
 void CoupledCost::GradientImpl(unsigned int const inputDimWrt, muq::Modeling::ref_vector<Eigen::VectorXd> const& input, Eigen::VectorXd const& sensitivity) {
@@ -55,20 +85,7 @@ void CoupledCost::GradientImpl(unsigned int const inputDimWrt, muq::Modeling::re
   const Eigen::Map<const Eigen::VectorXd> pointCoeffs(&input[0] (0), pnt->NumCoefficients());
   const Eigen::Map<const Eigen::VectorXd> neighCoeffs(&input[0] (pnt->NumCoefficients()), neigh->NumCoefficients());
 
-  // the difference in the support point output (evaluated at the neighbor point)
-  const Eigen::VectorXd diff = pnt->EvaluateLocalFunction(neigh->x, pointCoeffs, pointBasisEvals) - neigh->EvaluateLocalFunction(neigh->x, neighCoeffs, neighborBasisEvals);
-
-  // loop through each output
-  std::size_t indPoint = 0, indNeigh = pnt->NumCoefficients();
-  for( std::size_t i=0; i<diff.size(); ++i ) {
-    this->gradient.segment(indPoint, pointBasisEvals[i].size()) = diff(i)*pointBasisEvals[i];
-    indPoint += pointBasisEvals[i].size();
-
-    this->gradient.segment(indNeigh, neighborBasisEvals[i].size()) = -diff(i)*neighborBasisEvals[i];
-    indNeigh += neighborBasisEvals[i].size();
-  }
-
-  this->gradient *= pnt->couplingScale*pnt->NearestNeighborKernel(localNeighborInd)*sensitivity(0);
+  this->gradient = Gradient(pointCoeffs, neighCoeffs)*sensitivity(0);
 }
 
 void CoupledCost::Hessian(std::vector<Eigen::MatrixXd>& ViVi, std::vector<Eigen::MatrixXd>& ViVj, std::vector<Eigen::MatrixXd>& VjVj) const {

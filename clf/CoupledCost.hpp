@@ -54,6 +54,22 @@ public:
   */
   bool Coupled() const;
 
+  /// Compute the coupled cost
+  /**
+  @param[in] pointCoeffs The coefficients for the point
+  @param[in] neighCoeffs The coefficients for the neighbor
+  \return The coupling cost
+  */
+  double Cost(Eigen::VectorXd const& pointCoeffs, Eigen::VectorXd const& neighCoeffs) const;
+
+  // Compute the gradient of the cost given the coefficients
+  /**
+  @param[in] pointCoeffs The coefficients for the point
+  @param[in] neighCoeffs The coefficients for the neighbor
+  \return The coupled cost gradient
+  */
+  Eigen::VectorXd Gradient(Eigen::VectorXd const& pointCoeffs, Eigen::VectorXd const& neighCoeffs) const;
+
   /// Compute the Hessian of the cost function
   /**
   The Hessian of
@@ -97,6 +113,12 @@ public:
   @param[out] VjVj Each entry is the block of the bottom right matrix in the Hessian corresponding to the \f$s^{th}\f$ output (blocks of \f$V_{I(i,j)}^{\top}V_{I(i,j)}\f$)
   */
   void Hessian(std::vector<Eigen::MatrixXd>& ViVi, std::vector<Eigen::MatrixXd>& ViVj, std::vector<Eigen::MatrixXd>& VjVj) const;
+
+  /// The point where we are evaluating the coupling cost
+  std::weak_ptr<const SupportPoint> point;
+
+  /// The nearest neighbor that (may be) coupled with the main support point
+  std::weak_ptr<const SupportPoint> neighbor;
 
 protected:
 
@@ -142,12 +164,6 @@ private:
   \return The local nearest neighbor index
   */
   static std::size_t LocalIndex(std::shared_ptr<SupportPoint> const& point, std::shared_ptr<SupportPoint> const& neighbor);
-
-  /// The point where we are evaluating the coupling cost
-  std::weak_ptr<SupportPoint> point;
-
-  /// The nearest neighbor that (may be) coupled with the main support point
-  std::weak_ptr<SupportPoint> neighbor;
 
   const std::vector<Eigen::VectorXd> pointBasisEvals;
 
