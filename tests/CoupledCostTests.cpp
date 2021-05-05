@@ -121,14 +121,56 @@ TEST_F(CoupledCostTests, CostEvaluationAndDerivatives) {
 
     // comptue the coupling hessian
     if( !cost->Coupled() ) {
-
+      std::vector<Eigen::MatrixXd> ViVi, ViVj, VjVj;
+      cost->Hessian(ViVi, ViVj, VjVj);
+      EXPECT_EQ(ViVi.size(), 0); EXPECT_EQ(ViVj.size(), 0); EXPECT_EQ(VjVj.size(), 0);
     } else {
-      const Eigen::MatrixXd hessFD = cost->HessianByFD(0, ref_vector<Eigen::VectorXd>(1, coefficients));
+      const Eigen::MatrixXd hessFD = cost->HessianByFD(0, std::vector<Eigen::VectorXd>(1, coefficients));
+      EXPECT_EQ(hessFD.rows(), point->NumCoefficients()+(*it)->NumCoefficients());
+      EXPECT_EQ(hessFD.cols(), point->NumCoefficients()+(*it)->NumCoefficients());
 
-      std::cout << hessFD << std::endl;
-      std::cout << std::endl;
-      std::cout << "-------------------" << std::endl;
-      std::cout << std::endl;
+      Eigen::MatrixXd hess = Eigen::MatrixXd::Zero(hessFD.rows(), hessFD.cols());
+
+      std::vector<Eigen::MatrixXd> ViVi, ViVj, VjVj;
+      cost->Hessian(ViVi, ViVj, VjVj);
+      EXPECT_EQ(ViVi.size(), outdim);
+      EXPECT_EQ(ViVj.size(), outdim);
+      EXPECT_EQ(VjVj.size(), outdim);
+
+      std::size_t rows = 0, cols = 0, ind = 0, jnd = 0;
+      for( const auto& V : ViVi ) {
+        rows += V.rows(); cols += V.cols();
+        hess.block(ind, jnd, V.rows(), V.cols()) = V;
+        ind += V.rows(); jnd += V.cols();
+      }
+      EXPECT_EQ(rows, point->NumCoefficients());
+      EXPECT_EQ(cols, point->NumCoefficients());
+
+      rows = 0; cols = 0;
+      ind = 0; jnd = point->NumCoefficients();
+      for( const auto& V : ViVj ) {
+        rows += V.rows(); cols += V.cols();
+        hess.block(ind, jnd, V.rows(), V.cols()) = V;
+        hess.block(jnd, ind, V.cols(), V.rows()) = V.transpose();
+        ind += V.rows(); jnd += V.cols();
+      }
+      EXPECT_EQ(rows, point->NumCoefficients());
+      EXPECT_EQ(cols, (*it)->NumCoefficients());
+
+      rows = 0; cols = 0;
+      ind = point->NumCoefficients(); jnd = point->NumCoefficients();
+      for( const auto& V : VjVj ) {
+        rows += V.rows(); cols += V.cols();
+        hess.block(ind, jnd, V.rows(), V.cols()) = V;
+        ind += V.rows(); jnd += V.cols();
+      }
+      EXPECT_EQ(rows, (*it)->NumCoefficients());
+      EXPECT_EQ(cols, (*it)->NumCoefficients());
+
+      EXPECT_EQ(hess.rows(), point->NumCoefficients()+(*it)->NumCoefficients());
+      EXPECT_EQ(hess.cols(), point->NumCoefficients()+(*it)->NumCoefficients());
+
+      EXPECT_NEAR((hess-hessFD).norm(), 0.0, 1.0e-6);
     }
   }
 }

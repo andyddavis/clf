@@ -71,3 +71,27 @@ void CoupledCost::GradientImpl(unsigned int const inputDimWrt, muq::Modeling::re
 
   this->gradient *= coupledScale*pnt->NearestNeighborKernel(localNeighborInd)*sensitivity(0);
 }
+
+void CoupledCost::Hessian(std::vector<Eigen::MatrixXd>& ViVi, std::vector<Eigen::MatrixXd>& ViVj, std::vector<Eigen::MatrixXd>& VjVj) const {
+  if( !Coupled() ) {
+    ViVi.clear(); ViVj.clear(); VjVj.clear();
+    return;
+  }
+
+  auto pnt = point.lock();
+  auto neigh = neighbor.lock();
+  assert(pnt->model->outputDimension==neigh->model->outputDimension);
+
+  // the scaling constant
+  const double scale = coupledScale*pnt->NearestNeighborKernel(localNeighborInd);
+
+  // loop through each output
+  ViVi.resize(pnt->model->outputDimension);
+  ViVj.resize(pnt->model->outputDimension);
+  VjVj.resize(pnt->model->outputDimension);
+  for( std::size_t i=0; i<pnt->model->outputDimension; ++i ) {
+    ViVi[i] = scale*pointBasisEvals[i]*pointBasisEvals[i].transpose();
+    ViVj[i] = -scale*pointBasisEvals[i]*neighborBasisEvals[i].transpose();
+    VjVj[i] = scale*neighborBasisEvals[i]*neighborBasisEvals[i].transpose();
+  }
+}
