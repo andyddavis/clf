@@ -1,6 +1,7 @@
 #ifndef LOCALFUNCTIONS_HPP_
 #define LOCALFUNCTIONS_HPP_
 
+#include "clf/GlobalCost.hpp"
 #include "clf/SupportPointCloud.hpp"
 
 namespace clf {
@@ -60,17 +61,22 @@ public:
   */
   std::pair<std::size_t, double> NearestNeighbor(Eigen::VectorXd const& x) const;
 
-  /// Are any of the support points coupled with its nearest neighbors?
-  const bool independentSupportPoints;
-
 private:
 
-  /// Determine if the coefficients for the support points are coupled
+  /// Create the global cost function
   /**
   @param[in] cloud The support point cloud
-  \return <tt>true</tt>: Support points are coupled and we need to compute them simultaneously, <tt>false</tt>: Support points are independent and we can compute the coefficients separatly
+  @param[in] pt Construction options
+  \return A nullptr if the support points are independent, otherwise return the global cost function
   */
-  static bool IndependentSupportPoints(std::shared_ptr<SupportPointCloud> const& cloud);
+  static std::shared_ptr<GlobalCost> ConstructGlobalCost(std::shared_ptr<SupportPointCloud> const& cloud, boost::property_tree::ptree const& pt);
+
+  /// Get the (optional) child ptree for the optimization options
+  /**
+  @param[in] pt The options given to this support point
+  \return If specified, returns the options for minimizing the upcoupled cost. Otherwise, return an empty ptree and use the default options (see clf::OptimizationOptions)
+  */
+  static boost::property_tree::ptree GetOptimizationOptions(boost::property_tree::ptree const& pt);
 
   /// Compute the optimal coefficients for each support point
   /**
@@ -108,6 +114,15 @@ private:
   Uncoupled case: this is the average cost over all of the support points
   */
   double cost = std::numeric_limits<double>::infinity();
+
+  /// The global cost function
+  /**
+  This is the null pointer if the support points are independent
+  */
+  std::shared_ptr<GlobalCost> globalCost;
+
+  /// Optimization for the uncoupled cost minimization
+  const OptimizationOptions optimizationOptions;
 };
 
 } // namespace clf

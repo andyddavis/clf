@@ -41,10 +41,8 @@ std::shared_ptr<SupportPoint> SupportPoint::Construct(Eigen::VectorXd const& x, 
   // compute and store the number of coefficients
   point->numCoefficients = ComputeNumCoefficients(bases);
 
-  // set the coefficients so the local function is constant
+  // set the coefficients so the local function is zero
   point->coefficients = Eigen::VectorXd::Zero(point->numCoefficients);
-  std::size_t ind = 0;
-  for( const auto& it : bases ) { ind += it->NumBasisFunctions(); }
 
   // create the uncoupled cost
   point->uncoupledCost = std::make_shared<UncoupledCost>(point, pt);
@@ -232,15 +230,13 @@ std::vector<Eigen::MatrixXd> SupportPoint::OperatorHessian(Eigen::VectorXd const
 }
 
 double SupportPoint::MinimizeUncoupledCostNLOPT() {
-  double prevCost = uncoupledCost->Cost(coefficients);
-
   pt::ptree options;
   options.put("Ftol.AbsoluteTolerance", optimizationOptions.atol_function);
   options.put("Ftol.RelativeTolerance", optimizationOptions.rtol_function);
   options.put("Xtol.AbsoluteTolerance", optimizationOptions.atol_step);
   options.put("Xtol.RelativeTolerance", optimizationOptions.rtol_step);
   options.put("MaxEvaluations", optimizationOptions.maxEvals);
-  options.put("Algorithm", "LBFGS");
+  options.put("Algorithm", optimizationOptions.algNLOPT);
 
   auto opt = std::make_shared<NLoptOptimizer>(uncoupledCost, options);
 

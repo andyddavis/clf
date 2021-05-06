@@ -227,6 +227,7 @@ TEST_F(UncoupledCostTests, MinimizeOnePointNLOPT) {
   optimization.put("RelativeFunctionTol", 0.0);
   optimization.put("AbsoluteStepSizeTol", 0.0);
   optimization.put("RelativeStepSizeTol", 0.0);
+  optimization.put("MaxEvaluations", 100000);
   CreateCloud(optimization);
 
   CheckMinimization(1.0e-8);

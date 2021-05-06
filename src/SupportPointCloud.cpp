@@ -137,3 +137,23 @@ std::pair<std::vector<std::size_t>, std::vector<double> > SupportPointCloud::Fin
 std::vector<std::shared_ptr<SupportPoint> >::const_iterator SupportPointCloud::Begin() const { return supportPoints.begin(); }
 
 std::vector<std::shared_ptr<SupportPoint> >::const_iterator SupportPointCloud::End() const { return supportPoints.end(); }
+
+Eigen::VectorXd SupportPointCloud::GetCoefficients() const {
+  Eigen::VectorXd coeffs(numCoefficients);
+
+  std::size_t ind = 0;
+  for( const auto& point : supportPoints ) {
+    coeffs.segment(ind, point->NumCoefficients()) = point->Coefficients();
+    ind += point->NumCoefficients();
+  }
+
+  return coeffs;
+}
+
+void SupportPointCloud::SetCoefficients(Eigen::VectorXd const& coeffs) {
+  std::size_t ind = 0;
+  for( const auto& point : supportPoints ) {
+    point->Coefficients() = coeffs.segment(ind, point->NumCoefficients());
+    ind += point->NumCoefficients();
+  }
+}

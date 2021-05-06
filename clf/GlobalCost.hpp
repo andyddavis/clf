@@ -23,6 +23,13 @@ public:
 
   virtual ~GlobalCost() = default;
 
+  // Compute the gradient of the cost given the coefficients
+  /**
+  @param[in] coefficients The coefficients for the basis functions
+  \return The cost gradient
+  */
+  Eigen::VectorXd Gradient(Eigen::VectorXd const& coefficients) const;
+
   /// Compute the Hessian
   /**
   @param[in] coefficients The basis function coefficients for <em>all</em> of the support points

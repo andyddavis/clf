@@ -37,8 +37,45 @@ double GlobalCost::CostImpl(ref_vector<Eigen::VectorXd> const& input) {
   return cost;
 }
 
+Eigen::VectorXd GlobalCost::Gradient(Eigen::VectorXd const& coefficients) const {
+  Eigen::VectorXd grad = Eigen::VectorXd::Zero(inputSizes(0));
+  assert(grad.size()==coefficients.size());
+
+  // loop through the support points
+  for( auto point=dofIndices.cloud->Begin(); point!=dofIndices.cloud->End(); ++point ) {
+    const std::size_t globalDoFStart = dofIndices.globalDoFIndices[(*point)->GlobalIndex()];
+    const std::size_t dofLength = (*point)->NumCoefficients();
+
+    // extract the coefficients associated with (*point)
+    Eigen::Map<const Eigen::VectorXd> coeff(&coefficients(globalDoFStart), dofLength);
+
+    // uncoupled gradient
+    grad.segment(globalDoFStart, dofLength) += (*point)->uncoupledCost->Gradient(coeff);
+
+    // if necessary, evaluate the coupled cost
+    for( const auto& coupled : (*point)->coupledCost ) {
+      assert(coupled);
+      auto neigh = coupled->neighbor.lock();
+      assert(neigh);
+
+      const std::size_t globalDoFStartNeigh = dofIndices.globalDoFIndices[neigh->GlobalIndex()];
+      const std::size_t dofLengthNeigh = neigh->NumCoefficients();
+
+      // extract the coefficients associated with the neighbor
+      Eigen::Map<const Eigen::VectorXd> coeffNeigh(&coefficients(globalDoFStartNeigh), dofLengthNeigh);
+
+      const Eigen::VectorXd coupledGrad = coupled->Gradient(coeff, coeffNeigh);
+      grad.segment(globalDoFStart, dofLength) += coupledGrad.head(dofLength);
+      grad.segment(globalDoFStartNeigh, dofLengthNeigh) += coupledGrad.tail(dofLengthNeigh);
+    }
+  }
+
+  return grad;
+}
+
 void GlobalCost::GradientImpl(unsigned int const inputDimWrt, muq::Modeling::ref_vector<Eigen::VectorXd> const& input, Eigen::VectorXd const& sensitivity) {
-  this->gradient = Eigen::VectorXd::Zero(inputSizes(0));
+  this->gradient = sensitivity(0)*Gradient(input[0]);
+  /*this->gradient = Eigen::VectorXd::Zero(inputSizes(0));
   assert(this->gradient.size()==input[0].get().size());
 
   // loop through the support points
@@ -70,7 +107,7 @@ void GlobalCost::GradientImpl(unsigned int const inputDimWrt, muq::Modeling::ref
     }
   }
 
-  this->gradient *= sensitivity(0);
+  this->gradient *= sensitivity(0);*/
 }
 
 void GlobalCost::Hessian(Eigen::VectorXd const& coefficients, bool const gaussNewtonHessian, Eigen::SparseMatrix<double>& hess) const {

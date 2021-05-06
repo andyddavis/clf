@@ -7,6 +7,7 @@ OptimizationOptions::OptimizationOptions(pt::ptree const& pt) :
 useNLOPT(pt.get<bool>("UseNLOPT", false)),
 useGaussNewtonHessian(pt.get<bool>("UseGaussNewtonHessian", true)),
 maxEvals(pt.get<std::size_t>("MaxEvaluations", 250)),
+algNLOPT(pt.get<std::string>("NLOPTAlgorithm", "LBFGS")),
 atol_function(pt.get<double>("AbsoluteFunctionTol", 1.0e-10)),
 rtol_function(pt.get<double>("RelativeFunctionTol", 1.0e-10)),
 atol_step(pt.get<double>("AbsoluteStepSizeTol", 1.0e-10)),

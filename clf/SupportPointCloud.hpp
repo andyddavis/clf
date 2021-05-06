@@ -110,6 +110,15 @@ public:
   /// An iterator to the last support point
   std::vector<std::shared_ptr<SupportPoint> >::const_iterator End() const;
 
+  /// Get the global vector of coefficients
+  Eigen::VectorXd GetCoefficients() const;
+
+  /// Set the global vector of coefficients
+  /**
+  @param[in] coeffs The global vector of coefficients
+  */
+  void SetCoefficients(Eigen::VectorXd const& coeffs);
+
   /// The total number of coefficients
   /**
   The sum of all of the number coefficients required by each support point.

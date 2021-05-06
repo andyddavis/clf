@@ -40,7 +40,7 @@ protected:
     auto model = std::make_shared<ExampleModelForLocalFunctionsTests>(modelOptions);
 
     // the order of the total order polynomial and sin/cos bases
-    const std::size_t orderPoly = 5, orderSinCos = 2;
+    const std::size_t orderPoly = 3, orderSinCos = 2;
 
     const std::size_t npoints = 5;
 
@@ -66,7 +66,6 @@ protected:
           suppOptions);
       }
     }
-    //for( std::size_t i=0; i<supportPoints.size(); ++i ) { supportPoints[i] = SupportPoint::Construct(0.1*Eigen::VectorXd::Random(indim), model, suppOptions); }
 
     // create the support point cloud
     pt::ptree ptSupportPointCloud;
@@ -120,11 +119,10 @@ TEST_F(LocalFunctionsTests, UncoupledComputation) {
   func = std::make_shared<LocalFunctions>(cloud, ptFunc);
 }
 
-/*TEST_F(LocalFunctionsTests, CoupledComputation) {
+TEST_F(LocalFunctionsTests, CoupledComputation) {
   CreateSupportPointCloud(0.5);
 
   // create the local function
   pt::ptree ptFunc;
   func = std::make_shared<LocalFunctions>(cloud, ptFunc);
 }
-*/

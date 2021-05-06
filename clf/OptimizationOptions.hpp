@@ -12,6 +12,7 @@ Parameter Key | Type | Default Value | Description |
 ------------- | ------------- | ------------- | ------------- |
 "UseNLOPT"   | <tt>bool</tt> | <tt>false</tt> | Should we use <tt>NLOPT</tt> (<tt>true</tt>) or Newton's method using the Hessian (or ) Gauss-Newton Hessian (<tt>false</tt>)? |
 "UseGaussNewtonHessian"   | <tt>bool</tt> | <tt>true</tt> | Should we use the Gauss-Newton Hessian or the true Hessian? |
+"NLOPTAlgorithm"   | <tt>std::string</tt> | <tt>"LBFGS"</tt> | The <tt>NLOPT</tt> algorithm used for the optimization. |
 "MaxEvaluations"   | <tt>std::size_t</tt> | <tt>250</tt> | The maximum number of evaluations. |
 "AbsoluteFunctionTol"   | <tt>double</tt> | <tt>1.0e-10</tt> | The absolute cost function tolerance. |
 "RelativeFunctionTol"   | <tt>double</tt> | <tt>1.0e-10</tt> | The relative cost function tolerance. |
@@ -45,6 +46,12 @@ struct OptimizationOptions {
   In the Newton's method case this is actually the maximum number of iterations.
   */
   const std::size_t maxEvals;
+
+  /// The <tt>NLOPT</tt> algorithm used for the optimization.
+  /**
+  Only used if useNLOPT is <tt>true</tt>.
+  */
+  const std::string algNLOPT;
 
   /// The absolute cost function tolerance.
   const double atol_function;
