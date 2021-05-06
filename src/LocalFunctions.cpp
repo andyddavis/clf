@@ -26,6 +26,8 @@ double LocalFunctions::ComputeOptimalCoefficients() {
 }
 
 double LocalFunctions::ComputeCoupledSupportPoints() {
+  std::cout << std::endl << "COMPTUING COUPLED SUPPORT POINTS" << std::endl << std::endl;
+
   assert(globalCost);
 
   // get the current coefficients---they make up the initial guess
@@ -84,6 +86,7 @@ double LocalFunctions::ComputeCoupledSupportPoints() {
 }
 
 double LocalFunctions::ComputeIndependentSupportPoints() {
+  std::cout << std::endl << "COMPTUING INDEPENDENT SUPPORT POINTS" << std::endl << std::endl;
   cost = 0.0;
   for( auto point=cloud->Begin(); point!=cloud->End(); ++point ) { cost += (*point)->MinimizeUncoupledCost(); }
   cost /= cloud->NumSupportPoints();
