@@ -132,7 +132,7 @@ public:
   @param[in] jnd The index of the \f$j^{th}\f$ nearest neighbor
   \return The point associated with \f$I(i,j)\f$
   */
-  Eigen::VectorXd NearestNeighbor(std::size_t const jnd) const;
+  std::shared_ptr<SupportPoint> NearestNeighbor(std::size_t const jnd) const;
 
   /// Evaluate the operator applied to the local function at a given point
   /**
@@ -304,6 +304,24 @@ private:
   \return The uncoupled cost at the optimal coefficients value
   */
   double MinimizeUncoupledCostNewton();
+
+  /// Compute the line serach for Newton's method
+  /**
+  @param[in] coefficients The basis function coefficients
+  @param[in] stepDir The step direction
+  @param[in] prevCost The cost at the previous iteration of the optimization
+  \return First: The step size in that direction, Second: the new cost after taking the step
+  */
+  std::pair<double, double> LineSearch(Eigen::VectorXd const& coefficients, Eigen::VectorXd const& stepDir, double const prevCost) const;
+
+  /// Compute the step direction for the opimization
+  /**
+  @param[in] coefficients The basis function coefficients
+  @param[in] grad The gradient of the cost function given these coefficients
+  @param[in] useGN <tt>true</tt>: Use the Gauss-Newton Hessian, <tt>false</tt>: Use the true Hessian
+  \return The step direction
+  */
+  Eigen::VectorXd StepDirection(Eigen::VectorXd const& coefficients, Eigen::VectorXd const& grad, bool const useGN) const;
 
   /// The number of coefficients associated with this support point
   std::size_t numCoefficients;

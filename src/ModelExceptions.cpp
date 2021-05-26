@@ -27,6 +27,9 @@ ModelHasWrongInputOutputDimensions::ModelHasWrongInputOutputDimensions(Type cons
   } else if( func==Function::OPERATOR_HESSIAN_VECTOR ) {
     assert(type==Type::OUTPUT);
     WrongOperatorHessianDimensions(Type::OUTPUT, Function::OPERATOR_HESSIAN_VECTOR);
+  } else if( func==Function::FUNCTION_DERIVATIVE ) {
+    assert(type==Type::INPUT);
+    WrongFunctionDerivativeDimensions();
   }
 }
 
@@ -87,6 +90,14 @@ void ModelHasWrongInputOutputDimensions::WrongRHSDimensions() {
     } else {
       message = "ERROR: clf::Model::RightHandSide returned a " + std::to_string(givendim) + "-dimensional vector but required " + std::to_string(dim) + " dimensions.";
     }
+  }
+}
+
+void ModelHasWrongInputOutputDimensions::WrongFunctionDerivativeDimensions() {
+  if( dim==1 ) {
+    message = "ERROR: clf::Model::FunctionDerivative was called with a " + std::to_string(givendim) + "-dimensional vector but requires " + std::to_string(dim) + " dimension.";
+  } else {
+    message = "ERROR: clf::Model::FunctionDerivative was called with a " + std::to_string(givendim) + "-dimensional vector but requires " + std::to_string(dim) + " dimensions.";
   }
 }
 

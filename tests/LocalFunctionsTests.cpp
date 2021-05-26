@@ -33,11 +33,12 @@ protected:
   /// Set up information to test the support point cloud
   virtual void SetUp() override {}
 
+  template<class MODEL>
   inline void CreateSupportPointCloud(double const couplingScale = 0.0) {
     pt::ptree modelOptions;
     modelOptions.put("InputDimension", indim);
     modelOptions.put("OutputDimension", outdim);
-    auto model = std::make_shared<ExampleModelForLocalFunctionsTests>(modelOptions);
+    //auto model = std::make_shared<MODEL>(modelOptions);
 
     // the order of the total order polynomial and sin/cos bases
     const std::size_t orderPoly = 3, orderSinCos = 2;
@@ -62,7 +63,7 @@ protected:
       for( std::size_t j=0; j<2*npoints; ++j ) {
         supportPoints[2*npoints*i+j] = SupportPoint::Construct(
           0.1*Eigen::Vector2d((double)i/(2*npoints-1)-0.5, (double)j/(2*npoints-1)-0.5),
-          std::make_shared<ExampleModelForLocalFunctionsTests>(modelOptions),
+          std::make_shared<MODEL>(modelOptions),
           suppOptions);
       }
     }
@@ -112,7 +113,7 @@ protected:
 };
 
 TEST_F(LocalFunctionsTests, UncoupledComputation) {
-  CreateSupportPointCloud();
+  CreateSupportPointCloud<ExampleModelForLocalFunctionsTests>();
 
   // create the local function
   pt::ptree ptFunc;
@@ -120,9 +121,43 @@ TEST_F(LocalFunctionsTests, UncoupledComputation) {
 }
 
 TEST_F(LocalFunctionsTests, CoupledComputation) {
-  CreateSupportPointCloud(0.5);
+  CreateSupportPointCloud<ExampleModelForLocalFunctionsTests>(0.5);
 
   // create the local function
   pt::ptree ptFunc;
   func = std::make_shared<LocalFunctions>(cloud, ptFunc);
+}
+
+class ExampleDifferentialModelForLocalFunctionsTests : public Model {
+public:
+
+  inline ExampleDifferentialModelForLocalFunctionsTests(pt::ptree const& pt) : Model(pt) {}
+
+  virtual ~ExampleDifferentialModelForLocalFunctionsTests() = default;
+
+protected:
+
+  inline virtual double RightHandSideComponentImpl(Eigen::VectorXd const& x, std::size_t const outind) const override {
+    if( outind==0 ) {
+      // a sin/cos function
+      return std::sin(M_PI*x(0))*std::cos(2.0*M_PI*x(1)) + std::cos(M_PI*x(1));
+    } else if( outind==1 ) {
+      // a quadratic function
+      return x(1)*x(0) + x(0) + 1.0;
+    } else {
+      return 0.0;
+    }
+  }
+
+private:
+};
+
+TEST_F(LocalFunctionsTests, DifferentialOperator) {
+  CreateSupportPointCloud<ExampleModelForLocalFunctionsTests>(0.5);
+
+  // create the local function
+  pt::ptree ptFunc;
+  func = std::make_shared<LocalFunctions>(cloud, ptFunc);
+
+  EXPECT_TRUE(false);
 }

@@ -36,6 +36,8 @@ double LocalFunctions::ComputeCoupledSupportPoints() {
   const double initCost = globalCost->Cost(coefficients);
   double prevCost = initCost;
 
+  std::cout << "first prev cost: " << prevCost << std::endl;
+
   for( std::size_t iter=0; iter<optimizationOptions.maxEvals; ++iter ) {
     // compute the cost function gradient
     const Eigen::VectorXd grad = globalCost->Gradient(coefficients);
@@ -68,6 +70,8 @@ double LocalFunctions::ComputeCoupledSupportPoints() {
     const double stepsize = stepDir.norm();
     prevCost = newCost;
     coefficients -= stepDir;
+
+    std::cout << "prev cost: " << prevCost << std::endl;
 
     // check convergence
     if(

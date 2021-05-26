@@ -36,6 +36,11 @@ double BasisFunctions::FunctionEvaluation(Eigen::VectorXd const& x, Eigen::Vecto
   return coefficients.dot(EvaluateBasisFunctions(x));
 }
 
+double BasisFunctions::FunctionDerivative(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::size_t const i, std::size_t const k) const {
+  assert(coefficients.size()==NumBasisFunctions());
+  return coefficients.dot(EvaluateBasisFunctionDerivatives(x, i, k));
+}
+
 Eigen::VectorXd BasisFunctions::EvaluateBasisFunctions(Eigen::VectorXd const& x) const {
   Eigen::VectorXd phi(multis->Size());
   for( std::size_t i=0; i<phi.size(); ++i ) { phi(i) = EvaluateBasisFunction(x, i); }

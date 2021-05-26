@@ -21,6 +21,7 @@ double GlobalCost::CostImpl(ref_vector<Eigen::VectorXd> const& input) {
 
     // evaluate the uncoupled cost function
     cost += (*point)->uncoupledCost->Cost(coeff);
+    assert(!std::isnan(cost));
 
     // if necessary, evaluate the coupled cost
     for( const auto& coupled : (*point)->coupledCost ) {
@@ -31,6 +32,7 @@ double GlobalCost::CostImpl(ref_vector<Eigen::VectorXd> const& input) {
       // extract the coefficients associated with the neighbor
       Eigen::Map<const Eigen::VectorXd> coeffNeigh(&input[0](dofIndices.globalDoFIndices[neigh->GlobalIndex()]), neigh->NumCoefficients());
       cost += coupled->Cost(coeff, coeffNeigh);
+      assert(!std::isnan(cost));
     }
   }
 

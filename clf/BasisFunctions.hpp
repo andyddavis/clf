@@ -67,14 +67,25 @@ public:
 
   virtual ~BasisFunctions() = default;
 
-  /// Evaluate a function in this space given the basis coefficients
+  /// Evaluate the function given the basis coefficients
   /**
-  The function evaluation is given coefficients \f$c\f$ is \f$c \cdot \phi(x)\f$
+  The function evaluation, given coefficients \f$c\f$, is \f$c \cdot \phi(x)\f$
   @param[in] x The location where we are evaluating the function
   @param[in] coefficients The basis coefficients
   \return The function evaluation
   */
   double FunctionEvaluation(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients) const;
+
+  /// Evaluate the \f$k\f$ function derivative with respect to the \f$i^{th}\f$ input given the basis coefficients
+  /**
+  The \f$k\f$ function derivative evaluation with respect to the \f$i^{th}\f$ input, given coefficients \f$c\f$, is \f$c \cdot \frac{\partial^{k} \phi(x)}{\partial x_i^{k}}\f$
+  @param[in] x The location where we are evaluating the function
+  @param[in] coefficients The basis coefficients
+  @param[in] i Compute the derivative with respect to the \f$i^{th}\f$ input
+  @param[in] k We want the \f$k\f$ derivative
+  \return The function derivative
+  */
+  double FunctionDerivative(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::size_t const i, std::size_t const k) const;
 
   /// Evaluate the basis functions
   /**

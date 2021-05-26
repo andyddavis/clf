@@ -638,3 +638,209 @@ TEST(ModelTests, HessianImplementation) {
     EXPECT_NEAR((hess[i]-hessFD[i]).norm(), 0.0, 1.0e-8);
   }
 }
+
+class TestDifferentialOperatorImplementationModel : public Model {
+public:
+
+  inline TestDifferentialOperatorImplementationModel(pt::ptree const& pt) : Model(pt) {}
+
+  virtual ~TestDifferentialOperatorImplementationModel() = default;
+
+protected:
+
+  /**
+  @param[in] x The point \f$x \in \Omega \f$
+  @param[in] outind Return this component of the evaluation of \f$f\f$
+  \return The component of \f$f(x)\f$ corresponding to <tt>outind</tt>
+  */
+  inline virtual double RightHandSideComponentImpl(Eigen::VectorXd const& x, std::size_t const outind) const override { return x.prod(); }
+
+  /// The operator so that the \f$i^{th}\f$ output is \f$\mathcal{L}_i(u) = u_i \sum_{j=1}^{n} \frac{\partial u_i}{\partial x_j}\f$
+  inline virtual Eigen::VectorXd OperatorImpl(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases) const override {
+    assert(bases.size()==outputDimension);
+    const Eigen::VectorXd u = IdentityOperator(x, coefficients, bases);
+
+    Eigen::VectorXd output = Eigen::VectorXd::Zero(outputDimension);
+    for( std::size_t out=0; out<outputDimension; ++out ) {
+      for( std::size_t in=0; in<inputDimension; ++in ) {
+        output(out) += u(out)*FunctionDerivative(x, coefficients, bases, out, in, 1);
+      }
+    }
+
+    return output;
+  }
+
+  inline virtual Eigen::MatrixXd OperatorJacobianImpl(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases) const override {
+    Eigen::MatrixXd jac = Eigen::MatrixXd::Zero(outputDimension, coefficients.size());
+
+    std::size_t ind = 0;
+    for( std::size_t i=0; i<outputDimension; ++i ) {
+      const std::size_t basisSize = bases[i]->NumBasisFunctions();
+      const Eigen::VectorXd phi = bases[i]->EvaluateBasisFunctions(x);
+
+      const Eigen::Map<const Eigen::VectorXd> coeffs(&coefficients[ind], basisSize);
+      for( std::size_t p=0; p<inputDimension; ++p ) {
+        const Eigen::VectorXd dphidx = bases[i]->EvaluateBasisFunctionDerivatives(x, p, 1);
+
+        for( std::size_t j=0; j<basisSize; ++j ) {
+          for( std::size_t s=0; s<basisSize; ++s ) {
+            jac(i, ind+j) += (phi(j)*dphidx(s) + phi(s)*dphidx(j))*coeffs(s);
+          }
+        }
+      }
+      ind += basisSize;
+    }
+
+    return jac;
+  }
+
+  /// Compute the true Hessian of the operator with respect to the coefficients
+  inline virtual std::vector<Eigen::MatrixXd> OperatorHessianImpl(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases) const override {
+    std::vector<Eigen::MatrixXd> hess(outputDimension, Eigen::MatrixXd::Zero(coefficients.size(), coefficients.size()));
+
+    std::size_t ind = 0;
+    for( std::size_t i=0; i<outputDimension; ++i ) {
+      const std::size_t basisSize = bases[i]->NumBasisFunctions();
+      const Eigen::VectorXd phi = bases[i]->EvaluateBasisFunctions(x);
+
+      const Eigen::Map<const Eigen::VectorXd> coeffs(&coefficients[ind], basisSize);
+      for( std::size_t p=0; p<inputDimension; ++p ) {
+        const Eigen::VectorXd dphidx = bases[i]->EvaluateBasisFunctionDerivatives(x, p, 1);
+
+        for( std::size_t j=0; j<basisSize; ++j ) {
+          for( std::size_t s=0; s<basisSize; ++s ) {
+            hess[i](ind+j, ind+s) += phi(j)*dphidx(s) + phi(s)*dphidx(j);
+          }
+        }
+      }
+      ind += basisSize;
+    }
+
+    return hess;
+  }
+
+
+private:
+};
+
+TEST(ModelTests, FunctionDerivativeWrongInputDimension) {
+  // input/output dimension
+  const std::size_t indim = 3, outdim = 5;
+
+  // create a model
+  pt::ptree pt;
+  pt.put("InputDimension", indim);
+  pt.put("OutputDimension", outdim);
+  auto model = std::make_shared<TestDifferentialOperatorImplementationModel>(pt);
+
+  // check in the input/output sizes
+  EXPECT_EQ(model->inputDimension, indim);
+  EXPECT_EQ(model->outputDimension, outdim);
+
+  // pick a random point
+  const Eigen::VectorXd x = Eigen::VectorXd::Random(indim+1);
+
+  // evaluate the function derivatives
+  pt::ptree basisOptions;
+  basisOptions.put("InputDimension", indim);
+  std::vector<std::shared_ptr<const BasisFunctions> > bases(outdim, PolynomialBasis::TotalOrderBasis(basisOptions));
+  const Eigen::VectorXd coefficients = Eigen::VectorXd::Random(outdim*bases[0]->NumBasisFunctions());
+
+  // try to evaluate the right hand side
+  try {
+    const double du0dx0 = model->FunctionDerivative(x, coefficients, bases, 1, 0, 0);
+  } catch( exceptions::ModelHasWrongInputOutputDimensions const& exc ) {
+    EXPECT_EQ(exc.type, exceptions::ModelHasWrongInputOutputDimensions::Type::INPUT);
+    EXPECT_EQ(exc.func, exceptions::ModelHasWrongInputOutputDimensions::Function::FUNCTION_DERIVATIVE);
+    EXPECT_EQ(exc.givendim, indim+1);
+    EXPECT_EQ(exc.dim, indim);
+  }
+}
+
+TEST(ModelTests, FunctionDerivativeEvaluation) {
+  // input/output dimension
+  const std::size_t indim = 3, outdim = 5;
+
+  // create a model
+  pt::ptree pt;
+  pt.put("InputDimension", indim);
+  pt.put("OutputDimension", outdim);
+  auto model = std::make_shared<TestDifferentialOperatorImplementationModel>(pt);
+
+  // check in the input/output sizes
+  EXPECT_EQ(model->inputDimension, indim);
+  EXPECT_EQ(model->outputDimension, outdim);
+
+  // pick a random point
+  const Eigen::VectorXd x = Eigen::VectorXd::Random(indim);
+
+  // evaluate the function derivatives
+  pt::ptree basisOptions;
+  basisOptions.put("InputDimension", indim);
+  std::vector<std::shared_ptr<const BasisFunctions> > bases(outdim, PolynomialBasis::TotalOrderBasis(basisOptions));
+  const Eigen::VectorXd coefficients = Eigen::VectorXd::Random(outdim*bases[0]->NumBasisFunctions());
+
+  // compute the derivative
+  const std::size_t k = 1; // the order of the derivative
+  std::size_t coeffInd = 0;
+  for( std::size_t j=0; j<outdim; ++j ) {
+    for( std::size_t i=0; i<indim; ++i ) {
+      const double dujdxi = model->FunctionDerivative(x, coefficients, bases, j, i, k);
+
+      const double expected = coefficients.segment(coeffInd, bases[j]->NumBasisFunctions()).dot(bases[j]->EvaluateBasisFunctionDerivatives(x, i, k));
+
+      EXPECT_NEAR(dujdxi, expected, 1.0e-10);
+    }
+    coeffInd += bases[j]->NumBasisFunctions();
+  }
+}
+
+
+TEST(ModelTests, DifferentialOperator) {
+  // input/output dimension
+  const std::size_t indim = 3, outdim = 5;
+
+  // create a model
+  pt::ptree pt;
+  pt.put("InputDimension", indim);
+  pt.put("OutputDimension", outdim);
+  auto model = std::make_shared<TestDifferentialOperatorImplementationModel>(pt);
+
+  // check in the input/output sizes
+  EXPECT_EQ(model->inputDimension, indim);
+  EXPECT_EQ(model->outputDimension, outdim);
+
+  // pick a random point
+  const Eigen::VectorXd x = Eigen::VectorXd::Random(indim);
+
+  // evaluate the operator
+  pt::ptree basisOptions;
+  basisOptions.put("InputDimension", indim);
+  std::vector<std::shared_ptr<const BasisFunctions> > bases(outdim, PolynomialBasis::TotalOrderBasis(basisOptions));
+  const Eigen::VectorXd coefficients = Eigen::VectorXd::Random(outdim*bases[0]->NumBasisFunctions());
+  const Eigen::VectorXd identity = model->IdentityOperator(x, coefficients, bases);
+  const Eigen::VectorXd Lu = model->Operator(x, coefficients, bases);
+  Eigen::VectorXd expected = Eigen::VectorXd::Zero(outdim);
+  for( std::size_t out=0; out<outdim; ++out ) {
+    for( std::size_t in=0; in<indim; ++in ) { expected(out) += identity(out)*model->FunctionDerivative(x, coefficients, bases, out, in, 1); }
+  }
+  EXPECT_NEAR((Lu-expected).norm(), 0.0, 1.0e-10);
+
+  // evaluate the jacobian of the operator
+  const Eigen::MatrixXd jacFD = model->OperatorJacobianByFD(x, coefficients, bases);
+  const Eigen::MatrixXd jac = model->OperatorJacobian(x, coefficients, bases);
+  EXPECT_NEAR((jacFD-jac).norm(), 0.0, 1.0e-5);
+
+  // evaluate the hessian of the operator
+  const std::vector<Eigen::MatrixXd> hess = model->OperatorHessian(x, coefficients, bases);
+  const std::vector<Eigen::MatrixXd> hessFD = model->OperatorHessianByFD(x, coefficients, bases);
+  EXPECT_EQ(hess.size(), outdim);
+  EXPECT_EQ(hess.size(), hessFD.size());
+  for( std::size_t i=0; i<hess.size(); ++i ) {
+    EXPECT_EQ(hess[i].rows(), coefficients.size());
+    EXPECT_EQ(hess[i].cols(), coefficients.size());
+    EXPECT_EQ(hessFD[i].rows(), coefficients.size());
+    EXPECT_EQ(hessFD[i].cols(), coefficients.size());
+    EXPECT_NEAR((hess[i]-hessFD[i]).norm(), 0.0, 1.0e-8);
+  }
+}

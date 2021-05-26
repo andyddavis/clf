@@ -184,13 +184,13 @@ std::size_t SupportPoint::LocalIndex(std::size_t const globalInd) const {
   return std::distance(globalNeighorIndices.begin(), localInd);
 }
 
-Eigen::VectorXd SupportPoint::NearestNeighbor(std::size_t const jnd) const {
+std::shared_ptr<SupportPoint> SupportPoint::NearestNeighbor(std::size_t const jnd) const {
   // get the cloud
   auto cld = cloud.lock();
   assert(cld);
 
   assert(jnd<globalNeighorIndices.size());
-  return cld->GetSupportPoint(GlobalNeighborIndex(jnd))->x;
+  return cld->GetSupportPoint(GlobalNeighborIndex(jnd));
 }
 
 std::size_t SupportPoint::GlobalNeighborIndex(std::size_t const localInd) const {
@@ -246,6 +246,29 @@ double SupportPoint::MinimizeUncoupledCostNLOPT() {
   return costVal;
 }
 
+std::pair<double, double> SupportPoint::LineSearch(Eigen::VectorXd const& coefficients, Eigen::VectorXd const& stepDir, double const prevCost) const {
+  double alpha = optimizationOptions.maxStepSizeScale;
+  double newCost = uncoupledCost->Cost((coefficients-alpha*stepDir).eval());
+  std::size_t lineSearchIter = 0;
+  while( newCost>prevCost || lineSearchIter++>optimizationOptions.maxLineSearchIterations ) {
+    alpha *= optimizationOptions.lineSearchFactor;
+    newCost = uncoupledCost->Cost((coefficients-alpha*stepDir).eval());
+  }
+
+  return std::pair<double, double>(alpha, newCost);
+}
+
+Eigen::VectorXd SupportPoint::StepDirection(Eigen::VectorXd const& coefficients, Eigen::VectorXd const& grad,  bool const useGN) const {
+  // compute the Hessian
+  const Eigen::MatrixXd hess = uncoupledCost->Hessian(coefficients, useGN);
+  assert(hess.rows()==coefficients.size()); assert(hess.cols()==coefficients.size());
+
+  // step direction xk-xkp1 = H^{-1} g
+  Eigen::ColPivHouseholderQR<Eigen::MatrixXd> solver;
+  solver.compute(hess);
+  return solver.solve(grad);
+}
+
 double SupportPoint::MinimizeUncoupledCostNewton() {
   const double initCost = uncoupledCost->Cost(coefficients);
   double prevCost = initCost;
@@ -256,23 +279,20 @@ double SupportPoint::MinimizeUncoupledCostNewton() {
     // if the gradient is small, break
     if( grad.norm()<optimizationOptions.atol_grad ) { break; }
 
-    // compute the Hessian
-    const Eigen::MatrixXd hess = uncoupledCost->Hessian(coefficients, optimizationOptions.useGaussNewtonHessian);
-    assert(hess.rows()==coefficients.size());
-    assert(hess.cols()==coefficients.size());
-
-    // step direction xk-xkp1 = H^{-1} g
-    Eigen::ColPivHouseholderQR<Eigen::MatrixXd> solver;
-    solver.compute(hess);
-    Eigen::VectorXd stepDir = solver.solve(grad);
+    // compute the step direction
+    Eigen::VectorXd stepDir = StepDirection(coefficients, grad, optimizationOptions.useGaussNewtonHessian);
 
     // do the line search
-    double alpha = optimizationOptions.maxStepSizeScale;
-    double newCost = uncoupledCost->Cost((coefficients-alpha*stepDir).eval());
-    std::size_t lineSearchIter = 0;
-    while( newCost>prevCost || lineSearchIter++>optimizationOptions.maxLineSearchIterations ) {
-      alpha *= optimizationOptions.lineSearchFactor;
-      newCost = uncoupledCost->Cost((coefficients-alpha*stepDir).eval());
+    double alpha, newCost;
+    std::tie(alpha, newCost) = LineSearch(coefficients, stepDir, prevCost);
+
+    // if we are not using the Gauss-Newton Hessian and the stepsize is small, try taking a step with the Gauss-Newton Hessian
+    if( !optimizationOptions.useGaussNewtonHessian && alpha<optimizationOptions.atol_step ) {
+      // compute a new step direction
+      stepDir = StepDirection(coefficients, grad, true);
+
+      // do the line search
+      std::tie(alpha, newCost) = LineSearch(coefficients, stepDir, prevCost);
     }
 
     // make a step

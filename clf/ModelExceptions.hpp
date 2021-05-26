@@ -40,7 +40,10 @@ public:
     OPERATOR_HESSIAN_VECTOR,
 
     /// The Hessian of the operator with respect to the coefficients (one of the matrices has the wrong dimension)
-    OPERATOR_HESSIAN_MATRIX
+    OPERATOR_HESSIAN_MATRIX,
+
+    /// We have tried to compute the derivative of one of the outputs with the wrong input dimension
+    FUNCTION_DERIVATIVE
   };
 
   /**
@@ -119,6 +122,9 @@ private:
   @param[in] func How exactly did the Hessian fail to have the wrong input/output dimensions
   */
   void WrongOperatorHessianDimensions(Type const& type, Function const& func);
+
+  /// The input dimension used to compute the function derivative are wrong
+  void WrongFunctionDerivativeDimensions();
 };
 
 /// The model has not implemented the right hand side function or the operator

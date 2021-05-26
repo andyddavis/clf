@@ -218,3 +218,15 @@ double Model::RightHandSideComponentImpl(Eigen::VectorXd const& x, std::size_t c
   throw exceptions::ModelHasNotImplemented(exceptions::ModelHasNotImplemented::Type::COMPONENT, exceptions::ModelHasNotImplemented::Function::RHS);
   return 0.0;
 }
+
+double Model::FunctionDerivative(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases, std::size_t const i, std::size_t const j, std::size_t const k) const {
+  assert(i<outputDimension); assert(j<inputDimension);
+  assert(bases.size()==outputDimension);
+
+  if( x.size()!=inputDimension) { throw exceptions::ModelHasWrongInputOutputDimensions(exceptions::ModelHasWrongInputOutputDimensions::Type::INPUT, exceptions::ModelHasWrongInputOutputDimensions::Function::FUNCTION_DERIVATIVE, x.size(), inputDimension); }
+
+  std::size_t firstind = 0;
+  for( std::size_t ind=0; ind<i; ++ind ) { firstind += bases[ind]->NumBasisFunctions(); }
+
+  return bases[i]->FunctionDerivative(x, coefficients.segment(firstind, bases[i]->NumBasisFunctions()), j, k);
+}

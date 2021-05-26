@@ -28,10 +28,10 @@ double UncoupledCost::Cost(Eigen::VectorXd const& coefficients) const {
   double cost = 0.0;
   for( std::size_t i=0; i<pnt->NumNeighbors(); ++i ) {
     // the location of the neighbor
-    const Eigen::VectorXd& neighx = pnt->NearestNeighbor(i);
+    std::shared_ptr<SupportPoint> neigh = pnt->NearestNeighbor(i);
 
     // evaluate the difference between model operator and the right hand side
-    const Eigen::VectorXd diff = pnt->Operator(neighx, coefficients) - pnt->model->RightHandSide(neighx);
+    const Eigen::VectorXd diff = neigh->model->Operator(neigh->x, coefficients, pnt->GetBasisFunctions()) - neigh->model->RightHandSide(neigh->x);
 
     // add to the cost
     cost += kernel(i)*diff.dot(diff);
@@ -55,14 +55,14 @@ Eigen::VectorXd UncoupledCost::Gradient(Eigen::VectorXd const& coefficients) con
   Eigen::VectorXd grad = Eigen::VectorXd::Zero(inputSizes(0));
   for( std::size_t i=0; i<pnt->NumNeighbors(); ++i ) {
     // the location of the neighbor
-    const Eigen::VectorXd& neighx = pnt->NearestNeighbor(i);
+    std::shared_ptr<SupportPoint> neigh = pnt->NearestNeighbor(i);
 
     // the Jacobian of the operator
-    const Eigen::MatrixXd modelJac = pnt->OperatorJacobian(neighx, coefficients);
+    const Eigen::MatrixXd modelJac = neigh->model->OperatorJacobian(neigh->x, coefficients, pnt->GetBasisFunctions());
     assert(modelJac.rows()==pnt->model->outputDimension);
     assert(modelJac.cols()==inputSizes(0));
 
-    grad += kernel(i)*modelJac.transpose()*(pnt->Operator(neighx, coefficients) - pnt->model->RightHandSide(neighx));
+    grad += kernel(i)*modelJac.transpose()*(neigh->model->Operator(neigh->x, coefficients, pnt->GetBasisFunctions()) - neigh->model->RightHandSide(neigh->x));
   }
 
   grad *= uncoupledScale;
@@ -88,19 +88,19 @@ Eigen::MatrixXd UncoupledCost::Hessian(Eigen::VectorXd const& coefficients, bool
    Eigen::MatrixXd hess = Eigen::MatrixXd::Zero(inputSizes(0), inputSizes(0));
    for( std::size_t i=0; i<pnt->NumNeighbors(); ++i ) {
      // the location of the neighbor
-     const Eigen::VectorXd& neighx = pnt->NearestNeighbor(i);
+     std::shared_ptr<SupportPoint> neigh = pnt->NearestNeighbor(i);
 
      // the Jacobian of the operator
-     const Eigen::MatrixXd modelJac = pnt->OperatorJacobian(neighx, coefficients);
-     assert(modelJac.rows()==pnt->model->outputDimension);
+     const Eigen::MatrixXd modelJac = neigh->model->OperatorJacobian(neigh->x, coefficients, pnt->GetBasisFunctions());
+     assert(modelJac.rows()==neigh->model->outputDimension);
      assert(modelJac.cols()==inputSizes(0));
 
      hess += kernel(i)*modelJac.transpose()*modelJac;
 
      if( !gaussNewtonHessian ) {
-       const std::vector<Eigen::MatrixXd> modelHess = pnt->OperatorHessian(neighx, coefficients);
-       assert(modelHess.size()==pnt->model->outputDimension);
-       const Eigen::VectorXd diff = pnt->Operator(neighx, coefficients) - pnt->model->RightHandSide(neighx);
+       const std::vector<Eigen::MatrixXd> modelHess = neigh->model->OperatorHessian(neigh->x, coefficients, pnt->GetBasisFunctions());
+       assert(modelHess.size()==neigh->model->outputDimension);
+       const Eigen::VectorXd diff = neigh->model->Operator(neigh->x, coefficients, pnt->GetBasisFunctions()) - neigh->model->RightHandSide(neigh->x);
        assert(diff.size()==pnt->model->outputDimension);
        for( std::size_t j=0; j<diff.size(); ++j ) {
          assert(modelHess[j].rows()==inputSizes(0));

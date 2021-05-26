@@ -92,7 +92,7 @@ public:
     // the order of the total order polynomial and sin/cos bases
     const std::size_t orderPoly = 4, orderSinCos = 2;
 
-    // must be odd so that the randomly selected center is not a point on the grid
+    // must be odd so that the center is not a point on the grid
     const std::size_t npoints = 7;
 
     // options for the support point
@@ -106,7 +106,7 @@ public:
     suppOptions.put("Basis2.Order", orderPoly);
     suppOptions.add_child("Optimization", optimization);
     point = SupportPoint::Construct(
-      Eigen::VectorXd::Random(indim),
+      Eigen::VectorXd::Ones(indim),
       std::make_shared<ExampleModelForUncoupledCostTests>(modelOptions),
       suppOptions);
 
@@ -139,7 +139,9 @@ public:
         it->x.prod()
       );
       EXPECT_EQ(eval.size(), point->model->outputDimension);
-      for( std::size_t i=0; i<eval.size(); ++i ) { EXPECT_NEAR(expectedRHS(i), operatorEval(i), tol); }
+      for( std::size_t i=0; i<eval.size(); ++i ) {
+        EXPECT_NEAR(expectedRHS(i), operatorEval(i), tol);
+      }
     }
   }
 
