@@ -25,9 +25,30 @@ double LocalFunctions::ComputeOptimalCoefficients() {
   return ComputeIndependentSupportPoints();
 }
 
-double LocalFunctions::ComputeCoupledSupportPoints() {
-  std::cout << std::endl << "COMPTUING COUPLED SUPPORT POINTS" << std::endl << std::endl;
+Eigen::VectorXd LocalFunctions::StepDirection(Eigen::VectorXd const& coefficients, Eigen::VectorXd const& grad,  bool const useGN) const {
+  Eigen::SparseMatrix<double> hess;
+  globalCost->Hessian(coefficients, useGN, hess);
+  assert(hess.rows()==coefficients.size()); assert(hess.cols()==coefficients.size());
 
+  // step direction xk-xkp1 = H^{-1} g
+  Eigen::SparseQR<Eigen::SparseMatrix<double>, Eigen::COLAMDOrdering<typename Eigen::SparseMatrix<double>::StorageIndex> > solver;
+  solver.compute(hess);
+  return solver.solve(grad);
+}
+
+std::pair<double, double> LocalFunctions::LineSearch(Eigen::VectorXd const& coefficients, Eigen::VectorXd const& stepDir, double const prevCost) const {
+  double alpha = optimizationOptions.maxStepSizeScale;
+  double newCost = globalCost->Cost((coefficients-alpha*stepDir).eval());
+  std::size_t lineSearchIter = 0;
+  while( newCost>prevCost || lineSearchIter++>optimizationOptions.maxLineSearchIterations ) {
+    alpha *= optimizationOptions.lineSearchFactor;
+    newCost = globalCost->Cost((coefficients-alpha*stepDir).eval());
+  }
+
+  return std::pair<double, double>(alpha, newCost);
+}
+
+double LocalFunctions::ComputeCoupledSupportPoints() {
   assert(globalCost);
 
   // get the current coefficients---they make up the initial guess
@@ -36,8 +57,6 @@ double LocalFunctions::ComputeCoupledSupportPoints() {
   const double initCost = globalCost->Cost(coefficients);
   double prevCost = initCost;
 
-  std::cout << "first prev cost: " << prevCost << std::endl;
-
   for( std::size_t iter=0; iter<optimizationOptions.maxEvals; ++iter ) {
     // compute the cost function gradient
     const Eigen::VectorXd grad = globalCost->Gradient(coefficients);
@@ -45,24 +64,20 @@ double LocalFunctions::ComputeCoupledSupportPoints() {
     // if the gradient is small, break
     if( grad.norm()<optimizationOptions.atol_grad ) { break; }
 
-    // compute the Hessian
-    Eigen::SparseMatrix<double> hess;
-    globalCost->Hessian(coefficients, optimizationOptions.useGaussNewtonHessian, hess);
-    assert(hess.rows()==coefficients.size());
-    assert(hess.cols()==coefficients.size());
-
-    // step direction xk-xkp1 = H^{-1} g
-    Eigen::SparseQR<Eigen::SparseMatrix<double>, Eigen::COLAMDOrdering<typename Eigen::SparseMatrix<double>::StorageIndex> > solver;
-    solver.compute(hess);
-    Eigen::VectorXd stepDir = solver.solve(grad);
+    // compute the step direction
+    Eigen::VectorXd stepDir = StepDirection(coefficients, grad, optimizationOptions.useGaussNewtonHessian);
 
     // do the line search
-    double alpha = optimizationOptions.maxStepSizeScale;
-    double newCost = globalCost->Cost((coefficients-alpha*stepDir).eval());
-    std::size_t lineSearchIter = 0;
-    while( newCost>prevCost || lineSearchIter++>optimizationOptions.maxLineSearchIterations ) {
-      alpha *= optimizationOptions.lineSearchFactor;
-      newCost = globalCost->Cost((coefficients-alpha*stepDir).eval());
+    double alpha, newCost;
+    std::tie(alpha, newCost) = LineSearch(coefficients, stepDir, prevCost);
+
+    // if we are not using the Gauss-Newton Hessian and the stepsize is small, try taking a step with the Gauss-Newton Hessian
+    if( !optimizationOptions.useGaussNewtonHessian && alpha<optimizationOptions.atol_step ) {
+      // compute a new step direction
+      stepDir = StepDirection(coefficients, grad, true);
+
+      // do the line search
+      std::tie(alpha, newCost) = LineSearch(coefficients, stepDir, prevCost);
     }
 
     // make a step
@@ -70,8 +85,6 @@ double LocalFunctions::ComputeCoupledSupportPoints() {
     const double stepsize = stepDir.norm();
     prevCost = newCost;
     coefficients -= stepDir;
-
-    std::cout << "prev cost: " << prevCost << std::endl;
 
     // check convergence
     if(
@@ -90,7 +103,6 @@ double LocalFunctions::ComputeCoupledSupportPoints() {
 }
 
 double LocalFunctions::ComputeIndependentSupportPoints() {
-  std::cout << std::endl << "COMPTUING INDEPENDENT SUPPORT POINTS" << std::endl << std::endl;
   cost = 0.0;
   for( auto point=cloud->Begin(); point!=cloud->End(); ++point ) { cost += (*point)->MinimizeUncoupledCost(); }
   cost /= cloud->NumSupportPoints();

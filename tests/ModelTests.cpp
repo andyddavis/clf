@@ -719,7 +719,6 @@ protected:
     return hess;
   }
 
-
 private:
 };
 
@@ -794,7 +793,6 @@ TEST(ModelTests, FunctionDerivativeEvaluation) {
     coeffInd += bases[j]->NumBasisFunctions();
   }
 }
-
 
 TEST(ModelTests, DifferentialOperator) {
   // input/output dimension

@@ -10,7 +10,7 @@ using namespace clf;
 CLF_REGISTER_BASIS_FUNCTION(PolynomialBasis)
 
 PolynomialBasis::PolynomialBasis(std::shared_ptr<MultiIndexSet> const& multis, pt::ptree const& pt) : BasisFunctions(multis, pt) {
-  poly = IndexedScalarBasis::Construct(pt.get<std::string>("ScalarBasis", "Legendre"));
+  poly = IndexedScalarBasis::Construct(pt.get<std::string>("ScalarBasis", "ProbabilistHermite"));
 }
 
 std::shared_ptr<PolynomialBasis> PolynomialBasis::TotalOrderBasis(pt::ptree const& pt) {

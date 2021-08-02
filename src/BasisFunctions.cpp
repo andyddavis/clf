@@ -91,8 +91,10 @@ double BasisFunctions::EvaluateBasisFunctionDerivative(Eigen::VectorXd const& x,
     if( std::abs(basisEval)<1.0e-14 ) { return 0.0; }
     if( i==p ) {
       basisEval *= ScalarBasisFunctionDerivative(x(i), iota(i), i, k);
+      assert(!std::isnan(basisEval));
     } else {
       basisEval *= ScalarBasisFunction(x(i), iota(i), i);
+      assert(!std::isnan(basisEval));
     }
   }
   return basisEval;

@@ -31,6 +31,8 @@ double UncoupledCost::Cost(Eigen::VectorXd const& coefficients) const {
     std::shared_ptr<SupportPoint> neigh = pnt->NearestNeighbor(i);
 
     // evaluate the difference between model operator and the right hand side
+    const Eigen::VectorXd op = neigh->model->Operator(neigh->x, coefficients, pnt->GetBasisFunctions());
+    const Eigen::VectorXd rhs = neigh->model->RightHandSide(neigh->x);
     const Eigen::VectorXd diff = neigh->model->Operator(neigh->x, coefficients, pnt->GetBasisFunctions()) - neigh->model->RightHandSide(neigh->x);
 
     // add to the cost
