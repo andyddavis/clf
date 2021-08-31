@@ -27,7 +27,7 @@ std::size_t DOFIndices::MaxNonZeros(std::shared_ptr<SupportPointCloud> const& cl
     // if the uncoupled hessian where dense
     nonZeros += (*point)->NumCoefficients()*(*point)->NumCoefficients();
 
-    if( (*point)->couplingScale>0.0 ) {
+    /*if( (*point)->couplingScale>0.0 ) {
       for( const auto& neighInd : (*point)->GlobalNeighborIndices() ) {
         const auto& neigh = cloud->GetSupportPoint(neighInd);
         assert(neigh);
@@ -36,7 +36,7 @@ std::size_t DOFIndices::MaxNonZeros(std::shared_ptr<SupportPointCloud> const& cl
         assert(pointBases.size()==neighBases.size());
         for( std::size_t i=0; i<pointBases.size(); ++i ) { nonZeros += 2*pointBases[i]->NumBasisFunctions()*neighBases[i]->NumBasisFunctions(); }
       }
-    }
+    }*/
   }
 
   return nonZeros;

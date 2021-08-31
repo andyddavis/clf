@@ -3,58 +3,54 @@
 #include "clf/SupportPoint.hpp"
 
 namespace pt = boost::property_tree;
-using namespace muq::Optimization;
 using namespace clf;
 
 UncoupledCost::UncoupledCost(std::shared_ptr<SupportPoint> const& point, pt::ptree const& pt) :
-CostFunction(Eigen::VectorXi::Constant(1, point->NumCoefficients())),
+SparseCostFunction(point->NumCoefficients(), point->NumNeighbors()*point->model->outputDimension + (pt.get<double>("RegularizationParameter", 0.0)<1.0e-14? 0.0 : point->NumCoefficients())),
 point(point),
-uncoupledScale(pt.get<double>("UncoupledScale", 1.0)),
-regularizationScale(pt.get<double>("RegularizationParameter", 0.0))
-{
-  assert(uncoupledScale>-1.0e-10); assert(regularizationScale>-1.0e-10);
-}
+uncoupledScale(std::sqrt(pt.get<double>("UncoupledScale", 1.0))),
+regularizationScale(std::sqrt(pt.get<double>("RegularizationParameter", 0.0)))
+{}
 
-double UncoupledCost::Cost(Eigen::VectorXd const& coefficients) const {
+double UncoupledCost::UncoupledScale() const { return uncoupledScale*uncoupledScale; }
+
+double UncoupledCost::RegularizationScale() const { return regularizationScale*regularizationScale; }
+
+Eigen::VectorXd UncoupledCost::CostImpl(Eigen::VectorXd const& coefficients) const {
   // get the support point
   auto pnt = point.lock();
   assert(pnt);
 
   // get the kernel evaluation
-  const Eigen::VectorXd kernel = pnt->NearestNeighborKernel();
-  assert(kernel.size()==pnt->NumNeighbors());
+  const Eigen::VectorXd kernel = uncoupledScale*pnt->NearestNeighborKernel().array().sqrt();
+  assert(pnt->NumNeighbors()==kernel.size());
 
   // loop through the neighbors
-  double cost = 0.0;
+  Eigen::VectorXd cost(valDim);
   for( std::size_t i=0; i<pnt->NumNeighbors(); ++i ) {
     // the location of the neighbor
     std::shared_ptr<SupportPoint> neigh = pnt->NearestNeighbor(i);
 
     // evaluate the difference between model operator and the right hand side
-    const Eigen::VectorXd op = neigh->model->Operator(neigh->x, coefficients, pnt->GetBasisFunctions());
-    const Eigen::VectorXd rhs = neigh->model->RightHandSide(neigh->x);
-    const Eigen::VectorXd diff = neigh->model->Operator(neigh->x, coefficients, pnt->GetBasisFunctions()) - neigh->model->RightHandSide(neigh->x);
-
-    // add to the cost
-    cost += kernel(i)*diff.dot(diff);
+    cost.segment(i*pnt->model->outputDimension, pnt->model->outputDimension) = kernel(i)*(neigh->model->Operator(neigh->x, coefficients, pnt->GetBasisFunctions()) - neigh->model->RightHandSide(neigh->x));
   }
 
-  return (uncoupledScale*cost + (regularizationScale>0.0? regularizationScale*coefficients.dot(coefficients) : 0.0))/(2.0*pnt->NumNeighbors());
+  // if we are regularizing, these are seperate cost functions
+  if( regularizationScale>=1.0e-14 ) { cost.tail(inDim) = regularizationScale*coefficients; }
+
+  return cost;
 }
 
-double UncoupledCost::CostImpl(muq::Modeling::ref_vector<Eigen::VectorXd> const& input) { return Cost(input[0].get()); }
-
-Eigen::VectorXd UncoupledCost::Gradient(Eigen::VectorXd const& coefficients) const {
+void UncoupledCost::JacobianTriplets(Eigen::VectorXd const& coefficients, std::vector<Eigen::Triplet<double> >& triplets) const {
   // get the support point
   auto pnt = point.lock();
   assert(pnt);
 
   // get the kernel evaluation
-  const Eigen::VectorXd kernel = pnt->NearestNeighborKernel();
-  assert(kernel.size()==pnt->NumNeighbors());
+  const Eigen::VectorXd kernel = uncoupledScale*pnt->NearestNeighborKernel().array().sqrt();
+  assert(pnt->NumNeighbors()==kernel.size());
 
   // loop through the neighbors
-  Eigen::VectorXd grad = Eigen::VectorXd::Zero(inputSizes(0));
   for( std::size_t i=0; i<pnt->NumNeighbors(); ++i ) {
     // the location of the neighbor
     std::shared_ptr<SupportPoint> neigh = pnt->NearestNeighbor(i);
@@ -62,57 +58,20 @@ Eigen::VectorXd UncoupledCost::Gradient(Eigen::VectorXd const& coefficients) con
     // the Jacobian of the operator
     const Eigen::MatrixXd modelJac = neigh->model->OperatorJacobian(neigh->x, coefficients, pnt->GetBasisFunctions());
     assert(modelJac.rows()==pnt->model->outputDimension);
-    assert(modelJac.cols()==inputSizes(0));
+    assert(modelJac.cols()==inDim);
 
-    grad += kernel(i)*modelJac.transpose()*(neigh->model->Operator(neigh->x, coefficients, pnt->GetBasisFunctions()) - neigh->model->RightHandSide(neigh->x));
+    for( std::size_t d=0; d<pnt->model->outputDimension; ++d ) {
+      for( std::size_t j=0; j<pnt->NumCoefficients(); ++j ) {
+        if( std::abs(modelJac(d, j))>1.0e-14 ) { triplets.emplace_back(i*pnt->model->outputDimension+d, j, kernel(i)*modelJac(d, j)); }
+      }
+    }
   }
 
-  grad *= uncoupledScale;
-  if( regularizationScale>0.0 ) { grad += regularizationScale*coefficients; }
-
-  return grad/pnt->NumNeighbors();
+  if( regularizationScale>=1.0e-14 ) { for( std::size_t i=0; i<pnt->NumCoefficients(); ++i ) { triplets.emplace_back(pnt->NumNeighbors()*pnt->model->outputDimension+i, i, regularizationScale); } }
 }
 
-void UncoupledCost::GradientImpl(unsigned int const inputDimWrt, muq::Modeling::ref_vector<Eigen::VectorXd> const& input, Eigen::VectorXd const& sensitivity) { this->gradient = sensitivity(0)*Gradient(input[0]); }
-
-Eigen::MatrixXd UncoupledCost::Hessian(Eigen::VectorXd const& coefficients, bool const gaussNewtonHessian) const {
-   assert(coefficients.size()==inputSizes(0));
-
-   // get the support point
-   auto pnt = point.lock();
-   assert(pnt);
-
-   // get the kernel evaluation
-   const Eigen::VectorXd kernel = pnt->NearestNeighborKernel();
-   assert(kernel.size()==pnt->NumNeighbors());
-
-   // loop through the neighbors
-   Eigen::MatrixXd hess = Eigen::MatrixXd::Zero(inputSizes(0), inputSizes(0));
-   for( std::size_t i=0; i<pnt->NumNeighbors(); ++i ) {
-     // the location of the neighbor
-     std::shared_ptr<SupportPoint> neigh = pnt->NearestNeighbor(i);
-
-     // the Jacobian of the operator
-     const Eigen::MatrixXd modelJac = neigh->model->OperatorJacobian(neigh->x, coefficients, pnt->GetBasisFunctions());
-     assert(modelJac.rows()==neigh->model->outputDimension);
-     assert(modelJac.cols()==inputSizes(0));
-
-     hess += kernel(i)*modelJac.transpose()*modelJac;
-
-     if( !gaussNewtonHessian ) {
-       const std::vector<Eigen::MatrixXd> modelHess = neigh->model->OperatorHessian(neigh->x, coefficients, pnt->GetBasisFunctions());
-       assert(modelHess.size()==neigh->model->outputDimension);
-       const Eigen::VectorXd diff = neigh->model->Operator(neigh->x, coefficients, pnt->GetBasisFunctions()) - neigh->model->RightHandSide(neigh->x);
-       assert(diff.size()==pnt->model->outputDimension);
-       for( std::size_t j=0; j<diff.size(); ++j ) {
-         assert(modelHess[j].rows()==inputSizes(0));
-         assert(modelHess[j].cols()==inputSizes(0));
-         hess += diff(j)*kernel(i)*modelHess[j];
-       }
-     }
-   }
-
-   hess *= uncoupledScale;
-   if( regularizationScale>0.0 ) { hess += regularizationScale*Eigen::MatrixXd::Identity(inputSizes(0), inputSizes(0)); }
-   return hess/pnt->NumNeighbors();
- }
+void UncoupledCost::JacobianImpl(Eigen::VectorXd const& coefficients, Eigen::SparseMatrix<double>& jac) const {
+  std::vector<Eigen::Triplet<double> > triplets;
+  JacobianTriplets(coefficients, triplets);
+  jac.setFromTriplets(triplets.begin(), triplets.end());
+}

@@ -110,10 +110,11 @@ private:
   /**
   @param[in] coefficients The basis function coefficients
   @param[in] grad The gradient of the cost function given these coefficients
+  @param[in] lambda Add this scale times the identity to the Hessian matrix
   @param[in] useGN <tt>true</tt>: Use the Gauss-Newton Hessian, <tt>false</tt>: Use the true Hessian
   \return The step direction
   */
-  Eigen::VectorXd StepDirection(Eigen::VectorXd const& coefficients, Eigen::VectorXd const& grad, bool const useGN) const;
+  Eigen::VectorXd StepDirection(Eigen::VectorXd const& coefficients, Eigen::VectorXd const& grad, double const lambda, bool const useGN) const;
 
   /// Compute the line serach for Newton's method
   /**

@@ -3,7 +3,7 @@
 
 #include <boost/property_tree/ptree.hpp>
 
-#include <MUQ/Optimization/CostFunction.h>
+#include "clf/CostFunction.hpp"
 
 namespace clf {
 
@@ -23,7 +23,7 @@ Parameter Key | Type | Default Value | Description |
 "RegularizationParameter"   | <tt>double</tt> | <tt>0.0</tt> | The regularization parameter \f$a_i\f$. |
 "UncoupledScale"   | <tt>double</tt> | <tt>1.0</tt> | The scale parameter \f$m_i\f$. |
 */
-class UncoupledCost : public muq::Optimization::CostFunction {
+class UncoupledCost : public SparseCostFunction {
 public:
 
   /**
@@ -34,60 +34,67 @@ public:
 
   virtual ~UncoupledCost() = default;
 
-  /// Compute the cost given the coefficients
+  /// The parameter that scales the uncoupled cost
   /**
-  @param[in] coefficients The coefficients for the basis functions
-  \return The uncoupled cost
+  \return The parameter that scales the uncoupled cost
   */
-  double Cost(Eigen::VectorXd const& coefficients) const;
+  double UncoupledScale() const;
 
-  // Compute the gradient of the cost given the coefficients
+  /// The parameter that scales the regularizing term
   /**
-  @param[in] coefficients The coefficients for the basis functions
-  \return The uncoupled cost gradient
+  \return The parameter that scales the regularizing term
   */
-  Eigen::VectorXd Gradient(Eigen::VectorXd const& coefficients) const;
+  double RegularizationScale() const;
 
-  /// Compute the Hessian of the cost function
+  /// Compute the entries of the Jacobian matrix
   /**
-  @param[in] coefficients The coefficients for the basis functions
-  @param[in] gaussNewtonHessian <tt>true</tt>: compute the Gauss-Newton Hessian, <tt>false</tt>: compute the Hessian
-  \return The Hessian matrix (or the Gauss-Newton Hessian matrix)
+  The Jacobian matrix is \f$\boldsymbol{J} \in \mathbb{R}^{m \times n}\f$. Each row is the gradient of the sub-cost function \f$f_i\f$ with respect to the input parameters \$\boldsymbol{\beta} \in \mathbb{R}^{n}\f$.
+
+  Since it is sparse we can store each entry as an <tt>Eigen::Triplet<double></tt>.
+
+  @param[in] coefficients The coefficients for this support point
+  @param[out] triplets The entries of the Jacobian matrix
   */
-  Eigen::MatrixXd Hessian(Eigen::VectorXd const& coefficients, bool const gaussNewtonHessian) const;
+  void JacobianTriplets(Eigen::VectorXd const& coefficients, std::vector<Eigen::Triplet<double> >& triplets) const;
 
   /// The point that is associated with this cost
   std::weak_ptr<const SupportPoint> point;
 
+protected:
+
+  /// Evaluate each sub-cost function \f$f_i(\boldsymbol{\beta})\f$
+  /**
+  @param[in] beta The coefficients for this support point
+  \return The \f$i^{th}\f$ entry is the \f$i^{th}\f$ sub-cost function \f$f_i(\boldsymbol{\beta})\f$. For the uncoupled cost, this is the difference between the model and right hand side associted with the \f$i^{th}\f$ nearest neighbor.
+  */
+  virtual Eigen::VectorXd CostImpl(Eigen::VectorXd const& beta) const override;
+
+  /// Compute the Jacobian matrix
+  /**
+  The Jacobian matrix is \f$\boldsymbol{J} \in \mathbb{R}^{m \times n}\f$. Each row is the gradient of the sub-cost function \f$f_i\f$ with respect to the input parameters \$\boldsymbol{\beta} \in \mathbb{R}^{n}\f$.
+
+  @param[in] beta The coefficients for this support point
+  @param[out] jac The Jacobian matrix
+  */
+  virtual void JacobianImpl(Eigen::VectorXd const& beta, Eigen::SparseMatrix<double>& jac) const override;
+
+private:
+
   /// The parameter that scales the uncoupled cost
   /**
   Defaults to \f$1.0\f$.
+
+  We actually store the square root of the uncoupled scale to save a little bit of computation.
   */
   double uncoupledScale;
 
   /// The parameter that scales the regularizing term
   /**
   Defaults to \f$0.0\f$.
+
+  We actually store the square root of the uncoupled scale to save a little bit of computation.
   */
   double regularizationScale;
-
-protected:
-
-  /// Compute the cost function
-  /**
-  @param[in] input There is only one input: the basis function coefficients
-  */
-  virtual double CostImpl(muq::Modeling::ref_vector<Eigen::VectorXd> const& input) override;
-
-  /// Compute the cost function gradient
-  /**
-  @param[in] inputDimWrt Since there is only one input, this should always be zero
-  @param[in] input There is only one input: the basis function coefficients
-  @param[in] sensitivity A scaling for the gradient
-  */
-  virtual void GradientImpl(unsigned int const inputDimWrt, muq::Modeling::ref_vector<Eigen::VectorXd> const& input, Eigen::VectorXd const& sensitivity) override;
-
-private:
 };
 
 } // namespace clf

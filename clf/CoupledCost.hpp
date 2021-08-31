@@ -3,7 +3,7 @@
 
 #include <boost/property_tree/ptree.hpp>
 
-#include <MUQ/Optimization/CostFunction.h>
+#include "clf/CostFunction.hpp"
 
 namespace clf {
 
@@ -36,12 +36,11 @@ Parameter Key | Type | Default Value | Description |
 ------------- | ------------- | ------------- | ------------- |
 "CoupledScale"   | <tt>double</tt> | <tt>1.0</tt> | The scale parameter \f$c_i\f$. |
 */
-class CoupledCost : public muq::Optimization::CostFunction {
+class CoupledCost : public SparseCostFunction {
 public:
-
   /**
-  @param[in] point The point whose uncoupled cost we are computing
-  @param[in] neigh The neighbor point that is coupled to the main point
+  @param[in] point The point use uncoupled cost we are computing
+  @param[in] neighbor The neighbor point that is coupled to the main point
   @param[in] pt Options for the uncoupled cost function
   */
   CoupledCost(std::shared_ptr<SupportPoint> const& point, std::shared_ptr<SupportPoint> const& neighbor, boost::property_tree::ptree const& pt);
@@ -54,106 +53,53 @@ public:
   */
   bool Coupled() const;
 
+  /// Get a pointer to the point whose coupling cost we are computing
+  /**
+  \return A pointer to the point whose coupling cost we are computing
+  */
+  std::shared_ptr<const SupportPoint> GetPoint() const;
+
+  /// Get a pointer to the neighbor
+  /**
+  \return A pointer to the neighbor
+  */
+  std::shared_ptr<const SupportPoint> GetNeighbor() const;
+
   /// Compute the coupled cost
   /**
-  @param[in] pointCoeffs The coefficients for the point
-  @param[in] neighCoeffs The coefficients for the neighbor
-  \return The coupling cost
+  @param[in] coeffPoint The coefficients for the points whose coupling cost we are computing
+  @param[in] coeffNeigh The coefficients for the neighbor
+  \return Each entry is an evaluation of a sub-cost function
   */
-  double Cost(Eigen::VectorXd const& pointCoeffs, Eigen::VectorXd const& neighCoeffs) const;
+  Eigen::VectorXd ComputeCost(Eigen::VectorXd const& coeffPoint, Eigen::VectorXd const& coeffNeigh) const;
 
-  // Compute the gradient of the cost given the coefficients
+  /// Compute the entries of the Jacobian matrix
   /**
-  @param[in] pointCoeffs The coefficients for the point
-  @param[in] neighCoeffs The coefficients for the neighbor
-  \return The coupled cost gradient
+  The Jacobian matrix is \f$\boldsymbol{J} \in \mathbb{R}^{m \times n}\f$. Each row is the gradient of the sub-cost function \f$f_i\f$ with respect to the input parameters \$\boldsymbol{\beta} \in \mathbb{R}^{n}\f$.
+
+  Since it is sparse we can store each entry as an <tt>Eigen::Triplet<double></tt>.
+
+  @param[out] triplets The entries of the Jacobian matrix
   */
-  Eigen::VectorXd Gradient(Eigen::VectorXd const& pointCoeffs, Eigen::VectorXd const& neighCoeffs) const;
-
-  /// Compute the Hessian of the cost function
-  /**
-  The Hessian of
-  \f{equation*}{
-  \frac{c_i}{2}  K_i(x_i, x_{I(i,j)}) \| \ell_i(x_{I(i,j)}, p_{I(i, 0)}) - \ell_{I(i,j)}(x_{I(i,j)}, p_{I(i, j)}) \|^2
-  \f}
-  with respect to \f$[p_i,\, p_{I(i,j)}]\f$ is
-  \f{equation*}{
-  c_i  K_i(x_i, x_{I(i,j)}) \left[ \begin{array}{cc}
-  V_i^{\top} V_i & -V_i^{\top} V_{I(i,j)} \\
-  -V_{I(i,j)}^{\top} V_i & V_{I(i,j)}^{\top} V_{I(i,j)}
-  \end{array} \right],
-  \f}
-  where
-  \f{equation*}{
-  V_i = \nabla_{p_{i}} \ell_i(x, p_{i}) = \left[ \begin{array}{cccc}
-  (\phi_i^{(0)}(x))^{\top} & 0 & ... & 0\\
-  \vdots & \vdots & \vdots & \vdots \\
-  0 & ... & 0 & (\phi_i^{(q)}(x))^{\top}
-  \end{array} \right].
-  \f}
-  Note that
-  \f{equation*}{
-  V_i^{\top} V_i = \left[ \begin{array}{cccc}
-  \phi_i^{(0)}(x) (\phi_i^{(0)}(x))^{\top} & 0 & ... & 0\\
-  \vdots & \vdots & \vdots & \vdots \\
-  0 & ... & 0 & \phi_i^{(q)}(x) (\phi_i^{(q)}(x))^{\top}
-  \end{array} \right].
-  \f}
-  and
-  \f{equation*}{
-  V_i^{\top} V_{I(i,j)} = \left[ \begin{array}{cccc}
-  \phi_i^{(0)}(x) (\phi_{I(i,j)}^{(0)}(x))^{\top} & 0 & ... & 0\\
-  \vdots & \vdots & \vdots & \vdots \\
-  0 & ... & 0 & \phi_i^{(q)}(x) (\phi_{I(i,j)}^{(q)}(x))^{\top}
-  \end{array} \right].
-  \f}
-  are block-diagonal matrices.
-  @param[out] ViVi Each entry is the block of the top left matrix in the Hessian corresponding to the \f$s^{th}\f$ output (blocks of \f$V_i^{\top}V_i\f$)
-  @param[out] ViVj Each entry is the block of the top right matrix in the Hessian corresponding to the \f$s^{th}\f$ output (blocks of \f$V_i^{\top}V_{I(i,j)}\f$)---the transpose is the bottom left
-  @param[out] VjVj Each entry is the block of the bottom right matrix in the Hessian corresponding to the \f$s^{th}\f$ output (blocks of \f$V_{I(i,j)}^{\top}V_{I(i,j)}\f$)
-  */
-  void Hessian(std::vector<Eigen::MatrixXd>& ViVi, std::vector<Eigen::MatrixXd>& ViVj, std::vector<Eigen::MatrixXd>& VjVj) const;
-
-  /// The point where we are evaluating the coupling cost
-  std::weak_ptr<const SupportPoint> point;
-
-  /// The nearest neighbor that (may be) coupled with the main support point
-  std::weak_ptr<const SupportPoint> neighbor;
+  void JacobianTriplets(std::vector<Eigen::Triplet<double> >& triplets) const;
 
 protected:
 
-  /// Compute the cost function
+  /// Evaluate each sub-cost function \f$f_i(\boldsymbol{\beta})\f$
   /**
-  @param[in] input There is only one input: the basis function coefficients
+  @param[in] beta The coefficients for this support point and its \f$i^{th}\f$ nearest neighbor
+  \return The \f$i^{th}\f$ entry is the \f$i^{th}\f$ sub-cost function \f$f_i(\boldsymbol{\beta})\f$. For the coupled cost, this is the difference between this local function at this support point and its \f$i^{th}\f$ nearest neighbor evaluated at the neighbor.
   */
-  virtual double CostImpl(muq::Modeling::ref_vector<Eigen::VectorXd> const& input) override;
+  virtual Eigen::VectorXd CostImpl(Eigen::VectorXd const& beta) const override;
 
-  /// Compute the cost function gradient
+  /// Compute the Jacobian matrix
   /**
-  The gradient of
-  \f{equation*}{
-  \frac{c_i}{2}  K_i(x_i, x_{I(i,j)}) \| \ell_i(x_{I(i,j)}, p_{I(i, 0)}) - \ell_{I(i,j)}(x_{I(i,j)}, p_{I(i, j)}) \|^2
-  \f}
-  with respect to \f$[p_i,\, p_{I(i,j)}]\f$ is
-  \f{equation*}{
-  c_i  K_i(x_i, x_{I(i,j)}) \left[ \begin{array}{c}
-  V_i^{\top} ( \ell_i(x_{I(i,j)}, p_{I(i, 0)}) - \ell_{I(i,j)}(x_{I(i,j)}, p_{I(i, j)}) ) \\
-  -V_{I(i,j)}^{\top} ( \ell_i(x_{I(i,j)}, p_{I(i, 0)}) - \ell_{I(i,j)}(x_{I(i,j)}, p_{I(i, j)}) )
-  \end{array} \right],
-  \f}
-  where
-  \f{equation*}{
-  V_i = \nabla_{p_{i}} \ell_i(x, p_{i}) = \left[ \begin{array}{cccc}
-  (\phi_i^{(0)}(x))^{\top} & 0 & ... & 0\\
-  \vdots & \vdots & \vdots & \vdots \\
-  0 & ... & 0 & (\phi_i^{(q)}(x))^{\top}
-  \end{array} \right].
-  \f}
-  @param[in] inputDimWrt Since there is only one input, this should always be zero
-  @param[in] input There is only one input: the basis function coefficients
-  @param[in] sensitivity A scaling for the gradient
+  The Jacobian matrix is \f$\boldsymbol{J} \in \mathbb{R}^{m \times n}\f$. Each row is the gradient of the sub-cost function \f$f_i\f$ with respect to the input parameters \$\boldsymbol{\beta} \in \mathbb{R}^{n}\f$.
+
+  @param[in] beta The coefficients for this support point and its \f$i^{th}\f$ nearest neighbor
+  @param[out] jac The Jacobian matrix
   */
-  virtual void GradientImpl(unsigned int const inputDimWrt, muq::Modeling::ref_vector<Eigen::VectorXd> const& input, Eigen::VectorXd const& sensitivity) override;
+  virtual void JacobianImpl(Eigen::VectorXd const& beta, Eigen::SparseMatrix<double>& jac) const override;
 
 private:
 
@@ -165,6 +111,13 @@ private:
   */
   static std::size_t LocalIndex(std::shared_ptr<SupportPoint> const& point, std::shared_ptr<SupportPoint> const& neighbor);
 
+  /// The point where we are evaluating the coupling cost
+  std::weak_ptr<const SupportPoint> point;
+
+  /// The nearest neighbor that (may be) coupled with the main support point
+  std::weak_ptr<const SupportPoint> neighbor;
+
+  /// The point's basis functions evaluated at the neighbor support point
   const std::vector<Eigen::VectorXd> pointBasisEvals;
 
   /// The neighbor's basis functions evaluated at the neighbor support point
@@ -174,10 +127,15 @@ private:
   /**
   The neighbor point is the \f$j^{th}\f$ nearest neighbor of the main support point.
 
-  If this is an invalid index, the cost is zero. Two points are <em>uncoupled</em> if they are not nearest neighbors or if they are the same point. Invalid indices are stored as the maximum possible integer.
+  If this is an invalid index, the cost is zero. Two points are <em>uncoupled</em> if they are not nearest neighbors or if they are the same point. Invalid indices are stored as the maximum possible integer (<tt>std::numeric_limits<std::size_t>::max()</tt>).
   */
   const std::size_t localNeighborInd;
 
+    /// The (precomputed) scale for the cost function
+  /**
+  The cost function for the Levenberg Marquardt algorithm takes the form \f$\sum_{i=1}^{n} f_i^2\f$. Therefore, the constant \f$c_i K_i(x_i, x_{I(i,j)})\f$ actually corresponds to multiplying by \f$\sqrt{c_i K_i(x_i, x_{I(i,j)})}\f$
+  */
+  const double scale;
 };
 
 } // namespace clf

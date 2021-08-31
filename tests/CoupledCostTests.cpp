@@ -1,10 +1,9 @@
 #include <gtest/gtest.h>
 
-#include "clf/CoupledCost.hpp"
 #include "clf/SupportPointCloud.hpp"
+#include "clf/CoupledCost.hpp"
 
 namespace pt = boost::property_tree;
-using namespace muq::Modeling;
 using namespace clf;
 
 class ExampleModelForCoupledCostTests : public Model {
@@ -28,14 +27,11 @@ public:
     modelOptions.put("OutputDimension", outdim);
 
     // the order of the total order polynomial and sin/cos bases
-    const std::size_t orderPoly = 4, orderSinCos = 2;
-
-    const std::size_t npoints = 6;
+    const std::size_t orderPoly = 5, orderSinCos = 2;
 
     // options for the support point
     pt::ptree suppOptions;
     suppOptions.put("NumNeighbors", npoints*npoints+1);
-    suppOptions.put("CoupledScale", coupledScale);
     suppOptions.put("BasisFunctions", "Basis1, Basis2");
     suppOptions.put("Basis1.Type", "TotalOrderSinCos");
     suppOptions.put("Basis1.Order", orderSinCos);
@@ -75,96 +71,85 @@ public:
 
   std::shared_ptr<SupportPointCloud> cloud;
 
-  const double coupledScale = 0.25;
+  const double couplingScale = 0.25;
+
+  const std::size_t npoints = 6;
+
 private:
 };
 
 TEST_F(CoupledCostTests, CostEvaluationAndDerivatives) {
   // create the uncoupled cost for each neighbor
-  for( auto it=supportPoints.begin(); it!=supportPoints.end(); ++it ) {
+  for( const auto& it : supportPoints ) {
     pt::ptree costOptions;
-    costOptions.put("CoupledScale", coupledScale);
-    auto cost = std::make_shared<CoupledCost>(point, *it, costOptions);
-    EXPECT_EQ(cost->inputSizes(0), point->NumCoefficients()+(*it)->NumCoefficients());
-    EXPECT_DOUBLE_EQ((*it)->couplingScale, coupledScale);
-    EXPECT_EQ(cost->Coupled(), (*it)!=point & point->IsNeighbor((*it)->GlobalIndex()));
+    costOptions.put("CoupledScale", couplingScale);
+    auto cost = std::make_shared<CoupledCost>(point, it, costOptions);
+    EXPECT_EQ(cost->Coupled(), it!=point & point->IsNeighbor(it->GlobalIndex()));
+    EXPECT_EQ(cost->inDim, point->NumCoefficients()+it->NumCoefficients());
+    EXPECT_EQ(cost->valDim, outdim);
+    EXPECT_EQ(cost->GetPoint(), point);
+    EXPECT_EQ(cost->GetNeighbor(), it);
 
-    // choose random coefficients
-    const Eigen::VectorXd coefficients = Eigen::VectorXd::Random(cost->inputSizes(0));
+    // choose the vector of coefficients
+    const Eigen::VectorXd coefficients = Eigen::VectorXd::Random(point->NumCoefficients() + it->NumCoefficients());
 
-    // compute the coupling cost
-    const double cst = cost->CostFunction::Cost(ref_vector<Eigen::VectorXd>(1, coefficients));
+    const Eigen::VectorXd computedCost = cost->Cost(coefficients);
+    EXPECT_EQ(computedCost.size(), cost->valDim);
     if( !cost->Coupled() ) {
-      EXPECT_DOUBLE_EQ(cst, 0.0);
+      EXPECT_NEAR(computedCost.norm(), 0.0, 1.0e-14);
     } else {
-      const Eigen::VectorXd pntEval = point->EvaluateLocalFunction((*it)->x, coefficients.head(point->NumCoefficients()));
-      const Eigen::VectorXd neighEval = (*it)->EvaluateLocalFunction((*it)->x, coefficients.tail((*it)->NumCoefficients()));
-      const Eigen::VectorXd diff = pntEval - neighEval;
-      EXPECT_NEAR(cst, coupledScale*diff.dot(diff)*point->NearestNeighborKernel(point->LocalIndex((*it)->GlobalIndex()))/2.0, 1.0e-10);
+      const Eigen::VectorXd pntEval = point->EvaluateLocalFunction(it->x, coefficients.head(point->NumCoefficients()));
+      const Eigen::VectorXd neighEval = it->EvaluateLocalFunction(it->x, coefficients.tail(it->NumCoefficients()));
+      const Eigen::VectorXd diff = std::sqrt(couplingScale*point->NearestNeighborKernel(point->LocalIndex(it->GlobalIndex())))*(pntEval - neighEval);
+      EXPECT_EQ(diff.size(), cost->valDim);
+
+      EXPECT_NEAR(computedCost(0), diff(0), 1.0e-14);
+      EXPECT_NEAR(computedCost(1), diff(1), 1.0e-14);
     }
 
-    // compute the coupling gradient
-    const Eigen::VectorXd grad = cost->CostFunction::Gradient(0, std::vector<Eigen::VectorXd>(1, coefficients), (0.75*Eigen::VectorXd::Ones(1)).eval());
-    EXPECT_EQ(grad.size(), coefficients.size());
-    if( !cost->Coupled() ) {
-      EXPECT_DOUBLE_EQ(grad.norm(), 0.0);
-    } else {
-      const Eigen::VectorXd gradFD = cost->GradientByFD(0, 0, ref_vector<Eigen::VectorXd>(1, coefficients), 0.75*Eigen::VectorXd::Ones(1));
-      EXPECT_NEAR((gradFD-grad).norm()/gradFD.norm(), 0.0, 1.0e-6);
+    Eigen::MatrixXd jacFD = Eigen::MatrixXd::Zero(point->model->outputDimension, point->NumCoefficients()+it->NumCoefficients());
+    EXPECT_EQ(jacFD.rows(), cost->valDim);
+    EXPECT_EQ(jacFD.cols(), cost->inDim);
+    if( cost->Coupled() ) {
+      const double dc = 1.0e-6;
+      const Eigen::VectorXd kernel = point->NearestNeighborKernel();
+      for( std::size_t c=0; c<point->NumCoefficients()+it->NumCoefficients(); ++c ) {
+        Eigen::VectorXd coeffsp = coefficients;
+        coeffsp(c) += dc;
+        Eigen::VectorXd coeffsm = coefficients;
+        coeffsm(c) -= dc;
+        Eigen::VectorXd coeffs2m = coefficients;
+        coeffs2m(c) -= 2.0*dc;
+
+        const Eigen::VectorXd pntEvalp = point->EvaluateLocalFunction(it->x, coeffsp.head(point->NumCoefficients()));
+        const Eigen::VectorXd neighEvalp = it->EvaluateLocalFunction(it->x, coeffsp.tail(it->NumCoefficients()));
+        const Eigen::VectorXd diffp = pntEvalp - neighEvalp;
+
+        const Eigen::VectorXd pntEval = point->EvaluateLocalFunction(it->x, coefficients.head(point->NumCoefficients()));
+        const Eigen::VectorXd neighEval = it->EvaluateLocalFunction(it->x, coefficients.tail(it->NumCoefficients()));
+        const Eigen::VectorXd diff = pntEval - neighEval;
+
+        const Eigen::VectorXd pntEvalm = point->EvaluateLocalFunction(it->x, coeffsm.head(point->NumCoefficients()));
+        const Eigen::VectorXd neighEvalm = it->EvaluateLocalFunction(it->x, coeffsm.tail(it->NumCoefficients()));
+        const Eigen::VectorXd diffm = pntEvalm - neighEvalm;
+
+        const Eigen::VectorXd pntEval2m = point->EvaluateLocalFunction(it->x, coeffs2m.head(point->NumCoefficients()));
+        const Eigen::VectorXd neighEval2m = it->EvaluateLocalFunction(it->x, coeffs2m.tail(it->NumCoefficients()));
+        const Eigen::VectorXd diff2m = pntEval2m - neighEval2m;
+
+        jacFD.col(c) = std::sqrt(couplingScale*point->NearestNeighborKernel(point->LocalIndex(it->GlobalIndex())))*(2.0*diffp + 3.0*diff - 6.0*diffm + diff2m)/(6.0*dc);
+      }
     }
 
-    // comptue the coupling hessian
-    if( !cost->Coupled() ) {
-      std::vector<Eigen::MatrixXd> ViVi, ViVj, VjVj;
-      cost->Hessian(ViVi, ViVj, VjVj);
-      EXPECT_EQ(ViVi.size(), 0); EXPECT_EQ(ViVj.size(), 0); EXPECT_EQ(VjVj.size(), 0);
-    } else {
-      const Eigen::MatrixXd hessFD = cost->HessianByFD(0, std::vector<Eigen::VectorXd>(1, coefficients));
-      EXPECT_EQ(hessFD.rows(), point->NumCoefficients()+(*it)->NumCoefficients());
-      EXPECT_EQ(hessFD.cols(), point->NumCoefficients()+(*it)->NumCoefficients());
+    Eigen::SparseMatrix<double> jac;
+    cost->Jacobian(coefficients, jac);
 
-      Eigen::MatrixXd hess = Eigen::MatrixXd::Zero(hessFD.rows(), hessFD.cols());
-
-      std::vector<Eigen::MatrixXd> ViVi, ViVj, VjVj;
-      cost->Hessian(ViVi, ViVj, VjVj);
-      EXPECT_EQ(ViVi.size(), outdim);
-      EXPECT_EQ(ViVj.size(), outdim);
-      EXPECT_EQ(VjVj.size(), outdim);
-
-      std::size_t rows = 0, cols = 0, ind = 0, jnd = 0;
-      for( const auto& V : ViVi ) {
-        rows += V.rows(); cols += V.cols();
-        hess.block(ind, jnd, V.rows(), V.cols()) = V;
-        ind += V.rows(); jnd += V.cols();
+    EXPECT_EQ(jac.rows(), cost->valDim);
+    EXPECT_EQ(jac.cols(), cost->inDim);
+    for( std::size_t i=0; i<cost->valDim; ++i ) {
+      for( std::size_t j=0; j<cost->inDim; ++j ) {
+        EXPECT_NEAR(jac.coeff(i, j), jacFD(i, j), 1.0e-8);
       }
-      EXPECT_EQ(rows, point->NumCoefficients());
-      EXPECT_EQ(cols, point->NumCoefficients());
-
-      rows = 0; cols = 0;
-      ind = 0; jnd = point->NumCoefficients();
-      for( const auto& V : ViVj ) {
-        rows += V.rows(); cols += V.cols();
-        hess.block(ind, jnd, V.rows(), V.cols()) = V;
-        hess.block(jnd, ind, V.cols(), V.rows()) = V.transpose();
-        ind += V.rows(); jnd += V.cols();
-      }
-      EXPECT_EQ(rows, point->NumCoefficients());
-      EXPECT_EQ(cols, (*it)->NumCoefficients());
-
-      rows = 0; cols = 0;
-      ind = point->NumCoefficients(); jnd = point->NumCoefficients();
-      for( const auto& V : VjVj ) {
-        rows += V.rows(); cols += V.cols();
-        hess.block(ind, jnd, V.rows(), V.cols()) = V;
-        ind += V.rows(); jnd += V.cols();
-      }
-      EXPECT_EQ(rows, (*it)->NumCoefficients());
-      EXPECT_EQ(cols, (*it)->NumCoefficients());
-
-      EXPECT_EQ(hess.rows(), point->NumCoefficients()+(*it)->NumCoefficients());
-      EXPECT_EQ(hess.cols(), point->NumCoefficients()+(*it)->NumCoefficients());
-
-      EXPECT_NEAR((hess-hessFD).norm(), 0.0, 1.0e-6);
     }
   }
 }

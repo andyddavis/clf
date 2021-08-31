@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
 
+#include "clf/CoupledSupportPoint.hpp"
 #include "clf/GlobalCost.hpp"
 
 namespace pt = boost::property_tree;
-using namespace muq::Modeling;
 using namespace clf;
 
 class ExampleModelForGlobalCostTests : public Model {
@@ -45,14 +45,13 @@ public:
     // options for the support point
     pt::ptree suppOptions;
     suppOptions.put("NumNeighbors", npoints*npoints+1);
-    suppOptions.put("CoupledScale", coupledScale);
     suppOptions.put("BasisFunctions", "Basis1, Basis2");
     suppOptions.put("Basis1.Type", "TotalOrderSinCos");
     suppOptions.put("Basis1.Order", orderSinCos);
     suppOptions.put("Basis1.LocalBasis", false);
     suppOptions.put("Basis2.Type", "TotalOrderPolynomials");
     suppOptions.put("Basis2.Order", orderPoly);
-    point = SupportPoint::Construct(
+    point = CoupledSupportPoint::Construct(
       Eigen::VectorXd::Random(indim),
       std::make_shared<ExampleModelForGlobalCostTests>(modelOptions),
       suppOptions);
@@ -63,7 +62,7 @@ public:
     // add points on a grid so we know that they are well-poised---make sure there is an even number of points on each side so that the center point is not on the grid
     for( std::size_t i=0; i<2*npoints; ++i ) {
       for( std::size_t j=0; j<2*npoints; ++j ) {
-        supportPoints[2*npoints*i+j+1] = SupportPoint::Construct(
+        supportPoints[2*npoints*i+j+1] = CoupledSupportPoint::Construct(
           point->x+0.1*Eigen::Vector2d((double)i/(2*npoints-1)-0.5, (double)j/(2*npoints-1)-0.5),
           std::make_shared<ExampleModelForGlobalCostTests>(modelOptions),
           suppOptions);
@@ -84,49 +83,91 @@ public:
   std::shared_ptr<SupportPoint> point;
 
   std::shared_ptr<SupportPointCloud> cloud;
-
-  const double coupledScale = 0.25;
 private:
 };
 
 TEST_F(GlobalCostTests, CostEvaluationAndDerivatives) {
-  // create the global cost
-  pt::ptree costOptions;
-  auto cost = std::make_shared<GlobalCost>(cloud, costOptions);
-  EXPECT_EQ(cost->inputSizes(0), cloud->numCoefficients);
+  pt::ptree pt;
+  auto cost = std::make_shared<GlobalCost>(cloud, pt);
+  EXPECT_EQ(cost->inDim, cloud->numCoefficients);
+  std::size_t expectedValDim = 0;
+  for( auto it=cloud->Begin(); it!=cloud->End(); ++it ) {
+    expectedValDim += (*it)->NumNeighbors()*(*it)->model->outputDimension;
+    for( std::size_t i=1; i<(*it)->NumNeighbors(); ++i ) {
+      const double coupling = (*it)->CouplingFunction(i);
+      if( coupling>1.0e-12 ) { expectedValDim += (*it)->model->outputDimension; }
+    }
+  }
+  EXPECT_EQ(cost->valDim, expectedValDim);
 
   // choose random coefficients
-  const Eigen::VectorXd coefficients = Eigen::VectorXd::Random(cost->inputSizes(0));
+  const Eigen::VectorXd coefficients = Eigen::VectorXd::Random(cost->inDim);
 
-  // set these coefficients at each local point
-  std::size_t ind = 0;
-  for( const auto& point : supportPoints ) {
-    // extract the coefficients associated with point
-    Eigen::Map<const Eigen::VectorXd> coeff(&coefficients(ind), point->NumCoefficients());
-    ind += point->NumCoefficients();
+  // compute the cost
+  const Eigen::VectorXd costVec = cost->Cost(coefficients);
+  EXPECT_EQ(costVec.size(), cost->valDim);
 
-    point->Coefficients() = coeff;
+  // compute the exected cost
+  Eigen::VectorXd expectedCost(cost->valDim);
+  {
+    std::size_t ind = 0;
+    for( std::size_t i=0; i<cloud->NumSupportPoints(); ++i ) {
+      auto point = cloud->GetSupportPoint(i);
+
+      // compute the uncoupled cost
+      expectedCost.segment(ind, cost->GetUncoupledCost(i)->valDim) = cost->GetUncoupledCost(i)->Cost(coefficients.segment(i*point->NumCoefficients(), point->NumCoefficients()));
+      ind += cost->GetUncoupledCost(i)->valDim;
+
+      // compute the coupled cost
+      for( const auto& coupled : cost->GetCoupledCost(i) ) {
+        auto neigh = coupled->GetNeighbor();
+        expectedCost.segment(ind, coupled->valDim) = coupled->ComputeCost(coefficients.segment(i*point->NumCoefficients(), point->NumCoefficients()), coefficients.segment(neigh->GlobalIndex()*point->NumCoefficients(), point->NumCoefficients()));
+        ind += coupled->valDim;
+      }
+    }
   }
 
-  // compute the global cost
-  const double cst = cost->Cost(coefficients);
-  double expectedCost = 0.0;
-  for( const auto& point : supportPoints ) {
-    expectedCost += point->ComputeUncoupledCost();
-    expectedCost += point->ComputeCoupledCost();
+  // check the cost
+  EXPECT_EQ(costVec.size(), expectedCost.size());
+  for( std::size_t i=0; i<costVec.size(); ++i ) { EXPECT_NEAR(costVec(i), expectedCost(i), 1.0e-12); }
+
+  // compute the jacobian
+  Eigen::SparseMatrix<double> jac;
+  cost->Jacobian(coefficients, jac);
+
+  Eigen::MatrixXd expectedJac = Eigen::MatrixXd::Zero(cost->valDim, cost->inDim);
+  {
+    std::size_t ind = 0;
+    for( std::size_t i=0; i<cloud->NumSupportPoints(); ++i ) {
+      auto point = cloud->GetSupportPoint(i);
+
+      // compute the uncoupled cost entries
+      std::vector<Eigen::Triplet<double> > localTriplets;
+      cost->GetUncoupledCost(i)->JacobianTriplets(coefficients.segment(i*point->NumCoefficients(), point->NumCoefficients()), localTriplets);
+      for( const auto& it : localTriplets ) {
+        const std::size_t row = ind+it.row();
+        const std::size_t col = i*point->NumCoefficients()+it.col();
+        expectedJac(row, col) = it.value();
+      }
+      localTriplets.clear();
+      ind += cost->GetUncoupledCost(i)->valDim;
+
+      // compute the coupled cost entries
+      for( const auto& coupled : cost->GetCoupledCost(i) ) {
+        coupled->JacobianTriplets(localTriplets);
+        for( const auto& it : localTriplets ) {
+          const std::size_t row = ind+it.row();
+          const std::size_t col = (it.col()<point->NumCoefficients()? i : coupled->GetNeighbor()->GlobalIndex())*point->NumCoefficients() + it.col() - (it.col()<point->NumCoefficients()? 0 : point->NumCoefficients());
+          expectedJac(row, col) = it.value();
+        }
+        localTriplets.clear();
+        ind += coupled->valDim;
+      }
+    }
   }
-  EXPECT_NEAR(cst, expectedCost, 1.0e-10);
 
-  // compute the gradient
-  const Eigen::VectorXd gradFD = cost->GradientByFD(0, 0, ref_vector<Eigen::VectorXd>(1, coefficients), 0.75*Eigen::VectorXd::Ones(1));
-  const Eigen::VectorXd grad = cost->CostFunction::Gradient(0, std::vector<Eigen::VectorXd>(1, coefficients), (0.75*Eigen::VectorXd::Ones(1)).eval());
-  EXPECT_NEAR((grad-gradFD).norm()/gradFD.norm(), 0.0, 1.0e-5);
-
-  // compute the Hessian
-  const Eigen::MatrixXd hessFD = cost->HessianByFD(0, std::vector<Eigen::VectorXd>(1, coefficients));
-  EXPECT_EQ(hessFD.rows(), coefficients.size()); EXPECT_EQ(hessFD.cols(), coefficients.size());
-  Eigen::SparseMatrix<double> hess;
-  cost->Hessian(coefficients, false, hess);
-  EXPECT_EQ(hess.rows(), hessFD.rows()); EXPECT_EQ(hess.cols(), hessFD.cols());
-  EXPECT_NEAR((hess-hessFD).norm()/hessFD.norm(), 0.0, 1.0e-6);
+  // check the jacobian
+  EXPECT_EQ(jac.rows(), expectedJac.rows());
+  EXPECT_EQ(jac.cols(), expectedJac.cols());
+  for( std::size_t i=0; i<jac.rows(); ++i ) { for( std::size_t j=0; j<jac.cols(); ++j ) { EXPECT_NEAR(jac.coeff(i, j), expectedJac(i, j), 1.0e-12); } }
 }

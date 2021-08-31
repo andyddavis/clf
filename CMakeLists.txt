@@ -83,6 +83,7 @@ set(CLF_SOURCE
 
     src/SupportPointExceptions.cpp
     src/SupportPoint.cpp
+    src/CoupledSupportPoint.cpp
 
     src/SupportPointCloudExceptions.cpp
     src/SupportPointCloud.cpp
@@ -138,11 +139,14 @@ if( NOT CLF_BUILD_FROM_PIP )
 
         tests/ModelTests.cpp
 
+        tests/LevenbergMarquardtTests.cpp
+
         tests/UncoupledCostTests.cpp
         tests/CoupledCostTests.cpp
         tests/GlobalCostTests.cpp
 
         tests/SupportPointTests.cpp
+        tests/CoupledSupportPointTests.cpp
 
         tests/SupportPointCloudTests.cpp
 

@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include "clf/CoupledSupportPoint.hpp"
 #include "clf/LocalFunctions.hpp"
 
 namespace pt = boost::property_tree;
@@ -76,6 +77,7 @@ protected:
   virtual void TearDown() override {
     // the cost of the optimial coefficients
     const double cost = func->CoefficientCost();
+    std::cout << "COMPUTED COST: " << cost << std::endl;
     EXPECT_NEAR(cost, 0.0, 1.0e-8);
 
     for( const auto& it : supportPoints ) {
@@ -196,12 +198,12 @@ TEST(LocalFunctions_DifferentialOperatorsTests, PoissonEquation) {
   for( std::size_t i=0; i<2*npoints; ++i ) {
     for( std::size_t j=0; j<2*npoints; ++j ) {
       if( i==0 || i==2*npoints-1 || j==0 || j==2*npoints-1 ) {
-        supportPoints[2*npoints*i+j] = SupportPoint::Construct(
+        supportPoints[2*npoints*i+j] = CoupledSupportPoint::Construct(
           0.1*Eigen::Vector2d((double)i/(2*npoints-1)-0.5, (double)j/(2*npoints-1)-0.5),
           std::make_shared<ExampleBoundaryConditionsForLocalFunctionsTests>(modelOptions),
           suppOptions);
       } else {
-        supportPoints[2*npoints*i+j] = SupportPoint::Construct(
+        supportPoints[2*npoints*i+j] = CoupledSupportPoint::Construct(
           0.1*Eigen::Vector2d((double)i/(2*npoints-1)-0.5, (double)j/(2*npoints-1)-0.5),
           std::make_shared<ExampleDifferentialModelForLocalFunctionsTests>(modelOptions),
           suppOptions);

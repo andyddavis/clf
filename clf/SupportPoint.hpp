@@ -30,13 +30,12 @@ The \f$j^{th}\f$ output of the local function is defined by coordinates \f$p_j \
 Parameter Key | Type | Default Value | Description |
 ------------- | ------------- | ------------- | ------------- |
 "BasisFunctions"   | <tt>std::string</tt> | --- | The options to make the basis functions for each output, separated by commas (see SupportPoint::CreateBasisFunctions) |
-"CoupledScale"   | <tt>double</tt> | <tt>0.0</tt> | The scale parameter for the coupling cost term |
 "NumNeighbors"   | <tt>std::size_t</tt> | The number required to interpolate plus one | The number of nearest neighbors to use to compute the coefficients for each output. |
 "Optimization"   | <tt>boost::property_tree::ptree</tt> | see clf::OptimizationOptions | The options for the uncoupled cost minimization |
 */
 class SupportPoint : public std::enable_shared_from_this<SupportPoint> {
-// make the constructors private because we will always want to wrap the basis in a SupportPointBasis
-private:
+// make the constructors protected because we will always want to wrap the basis in a SupportPointBasis
+protected:
   /**
   @param[in] x The location of the support point \f$x\f$
   @param[in] model The model that defines the "data" at this support point
@@ -49,13 +48,38 @@ public:
   /// The global cost function is a friend
   friend GlobalCost;
 
+  /// A static construct method
   /**
   @param[in] x The location of the support point \f$x\f$
   @param[in] model The model that defines the "data" at this support point
   @param[in] pt The options for the support point
   \return A smart pointer to the support point
   */
-  static std::shared_ptr<SupportPoint> Construct(Eigen::VectorXd const& x, std::shared_ptr<const Model> const& model, boost::property_tree::ptree const& pt);
+  template<typename PointType = SupportPoint>
+  inline static std::shared_ptr<PointType> Construct(Eigen::VectorXd const& x, std::shared_ptr<const Model> const& model, boost::property_tree::ptree const& pt) {
+    // create the support point (the bases are unset)
+    auto point = std::shared_ptr<PointType>(new PointType(x, model, pt));
+
+    // create the SupportPointBasis
+    std::vector<std::shared_ptr<const BasisFunctions> > bases = CreateBasisFunctions(point, point->model->inputDimension, point->model->outputDimension, pt);
+    assert(bases.size()==model->outputDimension);
+
+    // reset the basis functions as SupportPointBasis
+    for( const auto& it : bases ) { assert(it); }
+    point->bases = bases;
+    point->numNeighbors = DetermineNumNeighbors(bases, pt);
+
+    // compute and store the number of coefficients
+    point->numCoefficients = ComputeNumCoefficients(bases);
+
+    // set the coefficients so the local function is zero
+    point->coefficients = Eigen::VectorXd::Zero(point->numCoefficients);
+
+    // create the uncoupled cost
+    point->uncoupledCost = std::make_shared<UncoupledCost>(point, pt);
+
+    return point;
+  }
 
   virtual ~SupportPoint() = default;
 
@@ -192,12 +216,11 @@ public:
   /// Evaluate the local function associated with this support point with given coefficients and previously evaluated basis functions
   /**
   Since we often have to repeatedly evaluate the local function at the same point with different coefficients, this allows us to precompute the basis evaluations.
-  @param[in] loc The point where we want to evaluate the local function
   @param[in] coeffs The coefficients of the basis functions
   @param[in] basisEvals The basis functions evaluated for each output at the location loc
   \return The function evaluation
   */
-  Eigen::VectorXd EvaluateLocalFunction(Eigen::VectorXd const& loc, Eigen::VectorXd const& coeffs, std::vector<Eigen::VectorXd> const& basisEvals) const;
+  Eigen::VectorXd EvaluateLocalFunction(Eigen::VectorXd const& coeffs, std::vector<Eigen::VectorXd> const& basisEvals) const;
 
   /// The global index of a neighbor given its local index
   /**
@@ -231,14 +254,38 @@ public:
   */
   double ComputeCoupledCost() const;
 
+  /// Determines the coupling coefficient between this support point and its neighbor
+  /**
+  Defaults to returning zero, which means the support points are uncoupled
+  @param[in] neighInd The local index of the nearest neighbor
+  \return The coupling coefficient between this support point and its neighbor
+  */
+  virtual double CouplingFunction(std::size_t const neighInd) const;
+
+  /// Get the squared distance to the \f$i^{th}\f$ neighbor
+  /**
+  If \f$i\f$ is greater than the number of nearest neighbors, this function returns <tt>nan</tt>.
+  @param[in] i The local index of the \f$i^{th}\f$ nearest neighbor
+  \return The squared distance between this support point and its \f$i^{th}\f$ neighbor
+  */
+  double SquaredDistanceToNeighbor(std::size_t const i) const;
+
+  /// Is this point coupled to its nearest neighbors?
+  /**
+  \return <tt>true</tt>: This point is coupled to its nearest neighbors; <tt>false</tt>: This point is not coupled with its nearest neighbors
+  */
+  bool Coupled() const;
+
   /// The location of the support point \f$x\f$.
   const Eigen::VectorXd x;
 
   /// The model that defines the data/observations at this support point
   const std::shared_ptr<const Model> model;
 
-  /// The scale parameter for the coupling cost term
-  const double couplingScale;
+protected:
+
+  /// The squared distances (Euclidean inner product) between the support point and its \f$j^{th}\f$ nearest neighbor
+  std::vector<double> squaredNeighborDistances;
 
 private:
 
@@ -342,9 +389,6 @@ private:
 
   /// The number of nearest neighbors used to compute the coefficients for each output
   std::size_t numNeighbors;
-
-  /// The squared distances (Euclidean inner product) between the support point and its \f$j^{th}\f$ nearest neighbor
-  std::vector<double> squaredNeighborDistances;
 
   /// The global indices (in a clf::SupportPointCloud) of the nearest neighbors
   std::vector<std::size_t> globalNeighorIndices;

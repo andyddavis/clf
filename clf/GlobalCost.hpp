@@ -3,16 +3,14 @@
 
 #include <boost/property_tree/ptree.hpp>
 
-#include <Eigen/Sparse>
-
-#include <MUQ/Optimization/CostFunction.h>
-
+#include "clf/SupportPointCloud.hpp"
+#include "clf/CostFunction.hpp"
 #include "clf/DOFIndices.hpp"
 
 namespace clf {
 
 /// Compute the global cost of the coefficients for <em>all</em> of the support points in a clf::SupportPointCloud
-class GlobalCost : public muq::Optimization::CostFunction {
+class GlobalCost : public SparseCostFunction {
 public:
 
   /**
@@ -23,38 +21,51 @@ public:
 
   virtual ~GlobalCost() = default;
 
-  // Compute the gradient of the cost given the coefficients
+  /// Get the uncoupled cost associated with the \f$i^{th}\f$ support point
   /**
-  @param[in] coefficients The coefficients for the basis functions
-  \return The cost gradient
+  If \f$i\f$ is greater than the number of support points return a nullptr.
+  @param[in] i We want the uncoupled cost associated with this support point
+  \return The uncoupled cost associated with the \f$i^{th}\f$ support point
   */
-  Eigen::VectorXd Gradient(Eigen::VectorXd const& coefficients) const;
+  std::shared_ptr<UncoupledCost> GetUncoupledCost(std::size_t const i) const;
 
-  /// Compute the Hessian
+  /// Get the coupled costs associated with the \f$i^{th}\f$ support point
   /**
-  @param[in] coefficients The basis function coefficients for <em>all</em> of the support points
-  @param[in] gaussNewtonHessian <tt>true</tt>: compute the Gauss-Newton Hessian, <tt>false</tt>: compute the Hessian
-  @param[out] hess The Hessian matrix
+  If \f$i\f$ is greater than the number of support points return an empty vector.
+  @param[in] i We want the coupled costs associated with this support point
+  \return The vector of coupled costs associated with the \f$i^{th}\f$ support point
   */
-  void Hessian(Eigen::VectorXd const& coefficients, bool const gaussNewtonHessian, Eigen::SparseMatrix<double>& hess) const;
+  std::vector<std::shared_ptr<CoupledCost> > GetCoupledCost(std::size_t const i) const;
 
 protected:
 
-  /// Compute the cost function
+  /// Evaluate each sub-cost function \f$f_i(\boldsymbol{\beta})\f$
   /**
-  @param[in] input There is only one input: the basis function coefficients for <em>all</em> of the support points
+  @param[in] beta The coefficients for all of the support points
+  \return The \f$i^{th}\f$ entry is the \f$i^{th}\f$ sub-cost function \f$f_i(\boldsymbol{\beta})\f$.
   */
-  virtual double CostImpl(muq::Modeling::ref_vector<Eigen::VectorXd> const& input) override;
+  virtual Eigen::VectorXd CostImpl(Eigen::VectorXd const& beta) const override;
 
-  /// Compute the cost function gradient
+  /// Compute the Jacobian matrix
   /**
-  @param[in] inputDimWrt Since there is only one input, this should always be zero
-  @param[in] input There is only one input: the basis function coefficients for <em>all</em> of the support points
-  @param[in] sensitivity A scaling for the gradient
+  @param[in] beta The coefficients for all of the support points
+  @param[out] jac The Jacobian matrix
   */
-  virtual void GradientImpl(unsigned int const inputDimWrt, muq::Modeling::ref_vector<Eigen::VectorXd> const& input, Eigen::VectorXd const& sensitivity) override;
+  virtual void JacobianImpl(Eigen::VectorXd const& beta, Eigen::SparseMatrix<double>& jac) const override;
 
 private:
+
+  /// Compute the number of sub-cost function
+  /**
+  The cost function takes the form:
+  \f{equation*}{
+  C = \min_{\boldsymbol{\beta} \in \mathbb{R}^{n}} \sum_{i=1}^{m} f_i(\boldsymbol{\beta})^{2}.
+  \f}
+  This function computes \f$m\f$ based on the uncoupled and coupled costs that are associated with each support point.
+  @param[in] cloud The support point cloud that holds all of the points (and their local cost functions)
+  \return The number of sub-cost functions
+  */
+  static std::size_t NumCostFunctions(std::shared_ptr<SupportPointCloud> const& cloud);
 
   /// The map from support point indices to the global degree of freedom indices
   const DOFIndices dofIndices;

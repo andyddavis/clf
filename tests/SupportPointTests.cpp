@@ -32,6 +32,7 @@ protected:
 
   /// Make sure everything is what we expect
   virtual void TearDown() override {
+    EXPECT_NEAR(point->CouplingFunction(1), 0.0, 1.0e-12);
     EXPECT_NEAR((point->x-x).norm(), 0.0, 1.0e-12);
     EXPECT_EQ(point->model->inputDimension, indim);
     EXPECT_EQ(point->model->outputDimension, outdim);
