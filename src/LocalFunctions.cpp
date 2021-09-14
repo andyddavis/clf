@@ -14,7 +14,7 @@ cloud(cloud),
 globalCost(ConstructGlobalCost(cloud, pt)),
 optimizationOptions(GetOptimizationOptions(pt))
 {
-  std::cout << ComputeOptimalCoefficients() << std::endl;
+  std::cout << "GLOBAL COST: " << ComputeOptimalCoefficients() << std::endl;
 }
 
 pt::ptree LocalFunctions::GetOptimizationOptions(pt::ptree const& pt) {
@@ -24,7 +24,6 @@ pt::ptree LocalFunctions::GetOptimizationOptions(pt::ptree const& pt) {
 }
 
 double LocalFunctions::ComputeOptimalCoefficients() {
-  std::cout << "global cost: " << globalCost << std::endl;
   if( globalCost ) { return ComputeCoupledSupportPoints(); }
   return ComputeIndependentSupportPoints();
 }

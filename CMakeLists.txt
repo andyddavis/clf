@@ -77,16 +77,23 @@ set(CLF_SOURCE
 
     src/UncoupledCost.cpp
     src/CoupledCost.cpp
+    src/ColocationCost.cpp
     src/GlobalCost.cpp
 
     src/OptimizationOptions.cpp
 
+    src/ColocationPointSampler.cpp
+
+    src/Point.cpp
     src/SupportPointExceptions.cpp
     src/SupportPoint.cpp
     src/CoupledSupportPoint.cpp
+    src/ColocationPoint.cpp
 
     src/SupportPointCloudExceptions.cpp
     src/SupportPointCloud.cpp
+
+    src/ColocationPointCloud.cpp
 
     src/LocalFunctions.cpp
 )
@@ -103,6 +110,7 @@ if( CLF_BUILD_FROM_PIP )
         python/Model.cpp
 
         python/SupportPoint.cpp
+        python/CoupledSupportPoint.cpp
 
         python/SupportPointCloud.cpp
 
@@ -114,15 +122,15 @@ endif()
 # Build the CoupledLocalFunctions library
 ###############################################
 
-set(LIBNAME CoupledLocalFunctions)
+set(CLF_LIBNAME CoupledLocalFunctions)
 
 if( CLF_BUILD_FROM_PIP )
-    pybind11_add_module(${LIBNAME} SHARED NO_EXTRAS ${CLF_SOURCE})
+    pybind11_add_module(${CLF_LIBNAME} SHARED NO_EXTRAS ${CLF_SOURCE})
 else()
-    add_library(${LIBNAME} SHARED ${CLF_SOURCE})
+    add_library(${CLF_LIBNAME} SHARED ${CLF_SOURCE})
 endif()
-target_link_libraries(${LIBNAME} PUBLIC ${CLF_EXTERNAL_LIBRARIES})
-add_dependencies(${LIBNAME} ${CLF_BUILT_DEPENDENCIES})
+target_link_libraries(${CLF_LIBNAME} PUBLIC ${CLF_EXTERNAL_LIBRARIES})
+add_dependencies(${CLF_LIBNAME} ${CLF_BUILT_DEPENDENCIES})
 
 ###############################################
 # Build gtests (if not a python install)
@@ -143,12 +151,18 @@ if( NOT CLF_BUILD_FROM_PIP )
 
         tests/UncoupledCostTests.cpp
         tests/CoupledCostTests.cpp
+        tests/ColocationCostTests.cpp
         tests/GlobalCostTests.cpp
+
+        tests/ColocationPointSamplerTests.cpp
 
         tests/SupportPointTests.cpp
         tests/CoupledSupportPointTests.cpp
+        tests/ColocationPointTests.cpp
 
         tests/SupportPointCloudTests.cpp
+
+        tests/ColocationPointCloudTests.cpp
 
         tests/LocalFunctionsTests.cpp
     )
@@ -156,11 +170,37 @@ if( NOT CLF_BUILD_FROM_PIP )
     include_directories(${GTEST_INCLUDE_DIR})
 
     add_executable(run-tests ${TEST_SOURCE})
-    target_link_libraries(run-tests ${LIBNAME} ${CLF_EXTERNAL_LIBRARIES} ${GTEST_LIBRARIES})
-    add_dependencies(run-tests ${LIBNAME})
+    target_link_libraries(run-tests ${CLF_LIBNAME} ${CLF_EXTERNAL_LIBRARIES} ${GTEST_LIBRARIES})
+    add_dependencies(run-tests ${CLF_LIBNAME})
     if( CLF_BUILT_GTEST )
         add_dependencies(run-tests GTEST)
     endif()
+endif()
+
+###############################################
+# Install step (if not a python install)
+###############################################
+
+if( NOT CLF_BUILD_FROM_PIP )
+    # install all the CLF headers
+    install(DIRECTORY clf
+        DESTINATION "${CMAKE_INSTALL_PREFIX}/include"
+	      FILES_MATCHING PATTERN "*.hpp")
+
+    # install the library
+    install(TARGETS ${CLF_LIBNAME}
+        EXPORT ${CMAKE_PROJECT_NAME}Depends
+        LIBRARY DESTINATION "${CMAKE_INSTALL_PREFIX}/lib"
+        ARCHIVE DESTINATION "${CMAKE_INSTALL_PREFIX}/lib")
+
+    # Install the config file
+    configure_file(cmake/CLFConfig.cmake.in "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${CMAKE_PROJECT_NAME}Config.cmake" @ONLY)
+    install(FILES "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${CMAKE_PROJECT_NAME}Config.cmake"
+        DESTINATION "${CMAKE_INSTALL_PREFIX}"
+	      COMPONENT dev)
+
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${INSTALL_LIB_DIR})
+    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${INSTALL_LIB_DIR})
 endif()
 
 ###############################################
@@ -178,4 +218,4 @@ if( DOXYGEN_FOUND AND NOT CLF_BUILD_FROM_PIP )
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Generating API documentation with Doxygen" VERBATIM
     )
-endif(DOXYGEN_FOUND)
+endif()

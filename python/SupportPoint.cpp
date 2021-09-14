@@ -20,4 +20,5 @@ void clf::python::SupportPointWrapper(pybind11::module& mod) {
   suppPt.def("NumCoefficients", &SupportPoint::NumCoefficients);
   suppPt.def("EvaluateLocalFunction", static_cast<Eigen::VectorXd (SupportPoint::*)(Eigen::VectorXd const& loc) const>(&SupportPoint::EvaluateLocalFunction));
   suppPt.def("EvaluateLocalFunction", static_cast<Eigen::VectorXd (SupportPoint::*)(Eigen::VectorXd const& loc, Eigen::VectorXd const& coeffs) const>(&SupportPoint::EvaluateLocalFunction));
+  suppPt.def("CouplingFunction", &SupportPoint::CouplingFunction);
 }

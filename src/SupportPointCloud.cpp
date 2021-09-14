@@ -115,6 +115,15 @@ std::size_t SupportPointCloud::OutputDimension() const {
   return supportPoints[0]->model->outputDimension;
 }
 
+std::shared_ptr<SupportPoint> SupportPointCloud::NearestSupportPoint(Eigen::VectorXd const& point) const {
+  std::vector<std::size_t> neighInd;
+  std::vector<double> neighDist;
+  FindNearestNeighbors(point, 1, neighInd, neighDist);
+  assert(neighInd.size()==1); assert(neighDist.size()==1);
+
+  return GetSupportPoint(neighInd[0]);
+}
+
 void SupportPointCloud::FindNearestNeighbors(Eigen::VectorXd const& point, std::size_t const k, std::vector<std::size_t>& neighInd, std::vector<double>& neighDist) const {
   assert(k<=supportPoints.size());
 

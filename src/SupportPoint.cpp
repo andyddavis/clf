@@ -14,9 +14,13 @@ using namespace muq::Modeling;
 using namespace muq::Optimization;
 using namespace clf;
 
+SupportPoint::SupportPoint(Eigen::VectorXd const& x, pt::ptree const& pt) :
+Point(x),
+optimizationOptions(GetOptimizationOptions(pt))
+{}
+
 SupportPoint::SupportPoint(Eigen::VectorXd const& x, std::shared_ptr<const Model> const& model, pt::ptree const& pt) :
-x(x),
-model(model),
+Point(x, model),
 optimizationOptions(GetOptimizationOptions(pt))
 {}
 
@@ -137,6 +141,9 @@ void SupportPoint::SetNearestNeighbors(std::shared_ptr<const SupportPointCloud> 
     auto suppBasis = std::dynamic_pointer_cast<const SupportPointBasis>(basis);
     if( suppBasis ) { suppBasis->SetRadius(std::sqrt(*(squaredNeighborDistances.end()-1))); }
   }
+
+  // compute and store information required to solve the least squares problem (with an identity model)
+  ComputeLeastSquaresInformation();
 }
 
 double SupportPoint::CouplingFunction(std::size_t const neighInd) const { return 0.0; }
@@ -161,7 +168,7 @@ void SupportPoint::CreateCoupledCosts() {
 
 std::size_t SupportPoint::GlobalIndex() const { return (globalNeighorIndices.size()==0? std::numeric_limits<std::size_t>::max() : globalNeighorIndices[0]); }
 
-std::vector<std::size_t> SupportPoint::GlobalNeighborIndices() const { return globalNeighorIndices; }
+std::vector<std::size_t> const& SupportPoint::GlobalNeighborIndices() const { return globalNeighorIndices; }
 
 bool SupportPoint::IsNeighbor(std::size_t const& globalInd) const { return std::find(globalNeighorIndices.begin(), globalNeighorIndices.end(), globalInd)!=globalNeighorIndices.end(); }
 
@@ -185,6 +192,24 @@ std::size_t SupportPoint::GlobalNeighborIndex(std::size_t const localInd) const 
   return globalNeighorIndices[localInd];
 }
 
+void SupportPoint::ComputeLeastSquaresInformation() {
+  Eigen::MatrixXd vand = Eigen::MatrixXd::Zero(NumNeighbors()*model->outputDimension, numCoefficients);
+  Eigen::VectorXd kernel(NumNeighbors()*model->outputDimension);
+
+  for( std::size_t i=0; i<NumNeighbors(); ++i ) {
+    auto neigh = NearestNeighbor(i);
+
+    std::size_t ind = 0;
+    for( std::size_t d=0; d<model->outputDimension; ++d ) {
+      vand.block(i*model->outputDimension+d, ind, 1, bases[d]->NumBasisFunctions()) = bases[d]->EvaluateBasisFunctions(neigh->x).transpose();
+      ind += bases[d]->NumBasisFunctions();
+    }
+    kernel.segment(i*model->outputDimension, model->outputDimension) = Eigen::VectorXd::Constant(model->outputDimension, NearestNeighborKernel(i));
+  }
+
+  lsJacobian = (vand.transpose()*kernel.asDiagonal()*vand).ldlt().solve(vand.transpose()*kernel.asDiagonal());
+}
+
 void SupportPoint::ComputeNearestNeighborKernel() {
   nearestNeighborKernel.resize(squaredNeighborDistances.size());
 
@@ -198,16 +223,42 @@ double SupportPoint::NearestNeighborKernel(std::size_t const ind) const {
   return nearestNeighborKernel(ind);
 }
 
-Eigen::VectorXd SupportPoint::Operator(Eigen::VectorXd const& loc, Eigen::VectorXd const& coefficients) const {
+Eigen::VectorXd SupportPoint::Operator() const {
+  assert(model);
+  assert(coefficients.size()==numCoefficients);
+  return model->Operator(x, coefficients, bases);
+}
+
+Eigen::VectorXd SupportPoint::Operator(Eigen::VectorXd const& loc) const {
+  assert(model);
   assert(loc.size()==model->inputDimension);
   assert(coefficients.size()==numCoefficients);
   return model->Operator(loc, coefficients, bases);
 }
 
-Eigen::MatrixXd SupportPoint::OperatorJacobian(Eigen::VectorXd const& loc, Eigen::VectorXd const& coefficients) const {
+Eigen::VectorXd SupportPoint::Operator(Eigen::VectorXd const& loc, Eigen::VectorXd const& coeffs) const {
+  assert(model);
   assert(loc.size()==model->inputDimension);
-  assert(coefficients.size()==numCoefficients);
+  assert(coeffs.size()==numCoefficients);
+  return model->Operator(loc, coeffs, bases);
+}
+
+Eigen::MatrixXd SupportPoint::OperatorJacobian() const {
+  assert(model);
+  return model->OperatorJacobian(x, coefficients, bases);
+}
+
+Eigen::MatrixXd SupportPoint::OperatorJacobian(Eigen::VectorXd const& loc) const {
+  assert(model);
+  assert(loc.size()==model->inputDimension);
   return model->OperatorJacobian(loc, coefficients, bases);
+}
+
+Eigen::MatrixXd SupportPoint::OperatorJacobian(Eigen::VectorXd const& loc, Eigen::VectorXd const& coeffs) const {
+  assert(model);
+  assert(loc.size()==model->inputDimension);
+  assert(coeffs.size()==numCoefficients);
+  return model->OperatorJacobian(loc, coeffs, bases);
 }
 
 std::vector<Eigen::MatrixXd> SupportPoint::OperatorHessian(Eigen::VectorXd const& loc, Eigen::VectorXd const& coefficients) const {
@@ -382,3 +433,11 @@ double SupportPoint::ComputeCoupledCost() const {
 }
 
 bool SupportPoint::Coupled() const { return coupledCost.size()>0; }
+
+void SupportPoint::ComputeOptimalCoefficients(Eigen::MatrixXd const& data) {
+  assert(data.cols()==NumNeighbors());
+  assert(data.rows()==model->outputDimension);
+
+  coefficients = lsJacobian*Eigen::Map<const Eigen::VectorXd>(data.data(), data.size());
+  assert(coefficients.size()==numCoefficients);
+}

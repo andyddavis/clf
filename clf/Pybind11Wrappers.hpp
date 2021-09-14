@@ -24,6 +24,12 @@ void ModelWrapper(pybind11::module& mod);
 */
 void SupportPointWrapper(pybind11::module& mod);
 
+/// Implement the python interface for the clf::CoupledSupportPoint class
+/**
+@param[in] mod The module that holds the python interface
+*/
+void CoupledSupportPointWrapper(pybind11::module& mod);
+
 /// Implement the python interface for the clf::SupportPointCloud class
 /**
 @param[in] mod The module that holds the python interface

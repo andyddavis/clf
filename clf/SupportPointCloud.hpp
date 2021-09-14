@@ -119,6 +119,13 @@ public:
   */
   void SetCoefficients(Eigen::VectorXd const& coeffs);
 
+  /// Find the nearest neighbor to a point
+  /**
+  @param[in] point Find the nearest support point to this point
+  \return The nearest support point
+  */
+  std::shared_ptr<SupportPoint> NearestSupportPoint(Eigen::VectorXd const& point) const;
+
   /// The total number of coefficients
   /**
   The sum of all of the number coefficients required by each support point.

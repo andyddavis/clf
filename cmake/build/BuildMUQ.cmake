@@ -10,6 +10,9 @@ endif()
 if( CLF_BUILT_NLOPT )
   list(APPEND MUQ_DEPENDS NLOPT)
 endif()
+if( CLF_BUILT_HDF5 )
+  list(APPEND MUQ_DEPENDS HDF5)
+endif()
 
 ExternalProject_Add(
   MUQ
@@ -39,21 +42,21 @@ ExternalProject_Add(
     -DHDF5_LIBRARY=${HDF5_LIBRARY}
     -DHDF5HL_LIBRARY=${HDF5HL_LIBRARY}
     -DMUQ_NLOPT_DIR=${CLF_NLOPT_DIR}
-    #-DMUQ_ENABLEGROUP_DEFAULT=OFF
-    #-DMUQ_ENABLEGROUP_APPROXIMATION_QUADRATURE=ON
-    #-DMUQ_ENABLEGROUP_MODELING_DISTRIBUTIONS=ON
-    #-DMUQ_ENABLEGROUP_OPTIMIZATION_CORE=ON
+    -DMUQ_ENABLEGROUP_DEFAULT=OFF
+    -DMUQ_ENABLEGROUP_UTILITIES_HDF5=ON
+    -DMUQ_ENABLEGROUP_APPROXIMATION_QUADRATURE=ON
+    -DMUQ_ENABLEGROUP_MODELING_DISTRIBUTIONS=ON
     BUILD_COMMAND make -j5
     INSTALL_COMMAND make -j5 install
 )
 
 list(APPEND MUQ_INCLUDE_DIRS
   "${CLF_EXTERNAL_INSTALL_DIR}/muq/include"
+  "${CLF_EXTERNAL_INSTALL_DIR}/muq/muq_external/include"
 )
 
 list(APPEND MUQ_LIBRARIES
   "${CLF_EXTERNAL_INSTALL_DIR}/muq/lib/${library_prefix}muqUtilities${shared_library_suffix}"
   "${CLF_EXTERNAL_INSTALL_DIR}/muq/lib/${library_prefix}muqModeling${shared_library_suffix}"
   "${CLF_EXTERNAL_INSTALL_DIR}/muq/lib/${library_prefix}muqApproximation${shared_library_suffix}"
-  "${CLF_EXTERNAL_INSTALL_DIR}/muq/lib/${library_prefix}muqOptimization${shared_library_suffix}"
 )

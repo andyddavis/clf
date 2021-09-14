@@ -68,7 +68,7 @@ public:
   betaTol(pt.get<double>("ParameterTolerance", 1.0e-8)),
   maxEvals(pt.get<std::size_t>("MaximumFunctionEvaluations", 1000)),
   maxJacEvals(pt.get<std::size_t>("MaximumJacobianEvaluations", 1000)),
-  maxIters(pt.get<std::size_t>("MaximumIterations", 1000)),
+  maxIters(pt.get<std::size_t>("MaximumIterations", 250)),
   stepFactor(pt.get<double>("StepFactor", 100.0))
   {}
 
@@ -97,11 +97,31 @@ public:
     // evaluate the cost at the initial guess
     EvaluateCost(beta, costVec);
 
-    std::size_t iter = 0;
-    while( iter<maxIters ) {
-      //std::cout << "iter: " << iter << std::endl;
+    double prevCost = costVec.dot(costVec);
 
-      const Convergence conv = Iteration(iter, beta, costVec);
+    std::size_t iter = 0;
+    double damping = 0.0;
+    while( iter<maxIters ) {
+      std::cout << std::endl << "iter: " << iter << std::endl;
+
+      Convergence conv;
+      double newCost;
+      //Eigen::VectorXd newBeta = beta;
+      std::tie(conv, newCost) = Iteration(iter, damping, beta, costVec);
+      std::cout << "cost: " << newCost << std::endl;
+
+      if( newCost<prevCost ) {
+        //beta = newBeta;
+        //prevCost = newCost;
+        damping *= 0.75;
+      } else {
+        damping *= 2.0;
+        damping = std::min(1.0, damping);
+      }
+      std::cout << "new damping: " << damping << std::endl;
+
+      prevCost = newCost;
+
       if( conv<0 ) {
         //std::cout << "beta: " << beta.transpose() << std::endl;
         //std::cout << "cost: " << costVec.transpose() << std::endl;
@@ -131,6 +151,10 @@ public:
   /// The maximum number of iterations
   const std::size_t maxIters;
 
+protected:
+
+  virtual void AddScaledIdentity(double const scale, MatrixType& mat) const = 0;
+
 private:
 
   /// Reset the parameters for the Levenberg Marquardt algorithm
@@ -148,7 +172,7 @@ private:
   @param[in,out] beta In: The current parameter value, Out: The updated parameter value
   @param[in,out] costVec In: The cost given the current parameter value, Out: The cost at the next iteration
   */
-  inline Convergence Iteration(std::size_t& iter, Eigen::VectorXd& beta, Eigen::VectorXd& costVec) {
+  inline std::pair<Convergence, double> Iteration(std::size_t& iter, double const damping, Eigen::VectorXd& beta, Eigen::VectorXd& costVec) {
     //std::cout << std::endl << std::endl << std::endl;
     ++iter;
 
@@ -159,27 +183,37 @@ private:
     // compute the Jacobian matrix
     MatrixType jac;
     Jacobian(beta, jac);
-    if( (jac.adjoint()*costVec).norm()<gradTol ) { return Convergence::CONVERGED_GRADIENT_SMALL; }
+    std::cout << "grad norm: " << (jac.adjoint()*costVec).norm() << " tol: " << gradTol << std::endl;
+    if( (jac.adjoint()*costVec).norm()<gradTol ) { return std::pair<Convergence, double>(Convergence::CONVERGED_GRADIENT_SMALL, costVec.dot(costVec)); }
 
     //std::cout << jac.adjoint()*costVec << std::endl;
 
     //if( costVec.dot(costVec)<funcTol ) { return Convergence::CONVERGED_FUNCTION_SMALL; }
 
-    // compute the QR factorization of the Jacobian matrix
-    QRSolver qrfac(jac);
-    assert(qrfac.info()==Eigen::Success);
-
-    //std::cout << "cost: " << costVec.transpose() << std::endl;
+    std::cout << "cost: " << costVec.dot(costVec) << std::endl;
 
     // form (q transpose)*costVec and store the first n components in qtCost.
-    Eigen::VectorXd QTcost = (qrfac.matrixQ().adjoint()*costVec).head(cost->inDim);
-    const MatrixType& matrixR = qrfac.matrixR();
+    //Eigen::VectorXd QTcost = (qrfac.matrixQ().adjoint()*costVec).head(cost->inDim);
+    Eigen::VectorXd QTcost = jac.transpose()*costVec;
     //std::cout << "Q^T cost: " << QTcost.transpose() << std::endl;
+
+    // compute the QR factorization of the Jacobian matrix
+    jac = jac.transpose()*jac;
+    AddScaledIdentity(damping, jac);
+    //for( std::size_t i=0; i<jac.cols(); ++i ) { jac.coeffRef(i, i) += damping; }
+    //jac.makeCompressed();
+    QRSolver qrfac(jac);
+    assert(qrfac.info()==Eigen::Success);
+    const MatrixType& matrixR = qrfac.matrixR();
+
+    QTcost = qrfac.matrixQ().adjoint()*QTcost;
 
     Eigen::VectorXd stepDir(cost->inDim);
     const Eigen::Index rank = qrfac.rank();
+    std::cout << "rank: " << rank << " of " << beta.size() << std::endl;
     stepDir.tail(cost->inDim-rank).setZero();
-    stepDir.head(rank) = matrixR.topLeftCorner(rank, rank).template triangularView<Eigen::Upper>().solve(QTcost.head(rank));
+
+    stepDir.head(rank) = matrixR.topLeftCorner(rank, rank).template triangularView<Eigen::Upper>().solve((QTcost).head(rank));
     //std::cout << "step dir: " << stepDir.transpose() << std::endl;
     stepDir = qrfac.colsPermutation()*stepDir;
     //std::cout << "step dir: " << stepDir.transpose() << std::endl;
@@ -191,7 +225,7 @@ private:
 
     //assert(false);
 
-    return Convergence::FAILED_MAX_NUM_COST_EVALS;
+    return std::pair<Convergence, double>(Convergence::FAILED_MAX_NUM_COST_EVALS, costVec.dot(costVec));
 
     /*
     ++iter;
@@ -654,8 +688,40 @@ private:
   double stepBound;
 };
 
-typedef LevenbergMarquardt<Eigen::MatrixXd, Eigen::ColPivHouseholderQR<Eigen::MatrixXd> > DenseLevenbergMarquardt;
-typedef LevenbergMarquardt<Eigen::SparseMatrix<double>, Eigen::SparseQR<Eigen::SparseMatrix<double>, Eigen::COLAMDOrdering<int> > > SparseLevenbergMarquardt;
+class DenseLevenbergMarquardt : public LevenbergMarquardt<Eigen::MatrixXd, Eigen::ColPivHouseholderQR<Eigen::MatrixXd> > {
+public:
+  /**
+  @param[in] cost The cost function that we need to minimize
+  */
+  inline DenseLevenbergMarquardt(std::shared_ptr<CostFunction<Eigen::MatrixXd> > const& cost, boost::property_tree::ptree const& pt) : LevenbergMarquardt<Eigen::MatrixXd, Eigen::ColPivHouseholderQR<Eigen::MatrixXd> >(cost, pt) {}
+
+  virtual ~DenseLevenbergMarquardt() = default;
+
+protected:
+
+  inline virtual void AddScaledIdentity(double const scale, Eigen::MatrixXd& mat) const override { mat += scale*Eigen::MatrixXd::Identity(mat.rows(), mat.cols()); }
+
+private:
+};
+
+class SparseLevenbergMarquardt : public LevenbergMarquardt<Eigen::SparseMatrix<double>, Eigen::SparseQR<Eigen::SparseMatrix<double>, Eigen::COLAMDOrdering<int> > > {
+public:
+  /**
+  @param[in] cost The cost function that we need to minimize
+  */
+  inline SparseLevenbergMarquardt(std::shared_ptr<CostFunction<Eigen::SparseMatrix<double> > > const& cost, boost::property_tree::ptree const& pt) : LevenbergMarquardt<Eigen::SparseMatrix<double>, Eigen::SparseQR<Eigen::SparseMatrix<double>, Eigen::COLAMDOrdering<int> > >(cost, pt) {}
+
+  virtual ~SparseLevenbergMarquardt() = default;
+
+protected:
+
+  inline virtual void AddScaledIdentity(double const scale, Eigen::SparseMatrix<double>& mat) const override {
+    for( std::size_t i=0; i<std::min(mat.rows(), mat.cols()); ++i ) { mat.coeffRef(i, i) += scale; }
+    mat.makeCompressed();
+  }
+
+private:
+};
 
 } // namespace clf
 

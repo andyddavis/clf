@@ -99,12 +99,17 @@ TEST_F(SupportPointCloudTests, NearestNeighborSearch) {
   const Eigen::VectorXd newpoint = dist->Sample();
   cloud->FindNearestNeighbors(newpoint, 5, neighInd, neighDist);
 
+  // find the nearest neighbor
+  auto nearest = cloud->NearestSupportPoint(newpoint);
+
   // get the maximum squared distance
   const double maxit = *std::max_element(neighDist.begin(), neighDist.end());
 
   // loop through all of the support points
   std::size_t count = 0;
   for( std::size_t i=0; i<cloud->NumSupportPoints(); ++i ) {
+    EXPECT_TRUE((nearest->x-newpoint).norm()<=(cloud->GetSupportPoint(i)->x-newpoint).norm()+1.0e-12);
+    
     // try to find this point in the nearest neighbor lest
     auto ind = std::find(neighInd.begin(), neighInd.end(), i);
 

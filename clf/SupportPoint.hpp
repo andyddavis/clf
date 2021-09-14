@@ -1,9 +1,11 @@
 #ifndef SUPPORTPOINT_HPP_
 #define SUPPORTPOINT_HPP_
 
+#include <Eigen/Dense>
+
 #include "clf/OptimizationOptions.hpp"
 #include "clf/SupportPointBasis.hpp"
-#include "clf/Model.hpp"
+#include "clf/Point.hpp"
 #include "clf/UncoupledCost.hpp"
 #include "clf/CoupledCost.hpp"
 #include "clf/SupportPointExceptions.hpp"
@@ -15,6 +17,9 @@ class SupportPointCloud;
 
 /// Forward declaration of the clf::GlobalCost
 class GlobalCost;
+
+/// Forward declaration of the clf::ColocationCost
+class ColocationCost;
 
 /// The local function \f$\ell\f$ associated with a support point \f$x\f$.
 /**
@@ -33,9 +38,15 @@ Parameter Key | Type | Default Value | Description |
 "NumNeighbors"   | <tt>std::size_t</tt> | The number required to interpolate plus one | The number of nearest neighbors to use to compute the coefficients for each output. |
 "Optimization"   | <tt>boost::property_tree::ptree</tt> | see clf::OptimizationOptions | The options for the uncoupled cost minimization |
 */
-class SupportPoint : public std::enable_shared_from_this<SupportPoint> {
+class SupportPoint : public Point, public std::enable_shared_from_this<SupportPoint> {
 // make the constructors protected because we will always want to wrap the basis in a SupportPointBasis
 protected:
+  /**
+  @param[in] x The location of the support point \f$x\f$
+  @param[in] pt The options for the support point
+  */
+  SupportPoint(Eigen::VectorXd const& x, boost::property_tree::ptree const& pt);
+
   /**
   @param[in] x The location of the support point \f$x\f$
   @param[in] model The model that defines the "data" at this support point
@@ -47,6 +58,9 @@ public:
 
   /// The global cost function is a friend
   friend GlobalCost;
+
+  /// The colocation cost function is a friend
+  friend ColocationCost;
 
   /// A static construct method
   /**
@@ -77,6 +91,44 @@ public:
 
     // create the uncoupled cost
     point->uncoupledCost = std::make_shared<UncoupledCost>(point, pt);
+
+    return point;
+  }
+
+  /// A static construct method with no model
+  /**
+  Additionally requires the following parameters:
+  <B>Configuration Parameters:</B>
+  Parameter Key | Type | Default Value | Description |
+  ------------- | ------------- | ------------- | ------------- |
+  "InputDimension"   | <tt>std::size_t</tt> | --- | The input dimension. |
+  "OutputDimension"   | <tt>std::size_t</tt> | --- | The output dimension. |
+
+  @param[in] x The location of the support point \f$x\f$
+  @param[in] pt The options for the support point
+  \return A smart pointer to the support point
+  */
+  template<typename PointType = SupportPoint>
+  inline static std::shared_ptr<PointType> Construct(Eigen::VectorXd const& x, boost::property_tree::ptree const& pt) {
+    // create the support point (the bases are unset)
+    auto point = std::shared_ptr<PointType>(new PointType(x, pt));
+
+    // create the SupportPointBasis
+    const std::size_t indim = pt.get<std::size_t>("InputDimension");
+    const std::size_t outdim = pt.get<std::size_t>("OutputDimension");
+    std::vector<std::shared_ptr<const BasisFunctions> > bases = CreateBasisFunctions(point, indim, outdim, pt);
+    assert(bases.size()==outdim);
+
+    // reset the basis functions as SupportPointBasis
+    for( const auto& it : bases ) { assert(it); }
+    point->bases = bases;
+    point->numNeighbors = DetermineNumNeighbors(bases, pt);
+
+    // compute and store the number of coefficients
+    point->numCoefficients = ComputeNumCoefficients(bases);
+
+    // set the coefficients so the local function is zero
+    point->coefficients = Eigen::VectorXd::Zero(point->numCoefficients);
 
     return point;
   }
@@ -114,7 +166,7 @@ public:
   /**
   \return The global indices of this support points nearest neighbors
   */
-  std::vector<std::size_t> GlobalNeighborIndices() const;
+  std::vector<std::size_t> const& GlobalNeighborIndices() const;
 
   /// Return the global index of this support point
   /**
@@ -153,24 +205,47 @@ public:
 
   /// The support point associated with the \f$j^{th}\f$ nearest neighbor
   /**
-  @param[in] jnd The index of the \f$j^{th}\f$ nearest neighbor
+  @param[in] jnd The local index of the \f$j^{th}\f$ nearest neighbor
   \return The point associated with \f$I(i,j)\f$
   */
   std::shared_ptr<SupportPoint> NearestNeighbor(std::size_t const jnd) const;
 
+  /// Evaluate the operator applied to the local function at the support point location
+  virtual Eigen::VectorXd Operator() const override;
+
+  /// Evaluate the operator applied to the local function at a given point using the stored coefficients
+  /**
+  @param[in] loc The location where we are evaluating the action of the operator
+  */
+  virtual Eigen::VectorXd Operator(Eigen::VectorXd const& loc) const override;
+
   /// Evaluate the operator applied to the local function at a given point
   /**
   @param[in] loc The location where we are evaluating the action of the operator
-  @param[in] coefficients The coefficients that define the local function
+  @param[in] coeffs The coefficients that define the local function
   */
-  Eigen::VectorXd Operator(Eigen::VectorXd const& loc, Eigen::VectorXd const& coefficients) const;
+  virtual Eigen::VectorXd Operator(Eigen::VectorXd const& loc, Eigen::VectorXd const& coeffs) const override;
+
+  /// Evaluate the Jacobian of the operator applied to the local function at the point's location with the stored coefficients
+  /**
+  \return The model Jacobian with respect to the coefficeints
+  */
+  virtual Eigen::MatrixXd OperatorJacobian() const override;
+
+  /// Evaluate the Jacobian of the operator applied to the local function at a given point with the stored coefficients
+  /**
+  @param[in] loc The location where we are evaluating the action of the operator
+  \return The model Jacobian with respect to the coefficeints
+  */
+  virtual Eigen::MatrixXd OperatorJacobian(Eigen::VectorXd const& loc) const override;
 
   /// Evaluate the Jacobian of the operator applied to the local function at a given point
   /**
   @param[in] loc The location where we are evaluating the action of the operator
-  @param[in] coefficients The coefficients that define the local function
+  @param[in] coeffs The coefficients that define the local function
+  \return The model Jacobian with respect to the coefficeints
   */
-  Eigen::MatrixXd OperatorJacobian(Eigen::VectorXd const& loc, Eigen::VectorXd const& coefficients) const;
+  Eigen::MatrixXd OperatorJacobian(Eigen::VectorXd const& loc, Eigen::VectorXd const& coeffs) const;
 
   /// Evaluate the Hessian of the operator applied to the local function at a given point
   /**
@@ -276,11 +351,11 @@ public:
   */
   bool Coupled() const;
 
-  /// The location of the support point \f$x\f$.
-  const Eigen::VectorXd x;
-
-  /// The model that defines the data/observations at this support point
-  const std::shared_ptr<const Model> model;
+  /// Compute the optimal coefficients given data at this point's nearest neighbors
+  /**
+  @param[in] data The data at each of the nearest neighbors. Each column is the function we are tryng to approximate evaluated at the support point
+  */
+  void ComputeOptimalCoefficients(Eigen::MatrixXd const& data);
 
 protected:
 
@@ -339,6 +414,20 @@ private:
   Stores the evaluations in SupportPoint::nearestNeighborKernel.
   */
   void ComputeNearestNeighborKernel();
+
+  /// Computes the information that allows us to solve the least squares problem
+  /**
+  The least squares problem is
+  \f{equation*}{
+  \min_{p \in \mathbb{R}^{n}}{ ( \| V p - \bar{u} \|_{K} ) },
+  \f}
+  where \f$V\f$ is the Vandermonde matrix and \f$K\f$ is the diagonal kernel matrix. The solution is
+  \f{equation*}{
+  p = (V^{\top} K V)^{-1} V^{\top} K \bar{u}.
+  \f}
+  This functions computes the matrix of \f$(V^{\top} K V^{-1} V^{\top} K\f$ using the Cholesky decomposition.
+  */
+  void ComputeLeastSquaresInformation();
 
   /// Minimize the uncoupled cost function for this support point using NLOPT
   /**
@@ -404,6 +493,9 @@ private:
 
   /// The coefficients used to evaluate the local function associated with this support point
   Eigen::VectorXd coefficients;
+
+  /// The least squares Jacobian matrix
+  Eigen::MatrixXd lsJacobian;
 };
 
 } // namespace clf
