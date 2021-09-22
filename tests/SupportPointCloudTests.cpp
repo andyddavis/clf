@@ -9,15 +9,10 @@ namespace pt = boost::property_tree;
 using namespace muq::Modeling;
 using namespace clf;
 
-class ExampleModelForSupportPointCloudTests : public Model {
-public:
+namespace clf {
+namespace tests {
 
-  inline ExampleModelForSupportPointCloudTests(pt::ptree const& pt) : Model(pt) {}
-
-  virtual ~ExampleModelForSupportPointCloudTests() = default;
-private:
-};
-
+/// A class that tests clf::SupportPointCloud
 class SupportPointCloudTests : public::testing::Test {
 protected:
   /// Set up information to test the support point cloud
@@ -25,7 +20,7 @@ protected:
     pt::ptree modelOptions;
     modelOptions.put("InputDimension", indim);
     modelOptions.put("OutputDimension", outdim);
-    model = std::make_shared<ExampleModelForSupportPointCloudTests>(modelOptions);
+    model = std::make_shared<Model>(modelOptions);
 
     ptSupportPoints.put("BasisFunctions", "Basis1, Basis2, Basis3, Basis4");
     ptSupportPoints.put("Basis1.Type", "TotalOrderPolynomials");
@@ -36,13 +31,18 @@ protected:
 
   /// Make sure everything is what we expect
   virtual void TearDown() override {
-    EXPECT_EQ(cloud->NumSupportPoints(), n);
+    EXPECT_EQ(cloud->NumPoints(), n);
     EXPECT_EQ(cloud->kdtree_get_point_count(), n);
     EXPECT_EQ(cloud->InputDimension(), indim);
     EXPECT_EQ(cloud->OutputDimension(), outdim);
 
     std::size_t totCoeffs = 0;
-    for( auto it=cloud->Begin(); it!=cloud->End(); ++it ) { totCoeffs += (*it)->NumCoefficients(); }
+    for( auto it=cloud->Begin(); it!=cloud->End(); ++it ) {
+      auto point = std::dynamic_pointer_cast<SupportPoint>(*it);
+      EXPECT_TRUE(point);
+
+      totCoeffs += point->NumCoefficients();
+    }
     EXPECT_EQ(cloud->numCoefficients, totCoeffs);
   }
 
@@ -84,6 +84,24 @@ TEST_F(SupportPointCloudTests, Construction) {
   }
 }
 
+TEST_F(SupportPointCloudTests, ConstructionSampler) {
+  // create a bunch of random support points
+  auto dist = std::make_shared<Gaussian>(indim)->AsVariable();
+
+  // the support point sampler
+  pt::ptree samplerOptions;
+  ptSupportPoints.put("SupportPoint.BasisFunctions", "Basis1, Basis2, Basis3, Basis4");
+  ptSupportPoints.put("SupportPoint.Basis1.Type", "TotalOrderPolynomials");
+  ptSupportPoints.put("SupportPoint.Basis2.Type", "TotalOrderPolynomials");
+  ptSupportPoints.put("SupportPoint.Basis3.Type", "TotalOrderPolynomials");
+  ptSupportPoints.put("SupportPoint.Basis4.Type", "TotalOrderPolynomials");
+  auto sampler = std::make_shared<SupportPointSampler>(dist, model, ptSupportPoints);
+
+  // create the support point cloud
+  ptSupportPointCloud.put("NumSupportPoints", n);
+  cloud = SupportPointCloud::Construct(sampler, ptSupportPointCloud);
+}
+
 TEST_F(SupportPointCloudTests, NearestNeighborSearch) {
   // create a bunch of random support points
   std::vector<std::shared_ptr<SupportPoint> > supportPoints(n);
@@ -107,9 +125,9 @@ TEST_F(SupportPointCloudTests, NearestNeighborSearch) {
 
   // loop through all of the support points
   std::size_t count = 0;
-  for( std::size_t i=0; i<cloud->NumSupportPoints(); ++i ) {
+  for( std::size_t i=0; i<cloud->NumPoints(); ++i ) {
     EXPECT_TRUE((nearest->x-newpoint).norm()<=(cloud->GetSupportPoint(i)->x-newpoint).norm()+1.0e-12);
-    
+
     // try to find this point in the nearest neighbor lest
     auto ind = std::find(neighInd.begin(), neighInd.end(), i);
 
@@ -131,13 +149,16 @@ TEST_F(SupportPointCloudTests, NearestNeighborSearch) {
   EXPECT_EQ(count, 5);
 }
 
+} // namespace tests
+} // namespace clf
+
 TEST(SupportPointCloudErrorTests, InputDimensionCheck) {
   pt::ptree modelOptions;
   modelOptions.put("InputDimension", 3);
   modelOptions.put("OutputDimension", 1);
-  auto model1 = std::make_shared<ExampleModelForSupportPointCloudTests>(modelOptions);
+  auto model1 = std::make_shared<Model>(modelOptions);
   modelOptions.put("InputDimension", 5);
-  auto model2 = std::make_shared<ExampleModelForSupportPointCloudTests>(modelOptions);
+  auto model2 = std::make_shared<Model>(modelOptions);
 
   std::vector<std::shared_ptr<SupportPoint> > supportPoints(2);
 
@@ -163,9 +184,9 @@ TEST(SupportPointCloudErrorTests, OutputDimensionCheck) {
   pt::ptree modelOptions;
   modelOptions.put("InputDimension", 5);
   modelOptions.put("OutputDimension", 2);
-  auto model1 = std::make_shared<ExampleModelForSupportPointCloudTests>(modelOptions);
+  auto model1 = std::make_shared<Model>(modelOptions);
   modelOptions.put("OutputDimension", 8);
-  auto model2 = std::make_shared<ExampleModelForSupportPointCloudTests>(modelOptions);
+  auto model2 = std::make_shared<Model>(modelOptions);
 
   std::vector<std::shared_ptr<SupportPoint> > supportPoints(2);
 
@@ -200,7 +221,7 @@ TEST(SupportPointCloudErrorTests, OutputDimensionCheck) {
 TEST(SupportPointCloudErrorTests, NotEnoughPoints) {
   pt::ptree modelOptions;
   modelOptions.put("InputDimension", 3);
-  auto model = std::make_shared<ExampleModelForSupportPointCloudTests>(modelOptions);
+  auto model = std::make_shared<Model>(modelOptions);
 
   std::vector<std::shared_ptr<SupportPoint> > supportPoints(2);
 
@@ -225,7 +246,7 @@ TEST(SupportPointCloudErrorTests, NotEnoughPoints) {
 TEST(SupportPointCloudErrorTests, NotConnected) {
   pt::ptree modelOptions;
   modelOptions.put("InputDimension", 3);
-  auto model = std::make_shared<ExampleModelForSupportPointCloudTests>(modelOptions);
+  auto model = std::make_shared<Model>(modelOptions);
 
   std::vector<std::shared_ptr<SupportPoint> > supportPoints(4);
 

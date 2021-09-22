@@ -10,11 +10,11 @@ namespace clf {
 /// Forward declaration of a support point
 class SupportPoint;
 
-/// Compute the uncoupled cost associated with a support point
+/// Compute the uncoupled cost associated with the support point at \f$\hat{x}\f$
 /**
-The uncoupled cost function associated with support point \f$i\f$ is
+Let \f$\Phi_{\hat{x}}(x)\f$ be the \f$m \times \tilde{q}\f$ matrix that defines the location function \f$\ell_{\hat{x}}(x) = \Phi_{\hat{x}}(x) p\f$ for \f$p \in \mathbb{R}^{\tilde{q}}\f$ (see clf::SupportPoint). The uncoupled cost function associated with the support point is
 \f{equation*}{
-p_i = \mbox{arg min}_{p \in \mathbb{R}^{\bar{q}_i}} J(p) = \sum_{j=1}^{k_{nn}} \frac{m_i}{2} \| \mathcal{L}_i(\hat{u}(x_{I(i,j)}, p)) - f_i(x_{I(i,j)}) \|^2 {K_i(x_i, x_{I(i,j)})} + \frac{a_i}{2} \|p\|^2,
+p_i = \mbox{arg min}_{p \in \mathbb{R}^{\tilde{q}}} J(p) = \sum_{j=0}^{k_{nn}} \frac{m_i}{2} \| \mathcal{L}_{\hat{x}}(\Phi_{\hat{x}} (x_{I(\hat{x},j)}) p) - f(x_{I(\hat{x},j)}) \|^2 {K_i(x_i, x_{I(\hat{x},j)})} + \frac{a_i}{2} \|p\|^2,
 \f}
 
 <B>Configuration Parameters:</B>
@@ -55,19 +55,27 @@ public:
   @param[in] coefficients The coefficients for this support point
   @param[out] triplets The entries of the Jacobian matrix
   */
-  void JacobianTriplets(Eigen::VectorXd const& coefficients, std::vector<Eigen::Triplet<double> >& triplets) const;
+  //void JacobianTriplets(Eigen::VectorXd const& coefficients, std::vector<Eigen::Triplet<double> >& triplets) const;
 
   /// The point that is associated with this cost
   std::weak_ptr<const SupportPoint> point;
 
 protected:
 
+  /// Evaluate the \f$i^{th}\f$ penalty function \f$f_i(\beta)\f$
+  /**
+  @param[in] ind The index of the penalty function
+  @param[in] beta The input parameter
+  \return The evaluation of the \f$i^{th}\f$ penalty function
+  */
+  virtual double PenaltyFunctionImpl(std::size_t const ind, Eigen::VectorXd const& beta) const override;
+
   /// Evaluate each sub-cost function \f$f_i(\boldsymbol{\beta})\f$
   /**
   @param[in] beta The coefficients for this support point
   \return The \f$i^{th}\f$ entry is the \f$i^{th}\f$ sub-cost function \f$f_i(\boldsymbol{\beta})\f$. For the uncoupled cost, this is the difference between the model and right hand side associted with the \f$i^{th}\f$ nearest neighbor.
   */
-  virtual Eigen::VectorXd CostImpl(Eigen::VectorXd const& beta) const override;
+  //Eigen::VectorXd CostImpl(Eigen::VectorXd const& beta) const;
 
   /// Compute the Jacobian matrix
   /**
@@ -76,7 +84,7 @@ protected:
   @param[in] beta The coefficients for this support point
   @param[out] jac The Jacobian matrix
   */
-  virtual void JacobianImpl(Eigen::VectorXd const& beta, Eigen::SparseMatrix<double>& jac) const override;
+  //void JacobianImpl(Eigen::VectorXd const& beta, Eigen::SparseMatrix<double>& jac) const;
 
 private:
 

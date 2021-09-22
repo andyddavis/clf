@@ -33,16 +33,24 @@ public:
 
 private:
 
+  /// Evaluate the \f$i^{th}\f$ penalty function \f$f_i(\beta)\f$
+  /**
+  @param[in] ind The index of the penalty function
+  @param[in] beta The input parameter
+  \return The evaluation of the \f$i^{th}\f$ penalty function
+  */
+  virtual double PenaltyFunctionImpl(std::size_t const ind, Eigen::VectorXd const& beta) const override;
+
   /// Implement the sub-cost functions
   /**
   @param[in] data When mapped into a matrix, each column is the function we are tryng to approximate evaluated at the support point
   */
-  virtual Eigen::VectorXd CostImpl(Eigen::VectorXd const& data) const override;
+  Eigen::VectorXd CostImpl(Eigen::VectorXd const& data) const;
 
   /**
   @param[in] data When mapped into a matrix, each column is the function we are tryng to approximate evaluated at the support point
   */
-  virtual void JacobianImpl(Eigen::VectorXd const& data, Eigen::SparseMatrix<double>& jac) const override;
+  void JacobianImpl(Eigen::VectorXd const& data, Eigen::SparseMatrix<double>& jac) const;
 
   /// The collocation cloud that we will use to comptue this cost
   std::shared_ptr<ColocationPointCloud> colocationCloud;

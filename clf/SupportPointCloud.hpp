@@ -3,8 +3,9 @@
 
 #include <nanoflann.hpp>
 
-#include "clf/SupportPoint.hpp"
+#include "clf/SupportPointSampler.hpp"
 #include "clf/SupportPointCloudExceptions.hpp"
+#include "clf/PointCloud.hpp"
 
 namespace clf {
 
@@ -16,7 +17,7 @@ Parameter Key | Type | Default Value | Description |
 "MaxLeaf"   | <tt>std::size_t</tt> | <tt>10</tt> | The max leaf parameter for constructing the \f$k\f$-\f$d\f$ tree. |
 "RequireConnectedGraphs"   | <tt>bool</tt> | <tt>false</tt> | <tt>true</tt>: The graphs associated with each output must be connected, <tt>false</tt>: The graphs associated with each output need not be connected |
 */
-class SupportPointCloud : public std::enable_shared_from_this<SupportPointCloud> {
+class SupportPointCloud : public PointCloud, public std::enable_shared_from_this<SupportPointCloud> {
 // make the constructors protected because we will always need to find the nearest neighbors after construction
 protected:
 
@@ -29,6 +30,19 @@ protected:
 public:
 
   virtual ~SupportPointCloud() = default;
+
+  /// Construct the cloud and also set the nearest neighbors
+  /**
+  Sample the support points from a distribution \f$\pi\f$. This also need to know the number of support points to sample.
+
+  <B>Configuration Parameters:</B>
+  Parameter Key | Type | Default Value | Description |
+  ------------- | ------------- | ------------- | ------------- |
+  "NumSupportPoints"   | <tt>std::size_t</tt> | --- | The number of support points to sample from \f$\pi\f$. |
+  @param[in] sampler Allows us to generate support points from a distribution \f$\pi\f$
+  @param[in] pt The options for the support point cloud
+  */
+  static std::shared_ptr<SupportPointCloud> Construct(std::shared_ptr<SupportPointSampler> const& sampler, boost::property_tree::ptree const& pt);
 
   /// Construct the cloud and also set the nearest neighbors
   /**
@@ -62,12 +76,6 @@ public:
   */
   template<class BBOX>
   inline bool kdtree_get_bbox(BBOX& bb) const { return false; }
-
-  /// The number of support points
-  /**
-  \return The number of support points
-  */
-  std::size_t NumSupportPoints() const;
 
   /// Get the \f$i^{th}\f$ support point
   /**
@@ -103,12 +111,6 @@ public:
   \return First: The indices of the nearest neighbors, Second: The squared distances from the input point to its nearest neighbors
   */
   std::pair<std::vector<std::size_t>, std::vector<double> > FindNearestNeighbors(Eigen::VectorXd const& point, std::size_t const k) const;
-
-  /// An iterator to the first support point
-  std::vector<std::shared_ptr<SupportPoint> >::const_iterator Begin() const;
-
-  /// An iterator to the last support point
-  std::vector<std::shared_ptr<SupportPoint> >::const_iterator End() const;
 
   /// Get the global vector of coefficients
   Eigen::VectorXd GetCoefficients() const;
@@ -166,7 +168,7 @@ private:
   void CheckConnected(std::size_t const ind, std::vector<bool>& visited) const;
 
   /// The \f$i^{th}\f$ entry is the support point associated with \f$x^{(i)}\f$
-  const std::vector<std::shared_ptr<SupportPoint> > supportPoints;
+  //const std::vector<std::shared_ptr<SupportPoint> > supportPoints;
 
   /// The \f$k\f$-\f$d\f$ tree type that sorts the support points
   typedef nanoflann::KDTreeSingleIndexAdaptor<nanoflann::L2_Simple_Adaptor<double, SupportPointCloud>, SupportPointCloud> NanoflannKDTree;

@@ -84,7 +84,7 @@ TEST_F(SupportPointTests, TotalOrderPolynomials) {
 }
 
 TEST_F(SupportPointTests, TotalOrderSineCosine) {
-  // the order of the total order sin/cos basis
+  // the order of the total order basis
   const std::size_t order = 2;
 
   // create the support points

@@ -4,7 +4,8 @@ namespace pt = boost::property_tree;
 using namespace clf;
 
 SupportPointCloud::SupportPointCloud(std::vector<std::shared_ptr<SupportPoint> > const& supportPoints, pt::ptree const& pt) :
-supportPoints(supportPoints),
+PointCloud(std::vector<std::shared_ptr<Point> >(supportPoints.begin(), supportPoints.end())),
+//supportPoints(supportPoints),
 numCoefficients(NumCoefficients(supportPoints)),
 requireConnectedGraphs(pt.get<bool>("RequireConnectedGraphs", false))
 {
@@ -21,6 +22,13 @@ std::size_t SupportPointCloud::NumCoefficients(std::vector<std::shared_ptr<Suppo
   return numCoeffs;
 }
 
+std::shared_ptr<SupportPointCloud> SupportPointCloud::Construct(std::shared_ptr<SupportPointSampler> const& sampler, boost::property_tree::ptree const& pt) {
+  std::vector<std::shared_ptr<SupportPoint> > points(pt.get<std::size_t>("NumSupportPoints"));
+  for( std::size_t i=0; i<points.size(); ++i ) { points[i] = sampler->Sample(); }
+
+  return Construct(points, pt);
+}
+
 std::shared_ptr<SupportPointCloud> SupportPointCloud::Construct(std::vector<std::shared_ptr<SupportPoint> > const& supportPoints, boost::property_tree::ptree const& pt) {
   // make the cloud
   auto cloud = std::shared_ptr<SupportPointCloud>(new SupportPointCloud(supportPoints, pt));
@@ -33,11 +41,12 @@ std::shared_ptr<SupportPointCloud> SupportPointCloud::Construct(std::vector<std:
 
 void SupportPointCloud::FindNearestNeighbors() const {
   // loop through each support point
-  for( const auto& point : supportPoints ) {
+  for( const auto& pnt : points ) {
+    auto point = std::dynamic_pointer_cast<SupportPoint>(pnt);
     assert(point);
     // the maximum required nearest neighbors
     const std::size_t numNeigh = point->NumNeighbors();
-    if( numNeigh>supportPoints.size() ) { throw exceptions::SupportPointCloudNotEnoughPointsException(supportPoints.size(), numNeigh); }
+    if( numNeigh>points.size() ) { throw exceptions::SupportPointCloudNotEnoughPointsException(points.size(), numNeigh); }
 
     // find the nearest nieghbors
     std::vector<std::size_t> neighInd; std::vector<double> neighDist;
@@ -49,7 +58,7 @@ void SupportPointCloud::FindNearestNeighbors() const {
   }
 
   // now that all of the points know their neighbors, we can create the coupling costs
-  for( const auto& point : supportPoints ) { point->CreateCoupledCosts(); }
+  for( const auto& point : points ) { std::dynamic_pointer_cast<SupportPoint>(point)->CreateCoupledCosts(); }
 
   if( requireConnectedGraphs ) {
     // check to make sure the graph is connected
@@ -58,7 +67,7 @@ void SupportPointCloud::FindNearestNeighbors() const {
 }
 
 bool SupportPointCloud::CheckConnected() const {
-  std::vector<bool> visited(supportPoints.size(), false);
+  std::vector<bool> visited(points.size(), false);
 
   CheckConnected(0, visited);
 
@@ -72,7 +81,7 @@ void SupportPointCloud::CheckConnected(std::size_t const ind, std::vector<bool>&
   visited[ind] = true;
 
   // get the connected neighbors and recursively mark them as visited
-  const std::vector<size_t> neighbors = supportPoints[ind]->GlobalNeighborIndices();
+  const std::vector<size_t> neighbors = GetSupportPoint(ind)->GlobalNeighborIndices();
   for( std::size_t i=0; i<neighbors.size(); ++i ) {
     assert(neighbors[i]<visited.size());
     if( !visited[neighbors[i]] ) { CheckConnected(neighbors[i], visited); }
@@ -80,12 +89,12 @@ void SupportPointCloud::CheckConnected(std::size_t const ind, std::vector<bool>&
 }
 
 void SupportPointCloud::CheckSupportPoints() const {
-  for( std::size_t i=1; i<supportPoints.size(); ++i ) {
+  for( std::size_t i=1; i<points.size(); ++i ) {
     // check the input dimension
-    if( supportPoints[i-1]->model->inputDimension!=supportPoints[i]->model->inputDimension ) { throw exceptions::SupportPointCloudDimensionException(exceptions::SupportPointCloudDimensionException::Type::INPUT, i-1, i); }
+    if( GetSupportPoint(i-1)->model->inputDimension!=GetSupportPoint(i)->model->inputDimension ) { throw exceptions::SupportPointCloudDimensionException(exceptions::SupportPointCloudDimensionException::Type::INPUT, i-1, i); }
 
     // check the output dimension
-    if( supportPoints[i-1]->model->outputDimension!=supportPoints[i]->model->outputDimension ) { throw exceptions::SupportPointCloudDimensionException(exceptions::SupportPointCloudDimensionException::Type::OUTPUT, i-1, i); }
+    if( GetSupportPoint(i-1)->model->outputDimension!=GetSupportPoint(i)->model->outputDimension ) { throw exceptions::SupportPointCloudDimensionException(exceptions::SupportPointCloudDimensionException::Type::OUTPUT, i-1, i); }
   }
 }
 
@@ -94,25 +103,27 @@ void SupportPointCloud::BuildKDTree(std::size_t const maxLeaf) {
   kdtree->buildIndex();
 }
 
-std::shared_ptr<SupportPoint> SupportPointCloud::GetSupportPoint(std::size_t const i) const { return supportPoints[i]; }
+std::shared_ptr<SupportPoint> SupportPointCloud::GetSupportPoint(std::size_t const i) const {
+  auto point = std::dynamic_pointer_cast<SupportPoint>(points[i]);
+  assert(point);
+  return point;
+}
 
-std::size_t SupportPointCloud::NumSupportPoints() const { return supportPoints.size(); }
-
-std::size_t SupportPointCloud::kdtree_get_point_count() const { return NumSupportPoints(); }
+std::size_t SupportPointCloud::kdtree_get_point_count() const { return NumPoints(); }
 
 double SupportPointCloud::kdtree_get_pt(std::size_t const p, std::size_t const i) const {
-  assert(p<supportPoints.size());
-  return supportPoints[p]->x(i);
+  assert(p<points.size());
+  return GetSupportPoint(p)->x(i);
 }
 
 std::size_t SupportPointCloud::InputDimension() const {
-  assert(supportPoints.size()>0);
-  return supportPoints[0]->model->inputDimension;
+  assert(points.size()>0);
+  return GetSupportPoint(0)->model->inputDimension;
 }
 
 std::size_t SupportPointCloud::OutputDimension() const {
-  assert(supportPoints.size()>0);
-  return supportPoints[0]->model->outputDimension;
+  assert(points.size()>0);
+  return GetSupportPoint(0)->model->outputDimension;
 }
 
 std::shared_ptr<SupportPoint> SupportPointCloud::NearestSupportPoint(Eigen::VectorXd const& point) const {
@@ -125,7 +136,7 @@ std::shared_ptr<SupportPoint> SupportPointCloud::NearestSupportPoint(Eigen::Vect
 }
 
 void SupportPointCloud::FindNearestNeighbors(Eigen::VectorXd const& point, std::size_t const k, std::vector<std::size_t>& neighInd, std::vector<double>& neighDist) const {
-  assert(k<=supportPoints.size());
+  assert(k<=points.size());
 
   // resize the input vecotrs
   assert(k>0);
@@ -143,15 +154,13 @@ std::pair<std::vector<std::size_t>, std::vector<double> > SupportPointCloud::Fin
   return result;
 }
 
-std::vector<std::shared_ptr<SupportPoint> >::const_iterator SupportPointCloud::Begin() const { return supportPoints.begin(); }
-
-std::vector<std::shared_ptr<SupportPoint> >::const_iterator SupportPointCloud::End() const { return supportPoints.end(); }
-
 Eigen::VectorXd SupportPointCloud::GetCoefficients() const {
   Eigen::VectorXd coeffs(numCoefficients);
 
   std::size_t ind = 0;
-  for( const auto& point : supportPoints ) {
+  for( const auto& pnt : points ) {
+    auto point = std::dynamic_pointer_cast<SupportPoint>(pnt);
+    assert(point);
     coeffs.segment(ind, point->NumCoefficients()) = point->Coefficients();
     ind += point->NumCoefficients();
   }
@@ -161,7 +170,9 @@ Eigen::VectorXd SupportPointCloud::GetCoefficients() const {
 
 void SupportPointCloud::SetCoefficients(Eigen::VectorXd const& coeffs) {
   std::size_t ind = 0;
-  for( const auto& point : supportPoints ) {
+  for( const auto& pnt : points ) {
+    auto point = std::dynamic_pointer_cast<SupportPoint>(pnt);
+    assert(point);
     point->Coefficients() = coeffs.segment(ind, point->NumCoefficients());
     ind += point->NumCoefficients();
   }

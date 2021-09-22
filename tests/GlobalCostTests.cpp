@@ -89,40 +89,43 @@ private:
 TEST_F(GlobalCostTests, CostEvaluationAndDerivatives) {
   pt::ptree pt;
   auto cost = std::make_shared<GlobalCost>(cloud, pt);
-  EXPECT_EQ(cost->inDim, cloud->numCoefficients);
+  EXPECT_EQ(cost->inputDimension, cloud->numCoefficients);
   std::size_t expectedValDim = 0;
   for( auto it=cloud->Begin(); it!=cloud->End(); ++it ) {
-    expectedValDim += (*it)->NumNeighbors()*(*it)->model->outputDimension;
-    for( std::size_t i=1; i<(*it)->NumNeighbors(); ++i ) {
-      const double coupling = (*it)->CouplingFunction(i);
-      if( coupling>1.0e-12 ) { expectedValDim += (*it)->model->outputDimension; }
+    auto point = std::dynamic_pointer_cast<SupportPoint>(*it);
+    EXPECT_TRUE(point);
+
+    expectedValDim += point->NumNeighbors()*point->model->outputDimension;
+    for( std::size_t i=1; i<point->NumNeighbors(); ++i ) {
+      const double coupling = point->CouplingFunction(i);
+      if( coupling>1.0e-12 ) { expectedValDim += point->model->outputDimension; }
     }
   }
-  EXPECT_EQ(cost->valDim, expectedValDim);
+  EXPECT_EQ(cost->numPenaltyFunctions, expectedValDim);
 
   // choose random coefficients
-  const Eigen::VectorXd coefficients = Eigen::VectorXd::Random(cost->inDim);
+  const Eigen::VectorXd coefficients = Eigen::VectorXd::Random(cost->inputDimension);
 
   // compute the cost
-  const Eigen::VectorXd costVec = cost->Cost(coefficients);
-  EXPECT_EQ(costVec.size(), cost->valDim);
+  const Eigen::VectorXd costVec = cost->CostVector(coefficients);
+  EXPECT_EQ(costVec.size(), cost->numPenaltyFunctions);
 
   // compute the exected cost
-  Eigen::VectorXd expectedCost(cost->valDim);
+  Eigen::VectorXd expectedCost(cost->numPenaltyFunctions);
   {
     std::size_t ind = 0;
-    for( std::size_t i=0; i<cloud->NumSupportPoints(); ++i ) {
+    for( std::size_t i=0; i<cloud->NumPoints(); ++i ) {
       auto point = cloud->GetSupportPoint(i);
 
       // compute the uncoupled cost
-      expectedCost.segment(ind, cost->GetUncoupledCost(i)->valDim) = cost->GetUncoupledCost(i)->Cost(coefficients.segment(i*point->NumCoefficients(), point->NumCoefficients()));
-      ind += cost->GetUncoupledCost(i)->valDim;
+      expectedCost.segment(ind, cost->GetUncoupledCost(i)->numPenaltyFunctions) = cost->GetUncoupledCost(i)->CostVector(coefficients.segment(i*point->NumCoefficients(), point->NumCoefficients()));
+      ind += cost->GetUncoupledCost(i)->numPenaltyFunctions;
 
       // compute the coupled cost
       for( const auto& coupled : cost->GetCoupledCost(i) ) {
         auto neigh = coupled->GetNeighbor();
-        expectedCost.segment(ind, coupled->valDim) = coupled->ComputeCost(coefficients.segment(i*point->NumCoefficients(), point->NumCoefficients()), coefficients.segment(neigh->GlobalIndex()*point->NumCoefficients(), point->NumCoefficients()));
-        ind += coupled->valDim;
+        expectedCost.segment(ind, coupled->numPenaltyFunctions) = coupled->ComputeCost(coefficients.segment(i*point->NumCoefficients(), point->NumCoefficients()), coefficients.segment(neigh->GlobalIndex()*point->NumCoefficients(), point->NumCoefficients()));
+        ind += coupled->numPenaltyFunctions;
       }
     }
   }
@@ -135,22 +138,22 @@ TEST_F(GlobalCostTests, CostEvaluationAndDerivatives) {
   Eigen::SparseMatrix<double> jac;
   cost->Jacobian(coefficients, jac);
 
-  Eigen::MatrixXd expectedJac = Eigen::MatrixXd::Zero(cost->valDim, cost->inDim);
+  Eigen::MatrixXd expectedJac = Eigen::MatrixXd::Zero(cost->numPenaltyFunctions, cost->inputDimension);
   {
     std::size_t ind = 0;
-    for( std::size_t i=0; i<cloud->NumSupportPoints(); ++i ) {
+    for( std::size_t i=0; i<cloud->NumPoints(); ++i ) {
       auto point = cloud->GetSupportPoint(i);
 
       // compute the uncoupled cost entries
       std::vector<Eigen::Triplet<double> > localTriplets;
-      cost->GetUncoupledCost(i)->JacobianTriplets(coefficients.segment(i*point->NumCoefficients(), point->NumCoefficients()), localTriplets);
+      //cost->GetUncoupledCost(i)->JacobianTriplets(coefficients.segment(i*point->NumCoefficients(), point->NumCoefficients()), localTriplets);
       for( const auto& it : localTriplets ) {
         const std::size_t row = ind+it.row();
         const std::size_t col = i*point->NumCoefficients()+it.col();
         expectedJac(row, col) = it.value();
       }
       localTriplets.clear();
-      ind += cost->GetUncoupledCost(i)->valDim;
+      ind += cost->GetUncoupledCost(i)->numPenaltyFunctions;
 
       // compute the coupled cost entries
       for( const auto& coupled : cost->GetCoupledCost(i) ) {
@@ -161,7 +164,7 @@ TEST_F(GlobalCostTests, CostEvaluationAndDerivatives) {
           expectedJac(row, col) = it.value();
         }
         localTriplets.clear();
-        ind += coupled->valDim;
+        ind += coupled->numPenaltyFunctions;
       }
     }
   }

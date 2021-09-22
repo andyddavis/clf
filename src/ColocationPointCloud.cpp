@@ -6,7 +6,7 @@ using namespace clf;
 ColocationPointCloud::ColocationPointCloud(std::shared_ptr<ColocationPointSampler> const& sampler, std::shared_ptr<SupportPointCloud> const& supportCloud, pt::ptree const& pt) :
 sampler(sampler),
 supportCloud(supportCloud),
-numColocationPoints(pt.get<std::size_t>("NumColocationPoints", supportCloud->NumSupportPoints()))
+numColocationPoints(pt.get<std::size_t>("NumColocationPoints", supportCloud->NumPoints()))
 {
   points.resize(numColocationPoints);
 }

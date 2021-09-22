@@ -21,21 +21,31 @@ class GlobalCost;
 /// Forward declaration of the clf::ColocationCost
 class ColocationCost;
 
-/// The local function \f$\ell\f$ associated with a support point \f$x\f$.
+/// The local function \f$\ell_{\hat{x}}\f$ associated with a support point \f$\hat{x}\f$.
 /**
-Let \f$x \in \Omega \subseteq \mathbb{R}^{d}\f$ be a support point with an associated local function \f$\ell: \Omega \mapsto \mathbb{R}^{m}\f$. Suppose that we are building an approximation of the function \f$u:\Omega \mapsto \mathbb{R}^{m}\f$. Although \f$\ell\f$ is well-defined in the entire domain, we expect there is a smooth monotonic function \f$W: \Omega \mapsto \mathbb{R}^{+}\f$ with \f$W(0) \leq \epsilon\f$ and \f$W(r) \rightarrow \infty\f$ as \f$r \rightarrow \infty\f$ such that \f$\| \ell(y) - u(x) \|^2 \leq W(\|y-x\|^2)\f$. Therefore, we primarily care about the local function \f$\ell\f$ in a ball \f$\mathcal{B}_{\delta}(x)\f$ centered at \f$x\f$ with radius \f$\delta\f$.
+Let \f$\hat{x} \in \Omega\f$ be a support point with an associated local function \f$\ell: \Omega \mapsto \mathbb{R}^{m}\f$. Suppose that we are building an approximation of the function \f$u:\Omega \mapsto \mathbb{R}^{m}\f$.
 
 The basis functions for the \f$j^{th}\f$ output are
 \f{equation*}{
-    \phi_j(x) = [\phi_1(x),\, \phi_2(x),\, ...,\, \phi_{q_j}(x)]^{\top}.
+    \phi_{\hat{x}}^{(j)}(x) = [\phi_1(x),\, \phi_2(x),\, ...,\, \phi_{q_j}(x)]^{\top}.
 \f}
-The \f$j^{th}\f$ output of the local function is defined by coordinates \f$p_j \in \mathbb{R}^{q_j}\f$ such that \f$\ell_j(x) = \phi_j(x)^{\top} p\f$.
+The \f$j^{th}\f$ output of the local function is defined by coefficients \f$p_j \in \mathbb{R}^{q_j}\f$ such that \f$\ell_{\hat{x}}^{(j)}(x) = \phi_j(x)^{\top} p\f$. Let \f$\tilde{q} = \sum_{j=1}^{m} q_j\f$ be the total number of coefficients.
+Define the \f$m \times \tilde{q}\f$ matrix
+\f{equation*}{
+     \Phi_{\hat{x}}(x) = \left[ \begin{array}{ccc|ccc|c|ccc}
+        --- & (\boldsymbol{\phi}_{\hat{x}}^{(0)}(x))^{\top} & --- & --- & 0 & --- & ... & --- & 0 & --- \\
+        --- & 0 & --- & --- & (\boldsymbol{\phi}_{\hat{x}}^{(1)}(x))^{\top} & --- & ... & --- & 0 & --- \\
+        --- & \vdots & --- & --- & \vdots & --- & \ddots & --- & \vdots & --- \\
+        --- & 0 & --- & --- & 0 & --- & ... & --- & (\boldsymbol{\phi}_{\hat{x}}^{(m)}(x))^{\top} & ---
+     \end{array} \right]
+\f}
+such that \f$\ell_{\hat{x}}(x) = \Phi_{\hat{x}}(x) p\f$, where \f$p \in \mathbb{R}^{\tilde{q}}\f$ are the coefficients that define the local function.
 
 <B>Configuration Parameters:</B>
 Parameter Key | Type | Default Value | Description |
 ------------- | ------------- | ------------- | ------------- |
 "BasisFunctions"   | <tt>std::string</tt> | --- | The options to make the basis functions for each output, separated by commas (see SupportPoint::CreateBasisFunctions) |
-"NumNeighbors"   | <tt>std::size_t</tt> | The number required to interpolate plus one | The number of nearest neighbors to use to compute the coefficients for each output. |
+"NumNeighbors"   | <tt>std::size_t</tt> | The number of basis functions plus one | The number of nearest neighbors to use to compute the coefficients for each output. |
 "Optimization"   | <tt>boost::property_tree::ptree</tt> | see clf::OptimizationOptions | The options for the uncoupled cost minimization |
 */
 class SupportPoint : public Point, public std::enable_shared_from_this<SupportPoint> {

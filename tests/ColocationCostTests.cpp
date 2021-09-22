@@ -21,7 +21,30 @@ private:
   @param[in] x The point \f$x \in \Omega \f$
   \return The evaluation of \f$f(x)\f$
   */
-  inline virtual Eigen::VectorXd RightHandSideVectorImpl(Eigen::VectorXd const& x) const override { return Eigen::VectorXd::Constant(outputDimension, x(0)); }
+  inline virtual Eigen::VectorXd RightHandSideVectorImpl(Eigen::VectorXd const& x) const override { return Eigen::VectorXd::Constant(outputDimension, 1.0); }
+
+  inline virtual Eigen::VectorXd OperatorImpl(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases) const override {
+    assert(bases.size()==outputDimension);
+    Eigen::VectorXd output = IdentityOperator(x, coefficients, bases);
+    output = output.array()*output.array();
+
+    return output;
+  }
+
+  inline virtual Eigen::MatrixXd OperatorJacobianImpl(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases) const override {
+    Eigen::MatrixXd jac = Eigen::MatrixXd::Zero(outputDimension, coefficients.size());
+
+    std::size_t ind = 0;
+    for( std::size_t i=0; i<outputDimension; ++i ) {
+      std::size_t basisSize = bases[i]->NumBasisFunctions();
+      const Eigen::VectorXd phi = bases[i]->EvaluateBasisFunctions(x);
+      assert(phi.size()==basisSize);
+      jac.row(i).segment(ind, basisSize) = phi.dot(coefficients.segment(ind, basisSize))*phi;
+      ind += basisSize;
+    }
+
+    return 2.0*jac;
+  }
 };
 
 class ColocationCostTests : public::testing::Test {
@@ -54,7 +77,7 @@ protected:
   }
 
   virtual void TearDown() override {
-    EXPECT_EQ(cost->inDim, model->outputDimension*supportCloud->NumSupportPoints());
+    EXPECT_EQ(cost->inputDimension, model->outputDimension*supportCloud->NumPoints());
   }
 
   /// Options for the colocation point cloud function
@@ -89,7 +112,7 @@ TEST_F(ColocationCostTests, Construction) {
 
   // create the colocation cost
   cost = std::make_shared<ColocationCost>(colocationCloud);
-  EXPECT_EQ(cost->valDim, model->outputDimension*nColocPoints);
+  EXPECT_EQ(cost->numPenaltyFunctions, model->outputDimension*nColocPoints);
 }
 
 TEST_F(ColocationCostTests, ComputeOptimalCoefficients) {
@@ -97,16 +120,19 @@ TEST_F(ColocationCostTests, ComputeOptimalCoefficients) {
 
   // create the colocation cost
   cost = std::make_shared<ColocationCost>(colocationCloud);
-  EXPECT_EQ(cost->valDim, model->outputDimension*supportCloud->NumSupportPoints());
+  EXPECT_EQ(cost->numPenaltyFunctions, model->outputDimension*supportCloud->NumPoints());
 
-  Eigen::MatrixXd data(outdim, supportCloud->NumSupportPoints());
+  Eigen::MatrixXd data(outdim, supportCloud->NumPoints());
   for( std::size_t i=0; i<data.cols(); ++i ) { data.col(i) = supportCloud->GetSupportPoint(i)->x.head(outdim); }
 
   cost->ComputeOptimalCoefficients(data);
 
   for( auto it=supportCloud->Begin(); it!=supportCloud->End(); ++it ) {
+    auto point = std::dynamic_pointer_cast<SupportPoint>(*it);
+    EXPECT_TRUE(point);
+
     const Eigen::VectorXd x = Eigen::VectorXd::Random(indim);
-    EXPECT_NEAR((x.head(outdim)-(*it)->EvaluateLocalFunction(x)).norm(), 0.0, 1.0e-8);
+    EXPECT_NEAR((x.head(outdim)-point->EvaluateLocalFunction(x)).norm(), 0.0, 1.0e-8);
   }
 }
 
@@ -124,21 +150,21 @@ TEST_F(ColocationCostTests, CostFunctionEvaluation) {
 
   // create the colocation cost
   cost = std::make_shared<ColocationCost>(colocationCloud);
-  EXPECT_EQ(cost->valDim, model->outputDimension*nColocPoints);
+  EXPECT_EQ(cost->numPenaltyFunctions, model->outputDimension*nColocPoints);
 
-  Eigen::MatrixXd data(outdim, supportCloud->NumSupportPoints());
+  Eigen::MatrixXd data(outdim, supportCloud->NumPoints());
   for( std::size_t i=0; i<data.cols(); ++i ) { data.col(i) = supportCloud->GetSupportPoint(i)->x.head(outdim); }
 
-  const Eigen::VectorXd costEval = cost->Cost(Eigen::Map<const Eigen::VectorXd>(data.data(), data.size()));
+  const Eigen::VectorXd costEval = cost->CostVector(Eigen::Map<const Eigen::VectorXd>(data.data(), data.size()));
 
-  EXPECT_EQ(costEval.size(), cost->valDim);
+  EXPECT_EQ(costEval.size(), cost->numPenaltyFunctions);
   for( std::size_t i=0; i<colocationCloud->numColocationPoints; ++i ) {
     auto it = colocationCloud->GetColocationPoint(i);
     EXPECT_TRUE(it);
     EXPECT_NEAR((it->Operator() - it->RightHandSide() - costEval.segment(i*model->outputDimension, model->outputDimension)).norm(), 0.0, 1.0e-10);
   }
 
-  Eigen::MatrixXd jacFD(cost->valDim, cost->inDim);
+  Eigen::MatrixXd jacFD(cost->numPenaltyFunctions, cost->inputDimension);
 
   Eigen::SparseMatrix<double> jac;
   cost->Jacobian(Eigen::Map<const Eigen::VectorXd>(data.data(), data.size()), jac);
@@ -153,9 +179,9 @@ TEST_F(ColocationCostTests, CostFunctionEvaluation) {
       Eigen::VectorXd data2m = dataVec;
       data2m(c) -= 2.0*dc;
 
-      const Eigen::VectorXd costp = cost->Cost(datap);
-      const Eigen::VectorXd costm = cost->Cost(datam);
-      const Eigen::VectorXd cost2m = cost->Cost(data2m);
+      const Eigen::VectorXd costp = cost->CostVector(datap);
+      const Eigen::VectorXd costm = cost->CostVector(datam);
+      const Eigen::VectorXd cost2m = cost->CostVector(data2m);
 
       jacFD.col(c) = (2.0*costp + 3.0*costEval - 6.0*costm + cost2m)/(6.0*dc);
     }
@@ -172,7 +198,7 @@ TEST_F(ColocationCostTests, CostFunctionEvaluation) {
 
 TEST_F(ColocationCostTests, CostFunctionMinimization) {
   // the number of colocation points
-  const std::size_t nColocPoints = 1000;
+  const std::size_t nColocPoints = 100000;
 
   // options for the cost function
   cloudOptions.put("NumColocationPoints", nColocPoints);
@@ -184,27 +210,31 @@ TEST_F(ColocationCostTests, CostFunctionMinimization) {
 
   // create the colocation cost
   cost = std::make_shared<ColocationCost>(colocationCloud);
-  EXPECT_EQ(cost->valDim, model->outputDimension*nColocPoints);
+  EXPECT_EQ(cost->numPenaltyFunctions, model->outputDimension*nColocPoints);
 
   pt::ptree pt;
   auto lm = std::make_shared<SparseLevenbergMarquardt>(cost, pt);
   Eigen::VectorXd costVec;
-  Eigen::VectorXd data(outdim*supportCloud->NumSupportPoints());
-  for( std::size_t i=0; i<supportCloud->NumSupportPoints(); ++i ) {
+  Eigen::VectorXd data(outdim*supportCloud->NumPoints());
+  for( std::size_t i=0; i<supportCloud->NumPoints(); ++i ) {
 
     data.segment(i*outdim, outdim) = Eigen::VectorXd::Constant(outdim, supportCloud->GetSupportPoint(i)->x(1));
   }
-  //std::cout << "TEST: " << cost->Cost(data).transpose() << std::endl;
+  //std::cout << "TEST: " << cost->CostVector(data).transpose() << std::endl;
   lm->Minimize(data, costVec);
   auto dist = std::make_shared<Gaussian>(indim)->AsVariable();
-  for( std::size_t i=0; i<supportCloud->NumSupportPoints(); ++i ) {
-    const Eigen::VectorXd pnt = dist->Sample();
+  //for( std::size_t i=0; i<supportCloud->NumPoints(); ++i ) {
+  for( std::size_t i=0; i<std::min((std::size_t)10, colocationCloud->numColocationPoints); ++i ) {
+    //const Eigen::VectorXd pnt = dist->Sample();
+    //const Eigen::VectorXd pnt = supportCloud->GetSupportPoint(i)->x;
+    const Eigen::VectorXd pnt = colocationCloud->GetColocationPoint(i)->x;
+    auto support = colocationCloud->GetColocationPoint(i)->supportPoint.lock();
     std::cout << "x: " << pnt.transpose() << std::endl;
     std::cout << "||x||: " << pnt.norm() << std::endl;
     std::cout << "x.x: " << pnt.dot(pnt) << std::endl;
-    std::cout << "f(x): " << supportCloud->GetSupportPoint(i)->RightHandSide(pnt).transpose() << std::endl;
-    std::cout << "u(x): " << supportCloud->GetSupportPoint(i)->EvaluateLocalFunction(pnt).transpose() << std::endl;
-    std::cout << "L(u(x)): " << supportCloud->GetSupportPoint(i)->Operator(pnt).transpose() << std::endl;
+    std::cout << "f(x): " << support->RightHandSide(pnt).transpose() << std::endl;
+    std::cout << "u(x): " << support->EvaluateLocalFunction(pnt).transpose() << std::endl;
+    std::cout << "L(u(x)): " << support->Operator(pnt).transpose() << std::endl;
     std::cout << std::endl;
   }
 }

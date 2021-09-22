@@ -39,19 +39,27 @@ public:
 
 protected:
 
+  /// Evaluate the \f$i^{th}\f$ penalty function \f$f_i(\beta)\f$
+  /**
+  @param[in] ind The index of the penalty function
+  @param[in] beta The input parameter
+  \return The evaluation of the \f$i^{th}\f$ penalty function
+  */
+  virtual double PenaltyFunctionImpl(std::size_t const ind, Eigen::VectorXd const& beta) const override;
+
   /// Evaluate each sub-cost function \f$f_i(\boldsymbol{\beta})\f$
   /**
   @param[in] beta The coefficients for all of the support points
   \return The \f$i^{th}\f$ entry is the \f$i^{th}\f$ sub-cost function \f$f_i(\boldsymbol{\beta})\f$.
   */
-  virtual Eigen::VectorXd CostImpl(Eigen::VectorXd const& beta) const override;
+  Eigen::VectorXd CostImpl(Eigen::VectorXd const& beta) const;
 
   /// Compute the Jacobian matrix
   /**
   @param[in] beta The coefficients for all of the support points
   @param[out] jac The Jacobian matrix
   */
-  virtual void JacobianImpl(Eigen::VectorXd const& beta, Eigen::SparseMatrix<double>& jac) const override;
+  void JacobianImpl(Eigen::VectorXd const& beta, Eigen::SparseMatrix<double>& jac) const;
 
 private:
 

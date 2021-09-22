@@ -362,7 +362,7 @@ double SupportPoint::MinimizeUncoupledCost() {
   pt::ptree pt;
   auto lm = std::make_shared<SparseLevenbergMarquardt>(uncoupledCost, pt);
 
-  if( coefficients.size()!=uncoupledCost->inDim ) { coefficients = Eigen::VectorXd::Zero(uncoupledCost->inDim); }
+  if( coefficients.size()!=uncoupledCost->inputDimension ) { coefficients = Eigen::VectorXd::Zero(uncoupledCost->inputDimension); }
   Eigen::VectorXd cost;
   lm->Minimize(coefficients, cost);
 

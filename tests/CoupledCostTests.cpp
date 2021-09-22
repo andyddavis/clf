@@ -85,31 +85,31 @@ TEST_F(CoupledCostTests, CostEvaluationAndDerivatives) {
     costOptions.put("CoupledScale", couplingScale);
     auto cost = std::make_shared<CoupledCost>(point, it, costOptions);
     EXPECT_EQ(cost->Coupled(), it!=point & point->IsNeighbor(it->GlobalIndex()));
-    EXPECT_EQ(cost->inDim, point->NumCoefficients()+it->NumCoefficients());
-    EXPECT_EQ(cost->valDim, outdim);
+    EXPECT_EQ(cost->inputDimension, point->NumCoefficients()+it->NumCoefficients());
+    EXPECT_EQ(cost->numPenaltyFunctions, outdim);
     EXPECT_EQ(cost->GetPoint(), point);
     EXPECT_EQ(cost->GetNeighbor(), it);
 
     // choose the vector of coefficients
     const Eigen::VectorXd coefficients = Eigen::VectorXd::Random(point->NumCoefficients() + it->NumCoefficients());
 
-    const Eigen::VectorXd computedCost = cost->Cost(coefficients);
-    EXPECT_EQ(computedCost.size(), cost->valDim);
+    const Eigen::VectorXd computedCost = cost->CostVector(coefficients);
+    EXPECT_EQ(computedCost.size(), cost->numPenaltyFunctions);
     if( !cost->Coupled() ) {
       EXPECT_NEAR(computedCost.norm(), 0.0, 1.0e-14);
     } else {
       const Eigen::VectorXd pntEval = point->EvaluateLocalFunction(it->x, coefficients.head(point->NumCoefficients()));
       const Eigen::VectorXd neighEval = it->EvaluateLocalFunction(it->x, coefficients.tail(it->NumCoefficients()));
       const Eigen::VectorXd diff = std::sqrt(couplingScale*point->NearestNeighborKernel(point->LocalIndex(it->GlobalIndex())))*(pntEval - neighEval);
-      EXPECT_EQ(diff.size(), cost->valDim);
+      EXPECT_EQ(diff.size(), cost->numPenaltyFunctions);
 
       EXPECT_NEAR(computedCost(0), diff(0), 1.0e-14);
       EXPECT_NEAR(computedCost(1), diff(1), 1.0e-14);
     }
 
     Eigen::MatrixXd jacFD = Eigen::MatrixXd::Zero(point->model->outputDimension, point->NumCoefficients()+it->NumCoefficients());
-    EXPECT_EQ(jacFD.rows(), cost->valDim);
-    EXPECT_EQ(jacFD.cols(), cost->inDim);
+    EXPECT_EQ(jacFD.rows(), cost->numPenaltyFunctions);
+    EXPECT_EQ(jacFD.cols(), cost->inputDimension);
     if( cost->Coupled() ) {
       const double dc = 1.0e-6;
       const Eigen::VectorXd kernel = point->NearestNeighborKernel();
@@ -144,10 +144,10 @@ TEST_F(CoupledCostTests, CostEvaluationAndDerivatives) {
     Eigen::SparseMatrix<double> jac;
     cost->Jacobian(coefficients, jac);
 
-    EXPECT_EQ(jac.rows(), cost->valDim);
-    EXPECT_EQ(jac.cols(), cost->inDim);
-    for( std::size_t i=0; i<cost->valDim; ++i ) {
-      for( std::size_t j=0; j<cost->inDim; ++j ) {
+    EXPECT_EQ(jac.rows(), cost->numPenaltyFunctions);
+    EXPECT_EQ(jac.cols(), cost->inputDimension);
+    for( std::size_t i=0; i<cost->numPenaltyFunctions; ++i ) {
+      for( std::size_t j=0; j<cost->inputDimension; ++j ) {
         EXPECT_NEAR(jac.coeff(i, j), jacFD(i, j), 1.0e-8);
       }
     }

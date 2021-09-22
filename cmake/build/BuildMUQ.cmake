@@ -46,6 +46,7 @@ ExternalProject_Add(
     -DMUQ_ENABLEGROUP_UTILITIES_HDF5=ON
     -DMUQ_ENABLEGROUP_APPROXIMATION_QUADRATURE=ON
     -DMUQ_ENABLEGROUP_MODELING_DISTRIBUTIONS=ON
+    -DMUQ_ENABLEGROUP_OPTIMIZATION_CORE=ON
     BUILD_COMMAND make -j5
     INSTALL_COMMAND make -j5 install
 )
@@ -59,4 +60,5 @@ list(APPEND MUQ_LIBRARIES
   "${CLF_EXTERNAL_INSTALL_DIR}/muq/lib/${library_prefix}muqUtilities${shared_library_suffix}"
   "${CLF_EXTERNAL_INSTALL_DIR}/muq/lib/${library_prefix}muqModeling${shared_library_suffix}"
   "${CLF_EXTERNAL_INSTALL_DIR}/muq/lib/${library_prefix}muqApproximation${shared_library_suffix}"
+  "${CLF_EXTERNAL_INSTALL_DIR}/muq/lib/${library_prefix}muqOptimization${shared_library_suffix}"
 )

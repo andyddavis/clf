@@ -11,43 +11,51 @@ dofIndices(cloud)
 std::size_t GlobalCost::NumCostFunctions(std::shared_ptr<SupportPointCloud> const& cloud) {
   std::size_t num = 0;
   for( auto it=cloud->Begin(); it!=cloud->End(); ++it ) {
+    auto point = std::dynamic_pointer_cast<SupportPoint>(*it);
+    assert(point);
+
     // add the outputs from the uncoupled cost
-    num += (*it)->uncoupledCost->valDim;
+    num += point->uncoupledCost->numPenaltyFunctions;
 
     // add the outputs from the coupled cost
-    for( const auto& coupled : (*it)->coupledCost ) { num += coupled->valDim; }
+    for( const auto& coupled : point->coupledCost ) { num += coupled->numPenaltyFunctions; }
   }
 
   return num;
 }
 
 std::shared_ptr<UncoupledCost> GlobalCost::GetUncoupledCost(std::size_t const i) const {
-  if( i>=dofIndices.cloud->NumSupportPoints() ) { return nullptr; }
+  if( i>=dofIndices.cloud->NumPoints() ) { return nullptr; }
 
   return dofIndices.cloud->GetSupportPoint(i)->uncoupledCost;
 }
 
 std::vector<std::shared_ptr<CoupledCost> > GlobalCost::GetCoupledCost(std::size_t const i) const {
-  if( i>=dofIndices.cloud->NumSupportPoints() ) { return std::vector<std::shared_ptr<CoupledCost> >(); }
+  if( i>=dofIndices.cloud->NumPoints() ) { return std::vector<std::shared_ptr<CoupledCost> >(); }
 
   return dofIndices.cloud->GetSupportPoint(i)->coupledCost;
 }
 
+double GlobalCost::PenaltyFunctionImpl(std::size_t const ind, Eigen::VectorXd const& beta) const {
+  assert(false);
+  return 0.0;
+}
+
 Eigen::VectorXd GlobalCost::CostImpl(Eigen::VectorXd const& beta) const {
-  Eigen::VectorXd cost(valDim);
+  Eigen::VectorXd cost(numPenaltyFunctions);
   std::size_t ind = 0;
-  for( std::size_t i=0; i<dofIndices.cloud->NumSupportPoints(); ++i ) {
+  for( std::size_t i=0; i<dofIndices.cloud->NumPoints(); ++i ) {
     auto point = dofIndices.cloud->GetSupportPoint(i);
 
     // compute the uncoupled cost
-    cost.segment(ind, point->uncoupledCost->valDim) = point->uncoupledCost->Cost( beta.segment(dofIndices.globalDoFIndices[i], point->NumCoefficients()));
-    ind += point->uncoupledCost->valDim;
+    cost.segment(ind, point->uncoupledCost->numPenaltyFunctions) = point->uncoupledCost->CostVector(beta.segment(dofIndices.globalDoFIndices[i], point->NumCoefficients()));
+    ind += point->uncoupledCost->numPenaltyFunctions;
 
     // compute the coupled cost
     for( const auto& coupled : point->coupledCost ) {
       auto neigh = coupled->GetNeighbor();
-      cost.segment(ind, coupled->valDim) = coupled->ComputeCost(beta.segment(dofIndices.globalDoFIndices[i], point->NumCoefficients()), beta.segment(dofIndices.globalDoFIndices[neigh->GlobalIndex()], neigh->NumCoefficients()));
-      ind += coupled->valDim;
+      cost.segment(ind, coupled->numPenaltyFunctions) = coupled->ComputeCost(beta.segment(dofIndices.globalDoFIndices[i], point->NumCoefficients()), beta.segment(dofIndices.globalDoFIndices[neigh->GlobalIndex()], neigh->NumCoefficients()));
+      ind += coupled->numPenaltyFunctions;
     }
   }
 
@@ -57,19 +65,19 @@ Eigen::VectorXd GlobalCost::CostImpl(Eigen::VectorXd const& beta) const {
 void GlobalCost::JacobianImpl(Eigen::VectorXd const& beta, Eigen::SparseMatrix<double>& jac) const {
   std::vector<Eigen::Triplet<double> > triplets;
   std::size_t ind = 0;
-  for( std::size_t i=0; i<dofIndices.cloud->NumSupportPoints(); ++i ) {
+  for( std::size_t i=0; i<dofIndices.cloud->NumPoints(); ++i ) {
     auto point = dofIndices.cloud->GetSupportPoint(i);
 
     // compute the uncoupled cost entries
     std::vector<Eigen::Triplet<double> > localTriplets;
-    point->uncoupledCost->JacobianTriplets(beta.segment(dofIndices.globalDoFIndices[i], point->NumCoefficients()), localTriplets);
+    //point->uncoupledCost->JacobianTriplets(beta.segment(dofIndices.globalDoFIndices[i], point->NumCoefficients()), localTriplets);
     for( const auto& it : localTriplets ) {
       const std::size_t row = ind+it.row(); assert(row<jac.rows());
       const std::size_t col = dofIndices.globalDoFIndices[i]+it.col(); assert(col<jac.cols());
       triplets.emplace_back(row, col, it.value());
     }
     localTriplets.clear();
-    ind += point->uncoupledCost->valDim;
+    ind += point->uncoupledCost->numPenaltyFunctions;
 
     // compute the coupled cost entries
     for( const auto& coupled : point->coupledCost ) {
@@ -81,7 +89,7 @@ void GlobalCost::JacobianImpl(Eigen::VectorXd const& beta, Eigen::SparseMatrix<d
         triplets.emplace_back(row, col, it.value());
       }
       localTriplets.clear();
-      ind += coupled->valDim;
+      ind += coupled->numPenaltyFunctions;
     }
   }
 

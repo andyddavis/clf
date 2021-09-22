@@ -198,7 +198,12 @@ double LocalFunctions::ComputeCoupledSupportPoints() {
 
 double LocalFunctions::ComputeIndependentSupportPoints() {
   cost = 0.0;
-  for( auto point=cloud->Begin(); point!=cloud->End(); ++point ) { cost += (*point)->MinimizeUncoupledCost(); }
+  for( auto it=cloud->Begin(); it!=cloud->End(); ++it ) {
+    auto point = std::dynamic_pointer_cast<SupportPoint>(*it);
+    assert(point);
+
+    cost += point->MinimizeUncoupledCost();
+  }
 
   std::cout << "!!!!!COMPUTED COST: " << cost << std::endl;
   return cost;
@@ -221,8 +226,11 @@ std::pair<std::size_t, double> LocalFunctions::NearestNeighbor(Eigen::VectorXd c
 }
 
 std::shared_ptr<GlobalCost> LocalFunctions::ConstructGlobalCost(std::shared_ptr<SupportPointCloud> const& cloud, boost::property_tree::ptree const& pt) {
-  for( auto point=cloud->Begin(); point!=cloud->End(); ++point ) {
-    if( (*point)->Coupled() ) { return std::make_shared<GlobalCost>(cloud, pt); }
+  for( auto it=cloud->Begin(); it!=cloud->End(); ++it ) {
+    auto point = std::dynamic_pointer_cast<SupportPoint>(*it);
+    assert(point);
+
+    if( point->Coupled() ) { return std::make_shared<GlobalCost>(cloud, pt); }
   }
   return nullptr;
 }

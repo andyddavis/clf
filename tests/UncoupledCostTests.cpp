@@ -3,78 +3,10 @@
 #include "clf/UncoupledCost.hpp"
 #include "clf/SupportPointCloud.hpp"
 
+#include "TestModels.hpp"
+
 namespace pt = boost::property_tree;
 using namespace clf;
-
-class ExampleModelForUncoupledCostTests : public Model {
-public:
-
-  inline ExampleModelForUncoupledCostTests(pt::ptree const& pt) : Model(pt) {}
-
-  virtual ~ExampleModelForUncoupledCostTests() = default;
-
-protected:
-
-  /**
-  @param[in] x The point \f$x \in \Omega \f$
-  \return The evaluation of \f$f(x)\f$
-  */
-  inline virtual Eigen::VectorXd RightHandSideVectorImpl(Eigen::VectorXd const& x) const override {
-    return Eigen::Vector2d(
-      std::sin(2.0*M_PI*x(0))*std::cos(M_PI*x(1)) + std::cos(x(0)),
-      x.prod()
-    );
-  }
-
-  inline virtual Eigen::VectorXd OperatorImpl(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases) const override {
-    assert(bases.size()==outputDimension);
-    Eigen::VectorXd output = IdentityOperator(x, coefficients, bases);
-    output(1) += output(1)*output(1);
-
-    return output;
-  }
-
-  inline virtual Eigen::MatrixXd OperatorJacobianImpl(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases) const override {
-    Eigen::MatrixXd jac = Eigen::MatrixXd::Zero(outputDimension, coefficients.size());
-
-    std::size_t ind = 0;
-    for( std::size_t i=0; i<outputDimension; ++i ) {
-      std::size_t basisSize = bases[i]->NumBasisFunctions();
-      const Eigen::VectorXd phi = bases[i]->EvaluateBasisFunctions(x);
-      assert(phi.size()==basisSize);
-
-      if( i==1 ) {
-        jac.row(i).segment(ind, basisSize) = phi + 2.0*phi.dot(coefficients.segment(ind, basisSize))*phi;
-      } else {
-        jac.row(i).segment(ind, basisSize) = phi;
-      }
-
-      ind += basisSize;
-    }
-
-    return jac;
-  }
-
-  /// Compute the true Hessian of the operator with respect to the coefficients
-  inline std::vector<Eigen::MatrixXd> OperatorHessianImpl(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases) const {
-    std::vector<Eigen::MatrixXd> hess(outputDimension, Eigen::MatrixXd::Zero(coefficients.size(), coefficients.size()));
-
-    std::size_t ind = bases[0]->NumBasisFunctions();
-    for( std::size_t i=1; i<outputDimension; ++i ) {
-      Eigen::VectorXd phi = bases[i]->EvaluateBasisFunctions(x);
-      for( std::size_t k=0; k<phi.size(); ++k ) {
-        for( std::size_t j=0; j<phi.size(); ++j ) {
-          hess[i](ind+k, ind+j) = 2.0*phi(k)*phi(j);
-        }
-      }
-      ind += bases[i]->NumBasisFunctions();
-    }
-
-    return hess;
-  }
-
-private:
-};
 
 class UncoupledCostTests : public::testing::Test {
 public:
@@ -103,7 +35,7 @@ public:
     suppOptions.put("UncoupledScale", uncoupledScale);
     point = SupportPoint::Construct(
       Eigen::VectorXd::Ones(indim),
-      std::make_shared<ExampleModelForUncoupledCostTests>(modelOptions),
+      std::make_shared<tests::TwoDimensionalAlgebraicModel>(modelOptions),
       suppOptions);
 
     // create a support point cloud so that this point has nearest neighbors
@@ -114,7 +46,7 @@ public:
       for( std::size_t j=0; j<npoints; ++j ) {
         supportPoints[i*npoints+j+1] = SupportPoint::Construct(
           point->x+0.1*Eigen::Vector2d((double)i/npoints-0.5, (double)j/npoints-0.5),
-          std::make_shared<ExampleModelForUncoupledCostTests>(modelOptions),
+          std::make_shared<tests::TwoDimensionalAlgebraicModel>(modelOptions),
           suppOptions);
       }
     }
@@ -145,8 +77,8 @@ TEST_F(UncoupledCostTests, CostEvaluationAndDerivatives_ZeroRegularization) {
   costOptions.put("RegularizationParameter", 0.0);
   costOptions.put("UncoupledScale", uncoupledScale);
   auto cost = std::make_shared<UncoupledCost>(point, costOptions);
-  EXPECT_EQ(cost->inDim, point->NumCoefficients());
-  EXPECT_EQ(cost->valDim, point->NumNeighbors()*point->model->outputDimension);
+  EXPECT_EQ(cost->inputDimension, point->NumCoefficients());
+  EXPECT_EQ(cost->numPenaltyFunctions, point->NumNeighbors()*point->model->outputDimension);
   EXPECT_DOUBLE_EQ(cost->RegularizationScale(), 0.0);
   EXPECT_DOUBLE_EQ(cost->UncoupledScale(), uncoupledScale);
 
@@ -167,7 +99,7 @@ TEST_F(UncoupledCostTests, CostEvaluationAndDerivatives_ZeroRegularization) {
     }
   }
 
-  const Eigen::VectorXd computedCost = cost->Cost(coefficients);
+  const Eigen::VectorXd computedCost = cost->CostVector(coefficients);
   EXPECT_EQ(computedCost.size(), point->NumNeighbors()*point->model->outputDimension);
   EXPECT_EQ(computedCost.size(), trueCost.size());
   for( std::size_t i=0; i<computedCost.size(); ++i ) { EXPECT_NEAR(computedCost(i), trueCost(i), 1.0e-12); }
@@ -200,13 +132,13 @@ TEST_F(UncoupledCostTests, CostEvaluationAndDerivatives_ZeroRegularization) {
 
   Eigen::SparseMatrix<double> jac;
   cost->Jacobian(coefficients, jac);
-  EXPECT_EQ(jac.rows(), cost->valDim);
+  EXPECT_EQ(jac.rows(), cost->numPenaltyFunctions);
   EXPECT_EQ(jac.rows(), jacFD.rows());
-  EXPECT_EQ(jac.cols(), cost->inDim);
+  EXPECT_EQ(jac.cols(), cost->inputDimension);
   EXPECT_EQ(jac.cols(), jacFD.cols());
 
-  for( std::size_t i=0; i<cost->valDim; ++i ) {
-    for( std::size_t j=0; j<cost->inDim; ++j ) {
+  for( std::size_t i=0; i<cost->numPenaltyFunctions; ++i ) {
+    for( std::size_t j=0; j<cost->inputDimension; ++j ) {
       EXPECT_NEAR(jac.coeff(i, j), jacFD(i, j), 1.0e-6);
     }
   }
@@ -218,8 +150,8 @@ TEST_F(UncoupledCostTests, CostEvaluationAndDerivatives_NonZeroRegularization) {
   costOptions.put("RegularizationParameter", regularizationScale);
   costOptions.put("UncoupledScale", uncoupledScale);
   auto cost = std::make_shared<UncoupledCost>(point, costOptions);
-  EXPECT_EQ(cost->inDim, point->NumCoefficients());
-  EXPECT_EQ(cost->valDim, point->NumNeighbors()*point->model->outputDimension+point->NumCoefficients());
+  EXPECT_EQ(cost->inputDimension, point->NumCoefficients());
+  EXPECT_EQ(cost->numPenaltyFunctions, point->NumNeighbors()*point->model->outputDimension+point->NumCoefficients());
   EXPECT_DOUBLE_EQ(cost->RegularizationScale(), regularizationScale);
   EXPECT_DOUBLE_EQ(cost->UncoupledScale(), uncoupledScale);
 
@@ -241,7 +173,7 @@ TEST_F(UncoupledCostTests, CostEvaluationAndDerivatives_NonZeroRegularization) {
     trueCost.tail(point->NumCoefficients()) = std::sqrt(regularizationScale)*coefficients;
   }
 
-  const Eigen::VectorXd computedCost = cost->Cost(coefficients);
+  const Eigen::VectorXd computedCost = cost->CostVector(coefficients);
   EXPECT_EQ(computedCost.size(), point->NumNeighbors()*point->model->outputDimension+point->NumCoefficients());
   EXPECT_EQ(computedCost.size(), trueCost.size());
   for( std::size_t i=0; i<computedCost.size(); ++i ) { EXPECT_NEAR(computedCost(i), trueCost(i), 1.0e-12); }
@@ -273,16 +205,16 @@ TEST_F(UncoupledCostTests, CostEvaluationAndDerivatives_NonZeroRegularization) {
 
     jacFD.block(point->NumNeighbors()*point->model->outputDimension, 0, point->NumCoefficients(), point->NumCoefficients()) = std::sqrt(regularizationScale)*Eigen::MatrixXd::Identity(point->NumCoefficients(), point->NumCoefficients());
   }
-  EXPECT_EQ(jacFD.rows(), cost->valDim);
-  EXPECT_EQ(jacFD.cols(), cost->inDim);
+  EXPECT_EQ(jacFD.rows(), cost->numPenaltyFunctions);
+  EXPECT_EQ(jacFD.cols(), cost->inputDimension);
 
   Eigen::SparseMatrix<double> jac;
   cost->Jacobian(coefficients, jac);
-  EXPECT_EQ(jac.rows(), cost->valDim);
-  EXPECT_EQ(jac.cols(), cost->inDim);
+  EXPECT_EQ(jac.rows(), cost->numPenaltyFunctions);
+  EXPECT_EQ(jac.cols(), cost->inputDimension);
 
-  for( std::size_t i=0; i<cost->valDim; ++i ) {
-    for( std::size_t j=0; j<cost->inDim; ++j ) {
+  for( std::size_t i=0; i<cost->numPenaltyFunctions; ++i ) {
+    for( std::size_t j=0; j<cost->inputDimension; ++j ) {
       EXPECT_NEAR(jac.coeff(i, j), jacFD(i, j), 1.0e-4);
     }
   }

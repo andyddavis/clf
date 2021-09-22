@@ -14,8 +14,8 @@ neighborBasisEvals(neighbor->EvaluateBasisFunctions(neighbor->x)),
 localNeighborInd(LocalIndex(point, neighbor)),
 scale((localNeighborInd==std::numeric_limits<std::size_t>::max()? 0 : std::sqrt(pt.get<double>("CoupledScale")*point->NearestNeighborKernel(localNeighborInd))))
 {
-  assert(pointBasisEvals.size()==valDim);
-  assert(neighborBasisEvals.size()==valDim);
+  assert(pointBasisEvals.size()==numPenaltyFunctions);
+  assert(neighborBasisEvals.size()==numPenaltyFunctions);
 }
 
 std::size_t CoupledCost::LocalIndex(std::shared_ptr<SupportPoint> const& point, std::shared_ptr<SupportPoint> const& neighbor) {
@@ -26,7 +26,7 @@ std::size_t CoupledCost::LocalIndex(std::shared_ptr<SupportPoint> const& point, 
 bool CoupledCost::Coupled() const { return localNeighborInd!=std::numeric_limits<std::size_t>::max(); }
 
 Eigen::VectorXd CoupledCost::ComputeCost(Eigen::VectorXd const& coeffPoint, Eigen::VectorXd const& coeffNeigh) const {
-  if( !Coupled() ) { return Eigen::VectorXd::Zero(valDim); }
+  if( !Coupled() ) { return Eigen::VectorXd::Zero(numPenaltyFunctions); }
 
   auto pnt = point.lock(); assert(pnt);
   auto neigh = neighbor.lock(); assert(neigh);
@@ -35,8 +35,13 @@ Eigen::VectorXd CoupledCost::ComputeCost(Eigen::VectorXd const& coeffPoint, Eige
   return scale*(pnt->EvaluateLocalFunction(coeffPoint, pointBasisEvals) - neigh->EvaluateLocalFunction(coeffNeigh, neighborBasisEvals));
 }
 
+double CoupledCost::PenaltyFunctionImpl(std::size_t const ind, Eigen::VectorXd const& beta) const {
+  assert(false);
+  return 0.0;
+}
+
 Eigen::VectorXd CoupledCost::CostImpl(Eigen::VectorXd const& beta) const {
-  if( !Coupled() ) { return Eigen::VectorXd::Zero(valDim); }
+  if( !Coupled() ) { return Eigen::VectorXd::Zero(numPenaltyFunctions); }
 
   auto pnt = point.lock(); assert(pnt);
   auto neigh = neighbor.lock(); assert(neigh);
@@ -52,7 +57,7 @@ Eigen::VectorXd CoupledCost::CostImpl(Eigen::VectorXd const& beta) const {
 void CoupledCost::JacobianTriplets(std::vector<Eigen::Triplet<double> >& triplets) const {
   auto pnt = point.lock(); assert(pnt);
 
-  for( std::size_t i=0; i<valDim; ++i ) {
+  for( std::size_t i=0; i<numPenaltyFunctions; ++i ) {
     const std::size_t ind0 = (i==0? 0 : pointBasisEvals[i-1].size());
     const std::size_t ind1 = pnt->NumCoefficients() + (i==0? 0 : neighborBasisEvals[i-1].size());
     assert(pointBasisEvals[i].size()==neighborBasisEvals[i].size());

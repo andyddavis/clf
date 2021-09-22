@@ -82,6 +82,10 @@ set(CLF_SOURCE
 
     src/OptimizationOptions.cpp
 
+    src/LevenbergMarquardt.cpp
+
+    src/PointSampler.cpp
+    src/SupportPointSampler.cpp
     src/ColocationPointSampler.cpp
 
     src/Point.cpp
@@ -90,9 +94,9 @@ set(CLF_SOURCE
     src/CoupledSupportPoint.cpp
     src/ColocationPoint.cpp
 
-    src/SupportPointCloudExceptions.cpp
+    src/PointCloud.cpp
     src/SupportPointCloud.cpp
-
+    src/SupportPointCloudExceptions.cpp
     src/ColocationPointCloud.cpp
 
     src/LocalFunctions.cpp
@@ -147,13 +151,17 @@ if( NOT CLF_BUILD_FROM_PIP )
 
         tests/ModelTests.cpp
 
-        tests/LevenbergMarquardtTests.cpp
+        tests/NLoptOptimizerTests.cpp
 
+        tests/CostFunctionTests.cpp
         tests/UncoupledCostTests.cpp
         tests/CoupledCostTests.cpp
         tests/ColocationCostTests.cpp
         tests/GlobalCostTests.cpp
 
+        tests/LevenbergMarquardtTests.cpp
+
+        tests/SupportPointSamplerTests.cpp
         tests/ColocationPointSamplerTests.cpp
 
         tests/SupportPointTests.cpp
@@ -161,13 +169,12 @@ if( NOT CLF_BUILD_FROM_PIP )
         tests/ColocationPointTests.cpp
 
         tests/SupportPointCloudTests.cpp
-
         tests/ColocationPointCloudTests.cpp
 
         tests/LocalFunctionsTests.cpp
     )
 
-    include_directories(${GTEST_INCLUDE_DIR})
+    include_directories(tests/ ${GTEST_INCLUDE_DIR})
 
     add_executable(run-tests ${TEST_SOURCE})
     target_link_libraries(run-tests ${CLF_LIBNAME} ${CLF_EXTERNAL_LIBRARIES} ${GTEST_LIBRARIES})
