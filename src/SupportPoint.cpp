@@ -360,7 +360,7 @@ double SupportPoint::MinimizeUncoupledCost() {
   assert(uncoupledCost);
 
   pt::ptree pt;
-  auto lm = std::make_shared<SparseLevenbergMarquardt>(uncoupledCost, pt);
+  auto lm = std::make_shared<DenseLevenbergMarquardt>(uncoupledCost, pt);
 
   if( coefficients.size()!=uncoupledCost->inputDimension ) { coefficients = Eigen::VectorXd::Zero(uncoupledCost->inputDimension); }
   Eigen::VectorXd cost;

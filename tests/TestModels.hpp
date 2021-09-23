@@ -10,7 +10,14 @@ namespace tests {
 class TwoDimensionalAlgebraicModel : public Model {
 public:
 
-  inline TwoDimensionalAlgebraicModel(boost::property_tree::ptree const& pt) : Model(pt) {}
+  /// Construct the model
+  /**
+  @param[in] pt Options for the model---both the input and output should be \f$2\f$
+  */
+  inline TwoDimensionalAlgebraicModel(boost::property_tree::ptree const& pt) : Model(pt) {
+    assert(inputDimension==2);
+    assert(outputDimension==2);
+  }
 
   virtual ~TwoDimensionalAlgebraicModel() = default;
 protected:
@@ -32,7 +39,7 @@ protected:
   @param[in] x The point \f$x \in \Omega \f$
   @param[in] coefficients The coefficients \f$p\f$
   @param[in] bases the basis function \f$\phi\f$
-  \return The evaluation of \f$mathcal{L}(u)\f$
+  \return The evaluation of \f$\mathcal{L}(u)\f$
   */
   inline virtual Eigen::VectorXd OperatorImpl(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases) const override {
     assert(bases.size()==outputDimension);
@@ -44,10 +51,18 @@ protected:
 
   /// Implement the Jacobian \f$\nabla_{p} \mathcal{L}(u)\f$
   /**
+  The Jacobian of the operator \f$\mathcal{L}(u)\f$ with respect to the basis function coefficients is
+  \f{equation*}{
+     \nabla_{p} \mathcal{L}(u) = \nabla_{p} \mathcal{L}(\Phi_{x^{\prime}}(x) p) = \left[ \begin{array}{ccc|ccc}
+        --- & (\boldsymbol{\phi}_{x^{\prime}}^{(0)}(x))^{\top} & --- & --- & 0 & --- \\
+        --- & 0 & --- & --- & 2 (\phi_{\hat{x}}^{(1)}(x) \cdot p_1) (\boldsymbol{\phi}_{x^{\prime}}^{(1)}(x))^{\top} + (\boldsymbol{\phi}_{x^{\prime}}^{(1)}(x))^{\top} & ---
+     \end{array} \right].
+  \f}
+
   @param[in] x The point \f$x \in \Omega \f$
   @param[in] coefficients The coefficients \f$p\f$
   @param[in] bases the basis function \f$\phi\f$
-  \return The evaluation of \f$mathcal{L}(u)\f$
+  \return The evaluation of \f$\nabla_{p} \mathcal{L}(u)\f$
   */
   inline virtual Eigen::MatrixXd OperatorJacobianImpl(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases) const override {
     Eigen::MatrixXd jac = Eigen::MatrixXd::Zero(outputDimension, coefficients.size());

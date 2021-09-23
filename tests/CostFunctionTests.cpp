@@ -4,14 +4,16 @@
 
 #include "TestCostFunctions.hpp"
 
-using namespace clf;
+namespace clf {
+namespace tests {
 
+/// A class that runs the tests for clf::CostFunction
 class CostFunctionTests : public::testing::Test {
 protected:
-  virtual void SetUp() override {}
-  virtual void TearDown() override {}
-
   /// Test that the cost function is correct
+  /**
+  @param[in] cost The cost function we are testing
+   */
   template<typename MATTYPE>
   void TestCostFunction(std::shared_ptr<CostFunction<MATTYPE> > const& cost) const {
     EXPECT_EQ(cost->inputDimension, 3);
@@ -62,7 +64,7 @@ protected:
     expectedJac(3, 0) = beta(2);
     expectedJac(3, 2) = beta(0);
 
-    EXPECT_NEAR((jac-expectedJac).norm(), 0.0, 1.0e-14);
+    EXPECT_NEAR(((Eigen::MatrixXd)jac-expectedJac).norm(), 0.0, 1.0e-14);
   }
 };
 
@@ -77,3 +79,6 @@ TEST_F(CostFunctionTests, Sparse) {
   auto cost = std::make_shared<tests::SparseCostTest>();
   TestCostFunction<Eigen::SparseMatrix<double> >(cost);
 }
+
+} // namespace tests 
+} // namespace clf

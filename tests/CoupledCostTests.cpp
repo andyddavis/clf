@@ -6,18 +6,6 @@
 namespace pt = boost::property_tree;
 using namespace clf;
 
-class ExampleModelForCoupledCostTests : public Model {
-public:
-
-  inline ExampleModelForCoupledCostTests(pt::ptree const& pt) : Model(pt) {}
-
-  virtual ~ExampleModelForCoupledCostTests() = default;
-
-protected:
-
-private:
-};
-
 class CoupledCostTests : public::testing::Test {
 public:
   /// Set up information to test the support point
@@ -40,7 +28,7 @@ public:
     suppOptions.put("Basis2.Order", orderPoly);
     point = SupportPoint::Construct(
       Eigen::VectorXd::Random(indim),
-      std::make_shared<ExampleModelForCoupledCostTests>(modelOptions),
+      std::make_shared<Model>(modelOptions),
       suppOptions);
 
     // create a support point cloud so that this point has nearest neighbors
@@ -51,7 +39,7 @@ public:
       for( std::size_t j=0; j<2*npoints; ++j ) {
         supportPoints[2*npoints*i+j+1] = SupportPoint::Construct(
           point->x+0.1*Eigen::Vector2d((double)i/(2*npoints-1)-0.5, (double)j/(2*npoints-1)-0.5),
-          std::make_shared<ExampleModelForCoupledCostTests>(modelOptions),
+          std::make_shared<Model>(modelOptions),
           suppOptions);
       }
     }

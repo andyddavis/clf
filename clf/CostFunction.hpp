@@ -61,9 +61,10 @@ public:
   /**
   @param[in] ind The index of the penalty function
   @param[in] beta The input parameter
+  @param[in] dbeta The \f$\Delta \beta\f$ used to compute finite difference approximations (defaults to \f$1e-8\f$)
   \return The gradient of the \f$i^{th}\f$ penalty function \f$\nabla_{\beta} f_i(\beta)\f$
   */
-  inline Eigen::VectorXd PenaltyFunctionGradientByFD(std::size_t const ind, Eigen::VectorXd const& beta) const {
+  inline Eigen::VectorXd PenaltyFunctionGradientByFD(std::size_t const ind, Eigen::VectorXd const& beta, double const dbeta = 1.0e-8) const {
     assert(beta.size()==inputDimension);
     assert(ind<numPenaltyFunctions);
     Eigen::VectorXd grad(inputDimension);
@@ -79,9 +80,6 @@ public:
 
     return grad;
   }
-
-  /// The \f$\Delta \beta\f$ used to compute finite difference approximations
-  const double dbeta = 1.0e-8;
 
   /// Evaluate each penalty function \f$f_i(\boldsymbol{\beta})\f$
   /**
@@ -246,10 +244,16 @@ protected:
     const Eigen::VectorXd grad = PenaltyFunctionGradientByFD(ind, beta);
     std::vector<std::pair<std::size_t, double> > sparseGrad;
     for( std::size_t i=0; i<inputDimension; ++i ) {
-      if( std::abs(grad(i))>1.0e-14 ) { sparseGrad.emplace_back(i, grad(i)); }
+      if( std::abs(grad(i))>sparsityTol ) { sparseGrad.emplace_back(i, grad(i)); }
     }
     return sparseGrad;
   }
+
+  /// The sparsity tolerance ignores entries in the Jacobian that are less then this value 
+  /**
+  Defaults to \f$1.0e-14\f$
+  */
+  const double sparsityTol = 1.0e-14;
 
 private:
 };

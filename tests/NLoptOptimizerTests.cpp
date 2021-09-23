@@ -10,7 +10,7 @@ using namespace clf;
 namespace clf {
 namespace tests {
 
-/// A class to run the tests for the NLopt optimizer
+/// A class to run the tests for the clf::NLoptOptimizer
 class NLoptOptimizerTests : public::testing::Test {
 protected:
 
