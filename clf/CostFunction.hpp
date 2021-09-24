@@ -127,6 +127,11 @@ protected:
   */
   inline virtual Eigen::VectorXd PenaltyFunctionGradientImpl(std::size_t const ind, Eigen::VectorXd const& beta) const { return PenaltyFunctionGradientByFD(ind, beta); }
 
+  /// Compute the total cost by summing the squared penalty terms 
+  /**
+  @param[in] input There is only one input: the input parameters \f$\beta\f$
+  \return The total cost 
+  */
   inline virtual double CostImpl(muq::Modeling::ref_vector<Eigen::VectorXd> const& input) override {
     double cost = 0.0;
     for( std::size_t i=0; i<numPenaltyFunctions; ++i ) {
@@ -136,6 +141,11 @@ protected:
     return cost;
   }
 
+  /// Compute the gradient of the total cost by summing the gradient of the squared penalty terms 
+  /**
+  @param[in] input There is only one input: the input parameters \f$\beta\f$
+  \return The gradient of the total cost 
+  */
   inline virtual void GradientImpl(unsigned int const inputDimWrt, muq::Modeling::ref_vector<Eigen::VectorXd> const& input, Eigen::VectorXd const& sensitivity) override {
     gradient = Eigen::VectorXd::Zero(inputDimension);
     for( std::size_t i=0; i<numPenaltyFunctions; ++i ) {

@@ -54,7 +54,7 @@ Eigen::VectorXd GlobalCost::CostImpl(Eigen::VectorXd const& beta) const {
     // compute the coupled cost
     for( const auto& coupled : point->coupledCost ) {
       auto neigh = coupled->GetNeighbor();
-      cost.segment(ind, coupled->numPenaltyFunctions) = coupled->ComputeCost(beta.segment(dofIndices.globalDoFIndices[i], point->NumCoefficients()), beta.segment(dofIndices.globalDoFIndices[neigh->GlobalIndex()], neigh->NumCoefficients()));
+      //cost.segment(ind, coupled->numPenaltyFunctions) = coupled->ComputeCost(beta.segment(dofIndices.globalDoFIndices[i], point->NumCoefficients()), beta.segment(dofIndices.globalDoFIndices[neigh->GlobalIndex()], neigh->NumCoefficients()));
       ind += coupled->numPenaltyFunctions;
     }
   }
@@ -81,7 +81,7 @@ void GlobalCost::JacobianImpl(Eigen::VectorXd const& beta, Eigen::SparseMatrix<d
 
     // compute the coupled cost entries
     for( const auto& coupled : point->coupledCost ) {
-      coupled->JacobianTriplets(localTriplets);
+      //coupled->JacobianTriplets(localTriplets);
       for( const auto& it : localTriplets ) {
         const std::size_t row = ind+it.row(); assert(row<jac.rows());
         const std::size_t col = dofIndices.globalDoFIndices[(it.col()<point->NumCoefficients()? i : coupled->GetNeighbor()->GlobalIndex())] + it.col() - (it.col()<point->NumCoefficients()? 0 : point->NumCoefficients());
