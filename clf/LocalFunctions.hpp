@@ -8,13 +8,13 @@ namespace clf {
 
 /// The local function, which is an approximation \f$\hat{u} \approx u\f$ of a function \f$u: \Omega \mapsto \mathbb{R}^{m}\f$
 /**
-Let \f$\Omega \subseteq \mathbb{R}^{d}\f$ be the domain with closure \f$\overline{\Omega}\f$. Let \f$\mathcal{H}\f$ be a Hilbert space with inner product \f$\langle \cdot, \cdot \rangle_{\mathcal{H}}\f$ such that if \f$u \in \mathcal{H}\f$ then \f$u: \Omega \mapsto \mathbb{R}^{m}\f$.
+Let \f$\Omega \subseteq \mathbb{R}^{d}\f$ be the domain. 
 
-A local function is defined by a cloud of support points \f$\{x_{i}\}_{i=1}^{n}\f$ (see clf::SupportPointCloud) such that each support point \f$i\f$ is associated with \f$m\f$ local functions \f$\ell_{i}^{(r)}: \overline{\Omega} \mapsto \mathbb{R}\f$ for \f$r \in [1,m]\f$.
+A local function is defined by a cloud of support points \f$\{x_{i}\}_{i=1}^{n}\f$ (see clf::SupportPointCloud) such that each support point \f$i\f$ is associated with a local function \f$\ell_{x_i}: \Omega \mapsto \mathbb{R}^{m}\f$.
 
-The local function is \f$\hat{u}:\Omega \mapsto \mathbb{R}^{m}\f$ for \f$\Omega \subseteq \mathbb{R}^{d}\f$. This function is defined piece-wise by functions \f$\ell_i^{(r)}\f$ associated with support point \f$i\f$ and output \f$r\f$. For this support point, the \f$r^{th}\f$ output of \f$\hat{u}\f$ is \f$\ell_i^{(r)} = p_i^{(r)} \cdot \phi_i^{(r)}\f$, where \f$\phi_i^{(r)}\f$ is a vector of basis function evaluations (see clf::BasisFunctions) and \f$p_i^{(r)} \in \mathbb{R}^{q_i^{(r)}}\f$ are the coefficients for the \f$r^{th}\f$ output. Let \f$p_i = [p_i^{(1)}, p_i^{(2)}, ..., p_i^{(m)}]^{\top} \in \mathbb{R}^{\bar{q}_i}\f$ be a vector of all the coefficients associated with support point \f$i\f$.
+The approximation \f$\hat{u}:\Omega \mapsto \mathbb{R}^{m}\f$ is defined piece-wise by functions \f$\ell_{x_i}(x) = \Phi_{x_i}(x) p_i\f$ associated with support point \f$x_i\f$ (see clf::SupportPoint), where \f$p_i \in \mathbb{R}^{\bar{q}_i}\f$ is a vector of coefficients associated with support point \f$i\f$.
 
-If \f$I(x)\f$ is the index of the nearest support point to a point \f$x \in \Omega\f$, then  The local function evaluation is \f$\hat{u}(x) = [\ell_{I(x)}^{(1)}(x), \ell_{I(x)}^{(2)}(x), ..., \ell_{I(x)}^{(m)}(x)]^{\top}\f$
+If \f$I(x)\f$ is the index of the nearest support point to a point \f$x \in \Omega\f$, then we evaluate the approximation as \f$\hat{u}(x) = \Phi_{x_{I(x)}}(x) p_{I(x)}\f$.
 */
 class LocalFunctions {
 public:
