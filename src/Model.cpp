@@ -5,8 +5,7 @@ using namespace clf;
 
 Model::Model(pt::ptree const& pt) :
 inputDimension(pt.get<std::size_t>("InputDimension", 1)),
-outputDimension(pt.get<std::size_t>("OutputDimension", 1)),
-fdEps(pt.get<double>("FiniteDifferenceStep", 1.0e-6))
+outputDimension(pt.get<std::size_t>("OutputDimension", 1))
 {}
 
 double Model::NearestNeighborKernel(double const delta) const {
@@ -88,7 +87,7 @@ Eigen::VectorXd Model::IdentityOperator(Eigen::VectorXd const& x, Eigen::VectorX
    return Eigen::MatrixXd();
  }
 
- Eigen::MatrixXd Model::OperatorJacobianByFD(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases, Eigen::VectorXd const& eval) const {
+Eigen::MatrixXd Model::OperatorJacobianByFD(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases, Eigen::VectorXd const& eval, double const fdEps) const {
     // compute the reference action of the operator
     Eigen::VectorXd u;
     if( eval.size()==0 ) { u = Operator(x, coefficients, bases); }
@@ -129,7 +128,7 @@ Eigen::VectorXd Model::IdentityOperator(Eigen::VectorXd const& x, Eigen::VectorX
    return jac;
  }
 
- std::vector<Eigen::MatrixXd> Model::OperatorHessianByFD(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases, Eigen::MatrixXd const& jacEval) const {
+std::vector<Eigen::MatrixXd> Model::OperatorHessianByFD(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases, Eigen::MatrixXd const& jacEval, double const fdEps) const {
    // compute the reference jacobian
    Eigen::MatrixXd jac;
    if( jacEval.size()==0 ) { jac = OperatorJacobian(x, coefficients, bases); }

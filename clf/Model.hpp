@@ -88,9 +88,10 @@ public:
   @param[in] coefficients The coefficients for each basis---this vector is divided into segments that correspond to coefficients of the bases. The length is the sum of the dimension of each basis.
   @param[in] bases The basis functions for each output
   @param[in] eval The evaluation of the operator at <tt>x</tt> with these <tt>coefficients</tt>, saves us from having to re-evaluate if we have this information handy. This defaults to empty; if its empty we compute this quantity
+  @param[in] fdEps The step size for the finite difference approximation (defaults to <tt>1.0e-6</tt>)
   \return The evaluation of \f$\mathcal{L}(u)\f$
   */
-  Eigen::MatrixXd OperatorJacobianByFD(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases, Eigen::VectorXd const& eval = Eigen::VectorXd()) const;
+  Eigen::MatrixXd OperatorJacobianByFD(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases, Eigen::VectorXd const& eval = Eigen::VectorXd(), double const fdEps = 1.0e-6) const;
 
   /// Compute the Jacobian of the model operator with respect to the basis coefficients
   /**
@@ -141,9 +142,10 @@ public:
   @param[in] coefficients The coefficients for each basis---this vector is divided into segments that correspond to coefficients of the bases. The length is the sum of the dimension of each basis.
   @param[in] bases The basis functions for each output
   @param[in] jacEval The evaluation of the operator Jacobian at <tt>x</tt> with these <tt>coefficients</tt>, saves us from having to re-evaluate if we have this information handy. This defaults to empty; if its empty we compute this quantity
+  @param[in] fdEps The step size for the finite difference approximation (defaults to <tt>1.0e-6</tt>)
   \return The evaluation of \f$\mathcal{L}(u)\f$
   */
-  std::vector<Eigen::MatrixXd> OperatorHessianByFD(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases, Eigen::MatrixXd const& jacEval = Eigen::MatrixXd()) const;
+  std::vector<Eigen::MatrixXd> OperatorHessianByFD(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases, Eigen::MatrixXd const& jacEval = Eigen::MatrixXd(), double const fdEps = 1.0e-6) const;
 
   /// Implement the right hand side function \f$f\f$
   /**
@@ -214,8 +216,6 @@ protected:
 
 private:
 
-  /// The parameter used to approximate derivatives with finite difference.
-  const double fdEps;
 };
 
 } // namespace clf

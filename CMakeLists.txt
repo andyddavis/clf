@@ -149,6 +149,7 @@ if( NOT CLF_BUILD_FROM_PIP )
         tests/SupportPointBasisTests.cpp
 
         tests/ModelTests.cpp
+	tests/LinearModelTests.cpp
 
 	tests/OptimizerTests.cpp
         tests/LevenbergMarquardtTests.cpp
