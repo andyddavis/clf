@@ -56,14 +56,15 @@ protected:
 
   /// Make sure everything is what we expect
   virtual void TearDown() override {
-    /*// the cost of the optimial coefficients
+    // the cost of the optimial coefficients
     const double cost = func->CoefficientCost();
-    std::cout << "COMPUTED COST: " << cost << std::endl;
-    EXPECT_NEAR(cost, 0.0, 1.0e-8);
+    EXPECT_TRUE(cost<1.0e-4);
 
-    for( const auto& it : supportPoints ) {
+    for( std::size_t i=0; i<cloud->NumPoints(); ++i ) { 
+      auto it = cloud->GetSupportPoint(i);
+
       const Eigen::VectorXd eval = it->EvaluateLocalFunction(it->x);
-      const Eigen::VectorXd expected = Eigen::Vector2d(std::sin(M_PI*it->x(0))*std::cos(2.0*M_PI*it->x(1)) + std::cos(M_PI*it->x(1)), it->x(1)*it->x(0) + it->x(0) + 1.0);
+      const Eigen::VectorXd expected = Eigen::Vector2d(std::sin(2.0*M_PI*it->x(0))*std::cos(M_PI*it->x(1)) + std::cos(M_PI*it->x(1)), it->x(1)*it->x(0));
       EXPECT_EQ(eval.size(), expected.size());
       EXPECT_NEAR((eval-expected).norm(), 0.0, 10.0*std::sqrt(cost));
     }
@@ -75,14 +76,17 @@ protected:
       // find the nearest support point and the squared distance to it
       std::size_t ind; double dist;
       std::tie(ind, dist) = func->NearestNeighbor(x);
-      for( const auto& it : supportPoints ) { EXPECT_TRUE(dist<=(x-it->x).dot(x-it->x)+1.0e-10); }
+      for( std::size_t i=0; i<cloud->NumPoints(); ++i ) { 
+	auto it = cloud->GetSupportPoint(i);
+	EXPECT_TRUE(dist<=(x-it->x).dot(x-it->x)+1.0e-10); 
+      }
 
       // evaluate the support point
       const Eigen::VectorXd eval = func->Evaluate(x);
-      const Eigen::VectorXd expected = Eigen::Vector2d(std::sin(M_PI*x(0))*std::cos(2.0*M_PI*x(1)) + std::cos(M_PI*x(1)), x(1)*x(0) + x(0) + 1.0);
+      const Eigen::VectorXd expected = Eigen::Vector2d(std::sin(2.0*M_PI*x(0))*std::cos(M_PI*x(1)) + std::cos(M_PI*x(1)), x(1)*x(0));
       EXPECT_EQ(eval.size(), expected.size());
       EXPECT_NEAR((eval-expected).norm(), 0.0, 10.0*std::sqrt(cost));
-      }*/
+    }
   }
 
   /// The cloud containing all of the support points 

@@ -49,7 +49,8 @@ double LocalFunctions::ComputeIndependentSupportPoints(boost::property_tree::ptr
 
     cost += point->MinimizeUncoupledCost(options);
   }
-  return cost/cloud->NumPoints();
+  cost /= cloud->NumPoints();
+  return cost;
 }
 
 double LocalFunctions::CoefficientCost() const { return cost; }
