@@ -3,7 +3,6 @@
 
 #include <Eigen/Dense>
 
-#include "clf/OptimizationOptions.hpp"
 #include "clf/SupportPointBasis.hpp"
 #include "clf/Point.hpp"
 #include "clf/UncoupledCost.hpp"
@@ -209,9 +208,10 @@ public:
 
   /// Minimize the uncoupled cost function for this support point
   /**
+  @param[in] options Options for the optimization algorithm 
   \return The uncoupled cost at the optimal coefficients value
   */
-  double MinimizeUncoupledCost();
+  double MinimizeUncoupledCost(boost::property_tree::ptree const& options);
 
   /// The support point associated with the \f$j^{th}\f$ nearest neighbor
   /**
@@ -404,13 +404,6 @@ private:
   */
   static std::shared_ptr<const BasisFunctions> CreateBasisFunctions(std::shared_ptr<SupportPoint> const& point, std::size_t const indim, boost::property_tree::ptree pt);
 
-  /// Get the (optional) child ptree for the optimization options
-  /**
-  @param[in] pt The options given to this support point
-  \return If specified, returns the options for minimizing the upcoupled cost. Otherwise, return an empty ptree and use the default options (see clf::OptimizationOptions)
-  */
-  static boost::property_tree::ptree GetOptimizationOptions(boost::property_tree::ptree const& pt);
-
   /// The number of coefficients associated with this support point
   /**
   The total number of coefficients is the sum of the coefficients associated with each basis.
@@ -439,48 +432,15 @@ private:
   */
   void ComputeLeastSquaresInformation();
 
-  /// Minimize the uncoupled cost function for this support point using NLOPT
-  /**
-  \return The uncoupled cost at the optimal coefficients value
-  */
-  double MinimizeUncoupledCostNLOPT();
-
-  /// Minimize the uncoupled cost function for this support point using Newton's method
-  /**
-  \return The uncoupled cost at the optimal coefficients value
-  */
-  double MinimizeUncoupledCostNewton();
-
-  /// Compute the line serach for Newton's method
-  /**
-  @param[in] coefficients The basis function coefficients
-  @param[in] stepDir The step direction
-  @param[in] prevCost The cost at the previous iteration of the optimization
-  \return First: The step size in that direction, Second: the new cost after taking the step
-  */
-  std::pair<double, double> LineSearch(Eigen::VectorXd const& coefficients, Eigen::VectorXd const& stepDir, double const prevCost) const;
-
-  /// Compute the step direction for the opimization
-  /**
-  @param[in] coefficients The basis function coefficients
-  @param[in] grad The gradient of the cost function given these coefficients
-  @param[in] useGN <tt>true</tt>: Use the Gauss-Newton Hessian, <tt>false</tt>: Use the true Hessian
-  \return The step direction
-  */
-  Eigen::VectorXd StepDirection(Eigen::VectorXd const& coefficients, Eigen::VectorXd const& grad, bool const useGN) const;
-
   /// The number of coefficients associated with this support point
   std::size_t numCoefficients;
 
   /// The nearest neighbor kernel at each neighboring support point
   Eigen::VectorXd nearestNeighborKernel;
 
-  /// Optimization for the uncoupled cost minimization
-  const OptimizationOptions optimizationOptions;
-
   /// The bases that defines this support point
   /**
-  Each entry corresponds to one of the outputs. This vector has the same length as the number of outputs.
+  Each entry corresponds to one of the outputs. This vector has the same length as the number of outputs.x2
 
   Evaluating the \f$j^{th}\f$ entry defines the vector \f$\phi_j(y) = [\phi^{(0)}(\hat{x}(y)),\, \phi^{(1)}(\hat{x}(y)),\, ...,\, \phi^{(q_j)}(\hat{x}(y))]^{\top}\f$.
   */

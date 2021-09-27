@@ -20,7 +20,7 @@ class LocalFunctions {
 public:
 
   /**
-  @param[in] cloud The support point cloud that stores all of the support points
+  @param[in] cloud The support point cloud that stores the support points \f$\{x_i\}_{i=1}^{n}\f$ 
   @param[in] options Options for the local function
   */
   LocalFunctions(std::shared_ptr<SupportPointCloud> const& cloud, boost::property_tree::ptree const& pt);
@@ -61,6 +61,13 @@ public:
   */
   std::pair<std::size_t, double> NearestNeighbor(Eigen::VectorXd const& x) const;
 
+  /// Compute the optimal coefficients for each support point
+  /**
+  @param[in] options Options for the optimization algorithm 
+  \return The cost associated with the optimal cupport points
+  */
+  double ComputeOptimalCoefficients(boost::property_tree::ptree const& options);
+
 private:
 
   /// Create the global cost function
@@ -71,29 +78,17 @@ private:
   */
   static std::shared_ptr<GlobalCost> ConstructGlobalCost(std::shared_ptr<SupportPointCloud> const& cloud, boost::property_tree::ptree const& pt);
 
-  /// Get the (optional) child ptree for the optimization options
-  /**
-  @param[in] pt The options given to this support point
-  \return If specified, returns the options for minimizing the upcoupled cost. Otherwise, return an empty ptree and use the default options (see clf::OptimizationOptions)
-  */
-  static boost::property_tree::ptree GetOptimizationOptions(boost::property_tree::ptree const& pt);
-
-  /// Compute the optimal coefficients for each support point
-  /**
-  \return The cost associated with the optimal cupport points
-  */
-  double ComputeOptimalCoefficients();
-
-  /// Compute the optimal coefficients for each support point given that their is no coupling
+  /// Compute the optimal coefficients for each support point given that there is no coupling
   /**
   This function assumes that each support point <em>independently</em> solves the problem
   \f{equation*}{
   p_i = \mbox{arg min}_{p \in \mathbb{R}^{\bar{q}_i}} J(p) = \sum_{j=1}^{k_{nn}} \frac{m_i}{2} \| \mathcal{L}_i(\hat{u}(x_{I(i,j)}, p)) - f_i(x_{I(i,j)}) \|^2 {K_i(x_i, x_{I(i,j)})} + \frac{a_i}{2} \|p\|^2,
   \f}
   where \f$\mathcal{L}_i\f$ and \f$f_i\f$ are the model operator and right hand side associated with support point \f$i\f$, \f$K_i\f$ is a compact kernel function, and \f$a_i \geq 0\f$ is a regulatory parameter.
-  \return The cost associated with the optimal cupport points (average cost of all the support points)
+  @param[in] options Options for the optimization algorithm 
+  \return The average of the costs assocaited with each support point
   */
-  double ComputeIndependentSupportPoints();
+  double ComputeIndependentSupportPoints(boost::property_tree::ptree const& options);
 
   /// Compute the optimal coefficients for each support point given that their is no coupling
   /**
@@ -105,25 +100,6 @@ private:
   \return The cost associated with the optimal cupport points
   */
   double ComputeCoupledSupportPoints();
-
-  /// Compute the step direction for the opimization
-  /**
-  @param[in] coefficients The basis function coefficients
-  @param[in] grad The gradient of the cost function given these coefficients
-  @param[in] lambda Add this scale times the identity to the Hessian matrix
-  @param[in] useGN <tt>true</tt>: Use the Gauss-Newton Hessian, <tt>false</tt>: Use the true Hessian
-  \return The step direction
-  */
-  Eigen::VectorXd StepDirection(Eigen::VectorXd const& coefficients, Eigen::VectorXd const& grad, double const lambda, bool const useGN) const;
-
-  /// Compute the line serach for Newton's method
-  /**
-  @param[in] coefficients The basis function coefficients
-  @param[in] stepDir The step direction
-  @param[in] prevCost The cost at the previous iteration of the optimization
-  \return First: The step size in that direction, Second: the new cost after taking the step
-  */
-  std::pair<double, double> LineSearch(Eigen::VectorXd const& coefficients, Eigen::VectorXd const& stepDir, double const prevCost) const;
 
   /// The support point cloud that stores all of the support points
   std::shared_ptr<SupportPointCloud> cloud;
@@ -139,9 +115,6 @@ private:
   This is the null pointer if the support points are independent
   */
   std::shared_ptr<GlobalCost> globalCost;
-
-  /// Optimization for the uncoupled cost minimization
-  const OptimizationOptions optimizationOptions;
 };
 
 } // namespace clf

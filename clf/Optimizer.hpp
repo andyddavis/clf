@@ -2,8 +2,11 @@
 #define OPTIMIZER_HPP_
 
 #include <boost/property_tree/ptree.hpp>
+#include <boost/function.hpp>
 
+#include "clf/SharedFactory.hpp"
 #include "clf/CostFunction.hpp"
+#include "clf/OptimizerExceptions.hpp"
 
 namespace clf {
 
@@ -66,6 +69,43 @@ public:
   */
   virtual std::pair<Optimization::Convergence, double> Minimize(Eigen::VectorXd& beta) = 0;
 
+  /// The constructor for an optimizer
+  typedef boost::function<std::shared_ptr<Optimizer<MatrixType> >(std::shared_ptr<CostFunction<MatrixType> > const& cost, boost::property_tree::ptree const&)> OptimizerConstructor;
+
+  /// A map from the optimizer type to its constructor 
+  typedef std::unordered_map<std::string, OptimizerConstructor> OptimizerConstructorMap;
+
+  /// Get the map from the optimizer type to its constructor 
+  /**
+  \return A map from the optimizer type to its constructor 
+  */
+  inline static std::shared_ptr<OptimizerConstructorMap> GetOptimizerConstructorMap() {
+    // define a static map 
+    static std::shared_ptr<OptimizerConstructorMap> map;
+    if( !map ) { // if the map has not yet been created ... 
+      // ... create the map 
+      map = std::make_shared<OptimizerConstructorMap>();
+    }
+
+    return map;
+  }
+
+  /// Static constructor for the optimizer 
+  /**
+  @param[in] options Parameters/options for the optimizer
+  \return The newly constructed optimizer 
+  */
+  inline static std::shared_ptr<Optimizer<MatrixType> > Construct(std::shared_ptr<CostFunction<MatrixType> > const& cost, boost::property_tree::ptree const& options) {
+    // get the name of the method 
+    const std::string& name = options.get<std::string>("Method");
+   
+    // construct the optimizer from the map 
+    auto map = GetOptimizerConstructorMap();
+    auto iter = map->find(name);
+    if( iter==map->end() ) { throw exceptions::OptimizerNameException<Optimizer<MatrixType> >(name); }
+    return iter->second(cost, options);
+  }
+
   /// The tolerance for convergence based on the gradient norm
   const double gradTol;
 
@@ -84,5 +124,7 @@ private:
 };
 
 } // namespace clf
+
+#define CLF_REGISTER_OPTIMIZER(NAME, TYPE, MATRIXTYPE) static auto reg ##TYPE = clf::Optimizer<MATRIXTYPE>::GetOptimizerConstructorMap()->insert(std::make_pair(#NAME, clf::SharedFactory<TYPE>()));
 
 #endif

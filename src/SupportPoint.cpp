@@ -15,20 +15,12 @@ using namespace muq::Optimization;
 using namespace clf;
 
 SupportPoint::SupportPoint(Eigen::VectorXd const& x, pt::ptree const& pt) :
-Point(x),
-optimizationOptions(GetOptimizationOptions(pt))
+Point(x)
 {}
 
 SupportPoint::SupportPoint(Eigen::VectorXd const& x, std::shared_ptr<const Model> const& model, pt::ptree const& pt) :
-Point(x, model),
-optimizationOptions(GetOptimizationOptions(pt))
+Point(x, model)
 {}
-
-pt::ptree SupportPoint::GetOptimizationOptions(pt::ptree const& pt) {
-  auto opt = pt.get_child_optional("Optimization");
-  if( !opt ) { return pt::ptree(); }
-  return opt.get();
-}
 
 std::size_t SupportPoint::DetermineNumNeighbors(std::vector<std::shared_ptr<const BasisFunctions> > const& bases, pt::ptree const& pt) {
   std::size_t numNeighs = pt.get<std::size_t>("NumNeighbors", std::numeric_limits<std::size_t>::max());
@@ -267,106 +259,13 @@ std::vector<Eigen::MatrixXd> SupportPoint::OperatorHessian(Eigen::VectorXd const
   return model->OperatorHessian(loc, coefficients, bases);
 }
 
-double SupportPoint::MinimizeUncoupledCostNLOPT() {
-  /*pt::ptree options;
-  options.put("Ftol.AbsoluteTolerance", optimizationOptions.atol_function);
-  options.put("Ftol.RelativeTolerance", optimizationOptions.rtol_function);
-  options.put("Xtol.AbsoluteTolerance", optimizationOptions.atol_step);
-  options.put("Xtol.RelativeTolerance", optimizationOptions.rtol_step);
-  options.put("MaxEvaluations", optimizationOptions.maxEvals);
-  options.put("Algorithm", optimizationOptions.algNLOPT);
-
-  auto opt = std::make_shared<NLoptOptimizer>(uncoupledCost, options);
-
-  double costVal;
-  std::tie(coefficients, costVal) = opt->Solve(std::vector<Eigen::VectorXd>(1, coefficients));
-
-  return costVal;*/
-  return 0.0;
-}
-
-std::pair<double, double> SupportPoint::LineSearch(Eigen::VectorXd const& coefficients, Eigen::VectorXd const& stepDir, double const prevCost) const {
-  double alpha = optimizationOptions.maxStepSizeScale;
-  //double newCost = uncoupledCost->Cost((coefficients-alpha*stepDir).eval());
-  double newCost = 0.0;
-  std::size_t lineSearchIter = 0;
-  while( newCost>prevCost || lineSearchIter++>optimizationOptions.maxLineSearchIterations ) {
-    alpha *= optimizationOptions.lineSearchFactor;
-    //newCost = uncoupledCost->Cost((coefficients-alpha*stepDir).eval());
-  }
-
-  return std::pair<double, double>(alpha, newCost);
-}
-
-Eigen::VectorXd SupportPoint::StepDirection(Eigen::VectorXd const& coefficients, Eigen::VectorXd const& grad,  bool const useGN) const {
-  // compute the Hessian
-  const Eigen::MatrixXd hess(grad.size(), grad.size());
-  //const Eigen::MatrixXd hess = uncoupledCost->Hessian(coefficients, useGN);
-  //assert(hess.rows()==coefficients.size()); assert(hess.cols()==coefficients.size());
-
-  // step direction xk-xkp1 = H^{-1} g
-  Eigen::ColPivHouseholderQR<Eigen::MatrixXd> solver;
-  solver.compute(hess);
-  return solver.solve(grad);
-}
-
-double SupportPoint::MinimizeUncoupledCostNewton() {
-  //const double initCost = uncoupledCost->Cost(coefficients);
-  const double initCost = 1.0;
-  double prevCost = initCost;
-  for( std::size_t iter=0; iter<optimizationOptions.maxEvals; ++iter ) {
-    // compute the cost function gradient
-    //const Eigen::VectorXd grad = uncoupledCost->Gradient(coefficients);
-    const Eigen::VectorXd grad(10);
-
-    // if the gradient is small, break
-    if( grad.norm()<optimizationOptions.atol_grad ) { break; }
-
-    // compute the step direction
-    Eigen::VectorXd stepDir = StepDirection(coefficients, grad, optimizationOptions.useGaussNewtonHessian);
-
-    // do the line search
-    double alpha, newCost;
-    std::tie(alpha, newCost) = LineSearch(coefficients, stepDir, prevCost);
-
-    // if we are not using the Gauss-Newton Hessian and the stepsize is small, try taking a step with the Gauss-Newton Hessian
-    if( !optimizationOptions.useGaussNewtonHessian && alpha<optimizationOptions.atol_step ) {
-      // compute a new step direction
-      stepDir = StepDirection(coefficients, grad, true);
-
-      // do the line search
-      std::tie(alpha, newCost) = LineSearch(coefficients, stepDir, prevCost);
-    }
-
-    // make a step
-    if( alpha<1.0-1.0e-10 ) { stepDir *= alpha; }
-    const double stepsize = stepDir.norm();
-    prevCost = newCost;
-    coefficients -= stepDir;
-
-    // check convergence
-    if(
-      prevCost<optimizationOptions.atol_function |
-      prevCost/std::max(1.0e-10, initCost)<optimizationOptions.rtol_function |
-      stepsize<optimizationOptions.atol_step |
-      stepsize/std::max(1.0e-10, coefficients.norm())<optimizationOptions.rtol_step
-    ) { break; }
-  }
-
-  return prevCost;
-}
-
-double SupportPoint::MinimizeUncoupledCost() {
+double SupportPoint::MinimizeUncoupledCost(pt::ptree const& options) {
   assert(uncoupledCost);
 
-  pt::ptree pt;
-  auto lm = std::make_shared<DenseLevenbergMarquardt>(uncoupledCost, pt);
-
-  if( coefficients.size()!=uncoupledCost->inputDimension ) { coefficients = Eigen::VectorXd::Zero(uncoupledCost->inputDimension); }
-  Eigen::VectorXd cost;
-  lm->Minimize(coefficients, cost);
-
-  return cost.dot(cost);
+  auto opt = Optimizer<Eigen::MatrixXd>::Construct(uncoupledCost, options);
+  const std::pair<Optimization::Convergence, double> info = opt->Minimize(coefficients);
+  assert(info.first>0);
+  return info.second;
 }
 
 std::vector<Eigen::VectorXd> SupportPoint::EvaluateBasisFunctions(Eigen::VectorXd const& loc) const {

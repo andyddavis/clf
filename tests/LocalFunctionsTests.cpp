@@ -3,42 +3,24 @@
 #include "clf/CoupledSupportPoint.hpp"
 #include "clf/LocalFunctions.hpp"
 
+#include "TestModels.hpp"
+
 namespace pt = boost::property_tree;
-using namespace clf;
 
-class ExampleModelForLocalFunctionsTests : public Model {
-public:
-
-  inline ExampleModelForLocalFunctionsTests(pt::ptree const& pt) : Model(pt) {}
-
-  virtual ~ExampleModelForLocalFunctionsTests() = default;
-
-protected:
-
-  inline virtual double RightHandSideComponentImpl(Eigen::VectorXd const& x, std::size_t const outind) const override {
-    if( outind==0 ) {
-      // a sin/cos function
-      return std::sin(M_PI*x(0))*std::cos(2.0*M_PI*x(1)) + std::cos(M_PI*x(1));
-    } else if( outind==1 ) {
-      // a quadratic function
-      return x(1)*x(0) + x(0) + 1.0;
-    } else {
-      return 0.0;
-    }
-  }
-private:
-};
-
+namespace clf { 
+namespace tests {
+/// A class to run the tests for clf::LocalFunctions
 class LocalFunctionsTests : public::testing::Test {
 protected:
-  /// Set up information to test the support point cloud
-  virtual void SetUp() override {}
-
-  template<class MODEL>
+  /// Create the support point cloud given the coupling scale 
+  /**
+  @param[in] couplingScale The coupling scale. If the coupling scale is greater than zero, this problem minimizes clf::GlobalCost. If the coupling scale is zero, this problem minimizes the clf::UncoupledCost for each support point.
+  */
   inline void CreateSupportPointCloud(double const couplingScale = 0.0) {
     pt::ptree modelOptions;
     modelOptions.put("InputDimension", indim);
     modelOptions.put("OutputDimension", outdim);
+    auto model = std::make_shared<TwoDimensionalAlgebraicModel>(modelOptions);
 
     // the order of the total order polynomial and sin/cos bases
     const std::size_t orderPoly = 3, orderSinCos = 2;
@@ -57,14 +39,13 @@ protected:
     suppOptions.put("Basis2.Order", orderPoly);
 
     // create a support point cloud
-    supportPoints.resize(4*npoints*npoints);
+    std::vector<std::shared_ptr<SupportPoint> > supportPoints(4*npoints*npoints);
     // add points on a grid so we know that they are well-poised
     for( std::size_t i=0; i<2*npoints; ++i ) {
       for( std::size_t j=0; j<2*npoints; ++j ) {
         supportPoints[2*npoints*i+j] = SupportPoint::Construct(
           0.1*Eigen::Vector2d((double)i/(2*npoints-1)-0.5, (double)j/(2*npoints-1)-0.5),
-          std::make_shared<MODEL>(modelOptions),
-          suppOptions);
+          model, suppOptions);
       }
     }
 
@@ -75,7 +56,7 @@ protected:
 
   /// Make sure everything is what we expect
   virtual void TearDown() override {
-    // the cost of the optimial coefficients
+    /*// the cost of the optimial coefficients
     const double cost = func->CoefficientCost();
     std::cout << "COMPUTED COST: " << cost << std::endl;
     EXPECT_NEAR(cost, 0.0, 1.0e-8);
@@ -101,27 +82,52 @@ protected:
       const Eigen::VectorXd expected = Eigen::Vector2d(std::sin(M_PI*x(0))*std::cos(2.0*M_PI*x(1)) + std::cos(M_PI*x(1)), x(1)*x(0) + x(0) + 1.0);
       EXPECT_EQ(eval.size(), expected.size());
       EXPECT_NEAR((eval-expected).norm(), 0.0, 10.0*std::sqrt(cost));
-    }
+      }*/
   }
 
-  std::vector<std::shared_ptr<SupportPoint> > supportPoints;
-
+  /// The cloud containing all of the support points 
   std::shared_ptr<SupportPointCloud> cloud;
 
+  /// The local function we are testing
   std::shared_ptr<LocalFunctions> func;
 
-  /// The input and output dimensions
-  const std::size_t indim = 2, outdim = 2;
+  /// The input dimension
+  const std::size_t indim = 2;
+
+  /// The output dimension
+  const std::size_t outdim = 2;
 };
 
-TEST_F(LocalFunctionsTests, UncoupledComputation) {
-  CreateSupportPointCloud<ExampleModelForLocalFunctionsTests>();
+TEST_F(LocalFunctionsTests, UncoupledComputation_LevenbergMarquardt) {
+  CreateSupportPointCloud();
 
   // create the local function
   pt::ptree ptFunc;
   func = std::make_shared<LocalFunctions>(cloud, ptFunc);
+
+  pt::ptree optimizationOptions;
+  optimizationOptions.put("Method", "LevenbergMarquardt");
+  optimizationOptions.put("InitialDamping", 1.0);
+  optimizationOptions.put("FunctionTolerance", 1.0e-4);
+  const double cost = func->ComputeOptimalCoefficients(optimizationOptions);
+  EXPECT_TRUE(cost<1.0e-4);
 }
 
+TEST_F(LocalFunctionsTests, UncoupledComputation_NLopt) {
+  CreateSupportPointCloud();
+
+  // create the local function
+  pt::ptree ptFunc;
+  func = std::make_shared<LocalFunctions>(cloud, ptFunc);
+
+  pt::ptree optimizationOptions;
+  optimizationOptions.put("Method", "NLopt");
+  optimizationOptions.put("FunctionTolerance", 1.0e-4);
+  const double cost = func->ComputeOptimalCoefficients(optimizationOptions);
+  EXPECT_TRUE(cost<1.0e-4);
+}
+
+/*
 TEST_F(LocalFunctionsTests, CoupledComputation) {
   CreateSupportPointCloud<ExampleModelForLocalFunctionsTests>(0.5);
 
@@ -246,3 +252,7 @@ TEST(LocalFunctions_DifferentialOperatorsTests, PoissonEquation) {
     EXPECT_NEAR((eval-expected).norm(), 0.0, 10.0*std::sqrt(cost));
   }
 }
+*/
+
+} // namespace tests
+} // namespace clf

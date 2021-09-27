@@ -23,6 +23,7 @@ Parameter Key | Type | Default Value | Description |
 "MaximumFunctionEvaluations"   | <tt>std::size_t</tt> | <tt>1000</tt> | The maximum number of function evaluations. |
 "MaximumJacobianEvaluations"   | <tt>std::size_t</tt> | <tt>1000</tt> | The maximum number of Jacobian evaluations. |
 "MaximumIterations"   | <tt>std::size_t</tt> | <tt>1000</tt> | The maximum number of iterations. |
+"InitialDampling"   | <tt>double</tt> | <tt>0.0</tt> | The value of the damping parameter at the first iteration. |
 */
 template<typename MatrixType, typename QRSolver>
 class LevenbergMarquardt : public Optimizer<MatrixType> {
@@ -36,7 +37,8 @@ public:
   Optimizer<MatrixType>(cost, pt),
   betaTol(pt.get<double>("ParameterTolerance", 1.0e-10)),
   maxJacEvals(pt.get<std::size_t>("MaximumJacobianEvaluations", 1000)),
-  maxIters(pt.get<std::size_t>("MaximumIterations", 1000))
+  maxIters(pt.get<std::size_t>("MaximumIterations", 1000)),
+  initialDamping(pt.get<double>("InitialDamping", 0.0))
   {}
 
   virtual ~LevenbergMarquardt() = default;
@@ -69,7 +71,7 @@ public:
     double prevCost = costVec.dot(costVec);
 
     std::size_t iter = 0;
-    double damping = 0.0;
+    double damping = initialDamping;
     while( iter<maxIters ) {
       const std::pair<Optimization::Convergence, double> convergenceInfo = Iteration(iter, damping, beta, costVec);
 
@@ -189,6 +191,9 @@ private:
 
   /// The number of Jacobian evaluations
   std::size_t numJacEvals = 0;
+
+  /// The dampling parameter at the first iteration 
+  const double initialDamping;
 };
 
 /// An implementation of the Levenberg Marquardt algorithm using a dense Jacobian matrix

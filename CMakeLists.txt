@@ -80,9 +80,8 @@ set(CLF_SOURCE
     src/ColocationCost.cpp
     src/GlobalCost.cpp
 
-    src/OptimizationOptions.cpp
-
     src/LevenbergMarquardt.cpp
+    src/NLoptOptimizer.cpp
 
     src/PointSampler.cpp
     src/SupportPointSampler.cpp
@@ -151,6 +150,8 @@ if( NOT CLF_BUILD_FROM_PIP )
 
         tests/ModelTests.cpp
 
+	tests/OptimizerTests.cpp
+        tests/LevenbergMarquardtTests.cpp
         tests/NLoptOptimizerTests.cpp
 
         tests/CostFunctionTests.cpp
@@ -158,8 +159,6 @@ if( NOT CLF_BUILD_FROM_PIP )
         tests/CoupledCostTests.cpp
         tests/ColocationCostTests.cpp
         tests/GlobalCostTests.cpp
-
-        tests/LevenbergMarquardtTests.cpp
 
         tests/SupportPointSamplerTests.cpp
         tests/ColocationPointSamplerTests.cpp
