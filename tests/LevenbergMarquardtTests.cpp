@@ -7,8 +7,11 @@
 #include "TestCostFunctions.hpp"
 
 namespace pt = boost::property_tree;
-using namespace clf;
 
+namespace clf { 
+namespace tests { 
+
+/// A class that runs the tests for clf::LevenbergMarquardt
 class LevenbergMarquardtTests : public::testing::Test {
 protected:
   /// Test the optimization
@@ -54,3 +57,6 @@ TEST_F(LevenbergMarquardtTests, Sparse) {
   auto lm = std::make_shared<SparseLevenbergMarquardt>(cost, pt);
   TestOptimizer(lm, cost);
 }
+
+} // namespace tests
+} // namespace clf

@@ -76,6 +76,7 @@ private:
   @param[in] pt Construction options
   \return A nullptr if the support points are independent, otherwise return the global cost function
   */
+
   static std::shared_ptr<GlobalCost> ConstructGlobalCost(std::shared_ptr<SupportPointCloud> const& cloud, boost::property_tree::ptree const& pt);
 
   /// Compute the optimal coefficients for each support point given that there is no coupling

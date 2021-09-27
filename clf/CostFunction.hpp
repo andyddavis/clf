@@ -156,6 +156,7 @@ protected:
 private:
 };
 
+/// A cost function using a dense Jacobian matrix 
 class DenseCostFunction : public CostFunction<Eigen::MatrixXd> {
 public:
   /**
@@ -182,6 +183,7 @@ public:
 private:
 };
 
+/// A cost function using a sparse Jacobian matrix 
 class SparseCostFunction : public CostFunction<Eigen::SparseMatrix<double> > {
 public:
   /**
