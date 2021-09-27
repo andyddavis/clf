@@ -113,6 +113,7 @@ TEST_F(LocalFunctionsTests, UncoupledComputation_LevenbergMarquardt) {
   optimizationOptions.put("Method", "LevenbergMarquardt");
   optimizationOptions.put("InitialDamping", 1.0);
   optimizationOptions.put("FunctionTolerance", 1.0e-4);
+  optimizationOptions.put("NumThreads", 5);
   const double cost = func->ComputeOptimalCoefficients(optimizationOptions);
   EXPECT_TRUE(cost<1.0e-4);
 }
@@ -127,6 +128,7 @@ TEST_F(LocalFunctionsTests, UncoupledComputation_NLopt) {
   pt::ptree optimizationOptions;
   optimizationOptions.put("Method", "NLopt");
   optimizationOptions.put("FunctionTolerance", 1.0e-4);
+  optimizationOptions.put("NumThreads", 5);
   const double cost = func->ComputeOptimalCoefficients(optimizationOptions);
   EXPECT_TRUE(cost<1.0e-4);
 }

@@ -43,6 +43,8 @@ double LocalFunctions::ComputeCoupledSupportPoints() {
 
 double LocalFunctions::ComputeIndependentSupportPoints(boost::property_tree::ptree const& options) {
   cost = 0.0;
+
+  #pragma omp parallel for num_threads(options.get<std::size_t>("NumThreads", 1))
   for( auto it=cloud->Begin(); it!=cloud->End(); ++it ) {
     auto point = std::dynamic_pointer_cast<SupportPoint>(*it);
     assert(point);
