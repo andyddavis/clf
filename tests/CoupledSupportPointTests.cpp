@@ -2,21 +2,13 @@
 
 #include <MUQ/Modeling/Distributions/Gaussian.h>
 
+#include "clf/LinearModel.hpp"
 #include "clf/CoupledSupportPoint.hpp"
 #include "clf/SupportPointCloud.hpp"
 
 namespace pt = boost::property_tree;
 using namespace muq::Modeling;
 using namespace clf;
-
-class ExampleModelForCoupledSupportPointTests : public Model {
-public:
-
-  inline ExampleModelForCoupledSupportPointTests(pt::ptree const& pt) : Model(pt) {}
-
-  virtual ~ExampleModelForCoupledSupportPointTests() = default;
-private:
-};
 
 class CoupledSupportPointTests : public::testing::Test {
 protected:
@@ -25,7 +17,7 @@ protected:
     pt::ptree modelOptions;
     modelOptions.put("InputDimension", indim);
     modelOptions.put("OutputDimension", outdim);
-    model = std::make_shared<ExampleModelForCoupledSupportPointTests>(modelOptions);
+    model = std::make_shared<LinearModel>(modelOptions);
 
     // choose a random location
     x = Eigen::VectorXd::Random(indim);

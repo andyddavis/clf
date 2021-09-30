@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include "clf/LinearModel.hpp"
 #include "clf/SupportPointCloud.hpp"
 #include "clf/CoupledCost.hpp"
 
@@ -16,7 +17,7 @@ public:
     pt::ptree modelOptions;
     modelOptions.put("InputDimension", indim);
     modelOptions.put("OutputDimension", outdim);
-    auto model = std::make_shared<Model>(modelOptions);
+    auto model = std::make_shared<LinearModel>(modelOptions);
 
     // the order of the total order polynomial and sin/cos bases
     const std::size_t orderPoly = 5, orderSinCos = 2;

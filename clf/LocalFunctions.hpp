@@ -63,10 +63,28 @@ public:
 
   /// Compute the optimal coefficients for each support point
   /**
+  In general, the optimal coefficients for each support point minimizes a cost function 
+  \f{equation*}{
+  \mbox{arg min}_{p \in \mathbb{R}^{q}} J(p) = C(p) + \sum_{i=1}^{n} \underbrace{\sum_{j=0}^{k_{nn}} \frac{m}{2} \| \mathcal{L}_{x_i}(\Phi_{x_i} (x_{I(x_i, j)}) p_i) - f(x_{I(x_i,j)}) \|^2 {K_i(x_i, x_{I(x_i, j)})} + \frac{a}{2} \|p_i\|^2}_{\text{Uncoupled cost}},
+  \f}
+  where \f$C(p)\f$ is the coupling cost (see clf::UncoupledCost and clf::CoupledCost). This function finds \f$p\f$ that minimizes the cost function. The forcing function \f$f\f$ is determined by evaluating the clf::Model::RightHandSide associated with each support point.
   @param[in] options Options for the optimization algorithm 
   \return The cost associated with the optimal cupport points
   */
   double ComputeOptimalCoefficients(boost::property_tree::ptree const& options);
+
+  /// Compute the optimal coefficients for each support point
+  /**
+  In general, the optimal coefficients for each support point minimizes a cost function 
+  \f{equation*}{
+  \mbox{arg min}_{p \in \mathbb{R}^{q}} J(p) = C(p) + \sum_{i=1}^{n} \underbrace{\sum_{j=0}^{k_{nn}} \frac{m}{2} \| \mathcal{L}_{x_i}(\Phi_{x_i} (x_{I(x_i, j)}) p_i) - f(x_{I(x_i,j)}) \|^2 {K_i(x_i, x_{I(x_i, j)})} + \frac{a}{2} \|p_i\|^2}_{\text{Uncoupled cost}},
+  \f}
+  where \f$C(p)\f$ is the coupling cost (see clf::UncoupledCost and clf::CoupledCost). This function finds \f$p\f$ that minimizes the cost function. The values of the forcing function \f$f\f$ at each support point is given to the problem, rather than being implemented as part of the clf::Model associated with each support point.
+  @param[in] forcing The \f$i^{th}\f$ column is the forcing function evaluated at the \f$i^{th}\f$ support point \f$f(x_i)\f$
+  @param[in] options Options for the optimization algorithm 
+  \return The cost associated with the optimal cupport points
+  */
+  double ComputeOptimalCoefficients(Eigen::MatrixXd const& forcing, boost::property_tree::ptree const& options);
 
 private:
 
@@ -90,6 +108,19 @@ private:
   \return The average of the costs assocaited with each support point
   */
   double ComputeIndependentSupportPoints(boost::property_tree::ptree const& options);
+
+  /// Compute the optimal coefficients for each support point given that there is no coupling
+  /**
+  This function assumes that each support point <em>independently</em> solves the problem
+  \f{equation*}{
+  p_i = \mbox{arg min}_{p \in \mathbb{R}^{\bar{q}_i}} J(p) = \sum_{j=1}^{k_{nn}} \frac{m_i}{2} \| \mathcal{L}_i(\hat{u}(x_{I(i,j)}, p)) - f_i(x_{I(i,j)}) \|^2 {K_i(x_i, x_{I(i,j)})} + \frac{a_i}{2} \|p\|^2,
+  \f}
+  where \f$\mathcal{L}_i\f$ is the model operator and right hand side associated with support point \f$i\f$, \f$K_i\f$ is a compact kernel function, and \f$a_i \geq 0\f$ is a regulatory parameter. The values of the forcing function \f$f\f$ at each support point is given to the problem, rather than being implemented as part of the clf::Model associated with each support point.
+  @param[in] forcing The \f$i^{th}\f$ column is the forcing function evaluated at the \f$i^{th}\f$ support point \f$f(x_i)\f$
+  @param[in] options Options for the optimization algorithm 
+  \return The average of the costs assocaited with each support point
+  */
+  double ComputeIndependentSupportPoints(Eigen::MatrixXd const& forcing, boost::property_tree::ptree const& options);
 
   /// Compute the optimal coefficients for each support point given that their is no coupling
   /**

@@ -206,12 +206,21 @@ public:
   */
   std::size_t NumCoefficients() const;
 
-  /// Minimize the uncoupled cost function for this support point
+  /// Minimize the uncoupled cost function (see clf::UncoupledCost) for this support point
   /**
+  This minimization requires the clf::Point::model to have implemented the forcing function clf::Model::RightHandSide
   @param[in] options Options for the optimization algorithm 
   \return The uncoupled cost at the optimal coefficients value
   */
   double MinimizeUncoupledCost(boost::property_tree::ptree const& options);
+
+  /// Minimize the uncoupled cost function (see clf::UncoupledCost) for this support point
+  /**
+  @param[in] forcing The \f$i^{th}\f$ column is the forcing function evaluated at the \f$i^{th}\f$ support point \f$f(x_i)\f$
+  @param[in] options Options for the optimization algorithm 
+  \return The uncoupled cost at the optimal coefficients value
+  */
+  double MinimizeUncoupledCost(Eigen::MatrixXd const& forcing, boost::property_tree::ptree const& options);
 
   /// The support point associated with the \f$j^{th}\f$ nearest neighbor
   /**

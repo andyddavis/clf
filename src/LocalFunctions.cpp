@@ -15,8 +15,13 @@ globalCost(ConstructGlobalCost(cloud, pt))
 {}
 
 double LocalFunctions::ComputeOptimalCoefficients(pt::ptree const& options) {
-  if( globalCost ) { return ComputeCoupledSupportPoints(); }
+  if( globalCost ) { assert(false); return ComputeCoupledSupportPoints(); }
   return ComputeIndependentSupportPoints(options);
+}
+
+double LocalFunctions::ComputeOptimalCoefficients(Eigen::MatrixXd const& forcing, pt::ptree const& options) {
+  if( globalCost ) { assert(false); return 0.0; }
+  return ComputeIndependentSupportPoints(forcing, options);
 }
 
 double LocalFunctions::ComputeCoupledSupportPoints() {
@@ -39,6 +44,20 @@ double LocalFunctions::ComputeCoupledSupportPoints() {
 
   return cost;*/
   return 0.0;
+}
+
+double LocalFunctions::ComputeIndependentSupportPoints(Eigen::MatrixXd const& forcing, boost::property_tree::ptree const& options) {
+  cost = 0.0;
+
+  #pragma omp parallel for num_threads(options.get<std::size_t>("NumThreads", 1))
+  for( std::size_t i=0; i<cloud->NumPoints(); ++i ) {
+    auto point = cloud->GetSupportPoint(i);
+    assert(point);
+
+    cost += point->MinimizeUncoupledCost(forcing, options);
+  }
+  cost /= cloud->NumPoints();
+  return cost;
 }
 
 double LocalFunctions::ComputeIndependentSupportPoints(boost::property_tree::ptree const& options) {

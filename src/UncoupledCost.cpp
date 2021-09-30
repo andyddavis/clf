@@ -34,7 +34,7 @@ double UncoupledCost::PenaltyFunctionImpl(std::size_t const ind, Eigen::VectorXd
   std::shared_ptr<SupportPoint> neigh = pnt->NearestNeighbor(ind);
 
   // compute the the residual evaluated at the neighbor's support point 
-  return kernel*(neigh->model->Operator(neigh->x, coefficients, pnt->GetBasisFunctions()) - neigh->model->RightHandSide(neigh->x)).norm();
+  return kernel*(neigh->model->Operator(neigh->x, coefficients, pnt->GetBasisFunctions()) - EvaluateForcingFunction(neigh)).norm();
 }
 
 Eigen::VectorXd UncoupledCost::PenaltyFunctionGradientImpl(std::size_t const ind, Eigen::VectorXd const& coefficients) const { 
@@ -53,7 +53,7 @@ Eigen::VectorXd UncoupledCost::PenaltyFunctionGradientImpl(std::size_t const ind
   std::shared_ptr<SupportPoint> neigh = pnt->NearestNeighbor(ind);
 
   // the residual vector 
-  const Eigen::VectorXd resid = neigh->model->Operator(neigh->x, coefficients, pnt->GetBasisFunctions()) - neigh->model->RightHandSide(neigh->x);
+  const Eigen::VectorXd resid = neigh->model->Operator(neigh->x, coefficients, pnt->GetBasisFunctions()) - EvaluateForcingFunction(neigh);
   const double residNorm = resid.norm();
 
   // if the residual is zero, the gradient is also zero 
@@ -64,4 +64,16 @@ Eigen::VectorXd UncoupledCost::PenaltyFunctionGradientImpl(std::size_t const ind
 
   // compute the gradient vector
   return kernel*neigh->model->OperatorJacobian(neigh->x, coefficients, pnt->GetBasisFunctions()).transpose()*resid/residNorm;
+}
+
+void UncoupledCost::SetForcingEvaluations(Eigen::MatrixXd const& force) { forcing = force; }
+
+void UncoupledCost::UnsetForcingEvaluations() { forcing = boost::none; }
+
+Eigen::VectorXd UncoupledCost::EvaluateForcingFunction(std::shared_ptr<SupportPoint> const& pnt) const {
+  // if we have not set the precomputed forcing 
+  if( forcing==boost::none ) { return pnt->model->RightHandSide(pnt->x); }
+
+  // otherwise use the precomputed value
+  return (*forcing).col(pnt->GlobalIndex());
 }

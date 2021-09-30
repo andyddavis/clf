@@ -2,6 +2,7 @@
 
 #include <MUQ/Modeling/Distributions/Gaussian.h>
 
+#include "clf/LinearModel.hpp"
 #include "clf/ColocationPointSampler.hpp"
 
 namespace pt = boost::property_tree;
@@ -19,7 +20,7 @@ TEST(ColocationPointSamplerTests, Construction) {
   pt::ptree modelOptions;
   modelOptions.put("InputDimension", indim);
   modelOptions.put("OutputDimension", outdim);
-  auto model = std::make_shared<Model>(modelOptions);
+  auto model = std::make_shared<LinearModel>(modelOptions);
 
   auto sampler = std::make_shared<ColocationPointSampler>(dist, model);
   EXPECT_EQ(sampler->InputDimension(), model->inputDimension);

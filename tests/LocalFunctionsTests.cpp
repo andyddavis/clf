@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include "clf/LinearModel.hpp"
 #include "clf/CoupledSupportPoint.hpp"
 #include "clf/LocalFunctions.hpp"
 
@@ -38,9 +39,8 @@ protected:
     suppOptions.put("Basis2.Type", "TotalOrderPolynomials");
     suppOptions.put("Basis2.Order", orderPoly);
 
-    // create a support point cloud
+    // add points on a grid
     std::vector<std::shared_ptr<SupportPoint> > supportPoints(4*npoints*npoints);
-    // add points on a grid so we know that they are well-poised
     for( std::size_t i=0; i<2*npoints; ++i ) {
       for( std::size_t j=0; j<2*npoints; ++j ) {
         supportPoints[2*npoints*i+j] = SupportPoint::Construct(
@@ -131,6 +131,67 @@ TEST_F(LocalFunctionsTests, UncoupledComputation_NLopt) {
   optimizationOptions.put("NumThreads", 5);
   const double cost = func->ComputeOptimalCoefficients(optimizationOptions);
   EXPECT_TRUE(cost<1.0e-4);
+}
+
+TEST(LocalFunctionTests, UncoupledLinearModel) {
+  // each model is a linear model 
+  pt::ptree modelOptions;
+  modelOptions.put("InputDimension", 2);
+  modelOptions.put("OutputDimension", 2);
+  auto model = std::make_shared<LinearModel>(modelOptions);
+
+  // the order of the polynomial basis
+  const std::size_t order = 2;
+
+  // the number of points on a grid 
+  const std::size_t npoints = 5;
+
+  pt::ptree suppOptions;
+  suppOptions.put("NumNeighbors", npoints*npoints);
+  suppOptions.put("BasisFunctions", "Basis1, Basis2");
+  suppOptions.put("Basis1.Type", "TotalOrderPolynomials");
+  suppOptions.put("Basis1.Order", order);
+  suppOptions.put("Basis2.Type", "TotalOrderPolynomials");
+  suppOptions.put("Basis2.Order", order);
+
+  // add points on a grid
+  std::vector<std::shared_ptr<SupportPoint> > supportPoints(4*npoints*npoints);
+  for( std::size_t i=0; i<2*npoints; ++i ) {
+    for( std::size_t j=0; j<2*npoints; ++j ) {
+      supportPoints[2*npoints*i+j] = SupportPoint::Construct(
+							     0.1*Eigen::Vector2d((double)i/(2*npoints-1)-0.5, (double)j/(2*npoints-1)-0.5),
+							     model, suppOptions);
+    }
+  }
+
+  // create the support point cloud
+  pt::ptree ptSupportPointCloud;
+  auto cloud = SupportPointCloud::Construct(supportPoints, ptSupportPointCloud);
+
+  // the forcing function evaluated at each support point 
+  Eigen::MatrixXd forcing(2, supportPoints.size());
+  for( std::size_t i=0; i<supportPoints.size(); ++i ) {
+    forcing(0, i) = 0;
+    forcing(1, i) = 1;
+  }
+
+  // create the local function
+  pt::ptree ptFunc;
+  auto func = std::make_shared<LocalFunctions>(cloud, ptFunc);
+
+  pt::ptree optimizationOptions;
+  optimizationOptions.put("Method", "NLopt");
+  optimizationOptions.put("FunctionTolerance", 1.0e-4);
+  optimizationOptions.put("NumThreads", 1);
+  const double cost = func->ComputeOptimalCoefficients(forcing, optimizationOptions);
+  
+  std::cout << "(need to set this to be a linear optimizer) COST: " << cost << std::endl;
+
+  EXPECT_TRUE(false);
+}
+
+TEST(LocalFunctionTests, CoupledLinearModel) {
+  EXPECT_TRUE(false);
 }
 
 /*

@@ -2,18 +2,10 @@
 
 #include "clf/SupportPointBasis.hpp"
 #include "clf/SupportPoint.hpp"
+#include "clf/LinearModel.hpp"
 
 namespace pt = boost::property_tree;
 using namespace clf;
-
-class ExampleModelForSupportPointBasisTests : public Model {
-public:
-
-  inline ExampleModelForSupportPointBasisTests(pt::ptree const& pt) : Model(pt) {}
-
-  virtual ~ExampleModelForSupportPointBasisTests() = default;
-private:
-};
 
 TEST(SupportPointBasisTests, Construct) {
   // the input and output dimensions
@@ -22,7 +14,7 @@ TEST(SupportPointBasisTests, Construct) {
   pt::ptree modelOptions;
   modelOptions.put("InputDimension", indim);
   modelOptions.put("OutputDimension", outdim);
-  auto model = std::make_shared<ExampleModelForSupportPointBasisTests>(modelOptions);
+  auto model = std::make_shared<LinearModel>(modelOptions);
 
   // choose a random location
   const Eigen::VectorXd x = Eigen::VectorXd::Random(indim);

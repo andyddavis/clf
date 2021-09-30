@@ -2,6 +2,7 @@
 
 #include <MUQ/Modeling/Distributions/Gaussian.h>
 
+#include "clf/LinearModel.hpp"
 #include "clf/SupportPointSampler.hpp"
 #include "clf/PolynomialBasis.hpp"
 
@@ -16,7 +17,7 @@ TEST(SupportPointSamplerTests, SamplePoints) {
   pt::ptree modelOptions;
   modelOptions.put("InputDimension", indim);
   modelOptions.put("OutputDimension", outdim);
-  auto model = std::make_shared<Model>(modelOptions);
+  auto model = std::make_shared<LinearModel>(modelOptions);
 
   // we will sample points from a Gaussian distribution
   auto randVar = std::make_shared<Gaussian>(indim)->AsVariable();

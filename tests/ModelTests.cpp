@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "clf/Model.hpp"
+#include "clf/LinearModel.hpp"
 #include "clf/PolynomialBasis.hpp"
 #include "clf/SinCosBasis.hpp"
 
@@ -17,7 +17,7 @@ TEST(ModelTests, RightHandSideEvaluationNotImplementedException) {
   pt::ptree pt;
   pt.put("InputDimension", indim);
   pt.put("OutputDimension", outdim);
-  auto model = std::make_shared<Model>(pt);
+  auto model = std::make_shared<LinearModel>(pt);
 
   // check in the input/output sizes
   EXPECT_EQ(model->inputDimension, indim);
@@ -55,7 +55,7 @@ TEST(ModelTests, OperatorEvaluationDefaultImplementation) {
   pt::ptree pt;
   pt.put("InputDimension", indim);
   pt.put("OutputDimension", outdim);
-  auto model = std::make_shared<Model>(pt);
+  auto model = std::make_shared<LinearModel>(pt);
 
   // check in the input/output sizes
   EXPECT_EQ(model->inputDimension, indim);
@@ -78,18 +78,15 @@ TEST(ModelTests, OperatorEvaluationDefaultImplementation) {
   EXPECT_EQ(modelJacFD.rows(), outdim);
   EXPECT_EQ(modelJacFD.cols(), coefficients.size());
   EXPECT_NEAR((modelJacFD.row(0).head(bases[0]->NumBasisFunctions())-bases[0]->EvaluateBasisFunctions(x).transpose()).norm(), 0.0, 1.0e-6);
-  EXPECT_NEAR((modelJacFD.row(0).tail(bases[1]->NumBasisFunctions())-Eigen::RowVectorXd::Zero(bases[1]->NumBasisFunctions())).norm(), 0.0, 1.0e-12);
+  EXPECT_NEAR(modelJacFD.row(0).tail(bases[1]->NumBasisFunctions()).norm(), 0.0, 1.0e-12);
   EXPECT_NEAR((modelJacFD.row(1).tail(bases[1]->NumBasisFunctions())-bases[1]->EvaluateBasisFunctions(x).transpose()).norm(), 0.0, 1.0e-6);
-  EXPECT_NEAR((modelJacFD.row(1).head(bases[0]->NumBasisFunctions())-Eigen::RowVectorXd::Zero(bases[0]->NumBasisFunctions())).norm(), 0.0, 1.0e-12);
+  EXPECT_NEAR(modelJacFD.row(1).head(bases[0]->NumBasisFunctions()).norm(), 0.0, 1.0e-12);
 
   // evaluate the true jacobian using the default implementation
   const Eigen::MatrixXd modelJac = model->OperatorJacobian(x, coefficients, bases);
-  EXPECT_EQ(modelJac.rows(), outdim);
-  EXPECT_EQ(modelJac.cols(), coefficients.size());
-  EXPECT_NEAR((modelJac.row(0).head(bases[0]->NumBasisFunctions())-bases[0]->EvaluateBasisFunctions(x).transpose()).norm(), 0.0, 1.0e-12);
-  EXPECT_NEAR((modelJac.row(0).tail(bases[1]->NumBasisFunctions())-Eigen::RowVectorXd::Zero(bases[1]->NumBasisFunctions())).norm(), 0.0, 1.0e-12);
-  EXPECT_NEAR((modelJac.row(1).tail(bases[1]->NumBasisFunctions())-bases[1]->EvaluateBasisFunctions(x).transpose()).norm(), 0.0, 1.0e-12);
-  EXPECT_NEAR((modelJac.row(1).head(bases[0]->NumBasisFunctions())-Eigen::RowVectorXd::Zero(bases[0]->NumBasisFunctions())).norm(), 0.0, 1.0e-12);
+  EXPECT_EQ(modelJac.rows(), modelJacFD.rows());
+  EXPECT_EQ(modelJac.cols(), modelJacFD.cols());
+  EXPECT_NEAR((modelJac-modelJacFD).norm(), 0.0, 1.0e-8);
 
   // evaluate the true hessian using the default implementation
   const std::vector<Eigen::MatrixXd> modelHessFD = model->OperatorHessianByFD(x, coefficients, bases);
@@ -99,11 +96,11 @@ TEST(ModelTests, OperatorEvaluationDefaultImplementation) {
   for( std::size_t i=0; i<outdim; ++i ) {
     EXPECT_EQ(modelHess[i].rows(), coefficients.size());
     EXPECT_EQ(modelHess[i].cols(), coefficients.size());
-    EXPECT_DOUBLE_EQ(modelHess[i].norm(), 0.0);
+    EXPECT_NEAR(modelHess[i].norm(), 0.0, 1.0e-2);
 
     EXPECT_EQ(modelHessFD[i].rows(), coefficients.size());
     EXPECT_EQ(modelHessFD[i].cols(), coefficients.size());
-    EXPECT_DOUBLE_EQ(modelHessFD[i].norm(), 0.0);
+    EXPECT_NEAR(modelHessFD[i].norm(), 0.0, 1.0e-2);
   }
 }
 

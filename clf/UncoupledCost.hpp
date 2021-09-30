@@ -2,6 +2,7 @@
 #define UNCOUPLEDCOST_HPP_
 
 #include <boost/property_tree/ptree.hpp>
+#include <boost/optional.hpp>
 
 #include "clf/CostFunction.hpp"
 
@@ -14,7 +15,7 @@ class SupportPoint;
 /**
    Let \f$\Phi_{\hat{x}}(x)\f$ be the \f$m \times \tilde{q}\f$ matrix that defines the local function \f$\ell_{\hat{x}}(x) = \Phi_{\hat{x}}(x) p\f$ for \f$p \in \mathbb{R}^{\tilde{q}}\f$ (see clf::SupportPoint). The uncoupled cost function associated with the support point is
 \f{equation*}{
-p_{\hat{x}} = \mbox{arg min}_{p \in \mathbb{R}^{\tilde{q}}} J(p) = \sum_{j=0}^{k_{nn}} \frac{m}{2} \| \mathcal{L}_{\hat{x}}(\Phi_{\hat{x}} (x_{I(\hat{x},j)}) p) - f(x_{I(\hat{x},j)}) \|^2 {K_i(x_i, x_{I(\hat{x},j)})} + \frac{a}{2} \|p\|^2,
+p_{\hat{x}} = \mbox{arg min}_{p \in \mathbb{R}^{\tilde{q}}} J(p) = \sum_{j=0}^{k_{nn}} \frac{m}{2} \| \mathcal{L}_{\hat{x}}(\Phi_{\hat{x}} (x_{I(\hat{x},j)}) p) - f(x_{I(\hat{x},j)}) \|^2 {K_{\hat{x}}(\hat{x}, x_{I(\hat{x},j)})} + \frac{a}{2} \|p\|^2,
 \f}
 where \f$I(\hat{x}, j)\f$ is the \f$j^{th}\f$ closest point to the support point \f$\hat{x}\f$.
 
@@ -47,6 +48,24 @@ public:
   \return The parameter that scales the regularizing term
   */
   double RegularizationScale() const;
+
+  /// Evaluate the forcing function \f$f\f$ at the \f$i^{th}\f$ support point \f$x_i\f$
+  /**
+  @param[in] pnt We need the forcing function \f$f\f$ evaluated at this support point 
+  */
+  Eigen::VectorXd EvaluateForcingFunction(std::shared_ptr<SupportPoint> const& pnt) const;  
+
+  /// Set clf::UncoupledCost::forcing so that we use precoupled values the forcing function \f$f(x_i)\f$ at each support point \f$x_i\f$.
+  /**
+  @param[in] force The \f$i^{th}\f$ column is the forcing function evaluated at the \f$i^{th}\f$ support point \f$f(x_i)\f$
+  */
+  void SetForcingEvaluations(Eigen::MatrixXd const& force);
+
+  /// Set clf::UncoupledCost::forcing equal to <tt>boost::none</tt>
+  /**
+  This means that those evaluation for the forcing function are no longer used to compute the uncoupled cost.
+  */
+  void UnsetForcingEvaluations();
 
   /// The point \f$\hat{x}\f$ that is associated with this cost
   std::weak_ptr<const SupportPoint> point;
@@ -104,6 +123,12 @@ private:
   We actually store the square root of the uncoupled scale to save a little bit of computation.
   */
   double regularizationScale;
+
+  /// The \f$i^{th}\f$ column is the forcing function evaluated at the \f$i^{th}\f$ support point \f$f(x_i)\f$
+  /**
+  If this optional parameter is set, use these values for the forcing function \f$f(x_i)\f$ evaluated at each support point. Otherwise, use the implementation in clf::Model::RightHandSide.
+  */
+  boost::optional<Eigen::MatrixXd const&> forcing;
 };
 
 } // namespace clf

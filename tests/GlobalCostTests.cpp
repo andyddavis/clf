@@ -1,15 +1,16 @@
 #include <gtest/gtest.h>
 
+#include "clf/LinearModel.hpp"
 #include "clf/CoupledSupportPoint.hpp"
 #include "clf/GlobalCost.hpp"
 
 namespace pt = boost::property_tree;
 using namespace clf;
 
-class ExampleModelForGlobalCostTests : public Model {
+class ExampleModelForGlobalCostTests : public LinearModel {
 public:
 
-  inline ExampleModelForGlobalCostTests(pt::ptree const& pt) : Model(pt) {}
+  inline ExampleModelForGlobalCostTests(pt::ptree const& pt) : LinearModel(pt) {}
 
   virtual ~ExampleModelForGlobalCostTests() = default;
 

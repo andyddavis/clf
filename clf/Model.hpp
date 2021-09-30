@@ -18,7 +18,9 @@ Each support point is associated with a model
 \f{equation*}{
 \mathcal{L}(u) = f,
 \f}
-where \f$u:\Omega \mapsto \mathbb{R}^{m}\f$ (and \f$\Omega \subseteq \mathbb{R}^{d}\f$) is the function that we are trying to represent with local functions. This class allows the user to implement \f$\mathcal{L}\f$ and/or \f$f\f$. By default, we assume \f$\mathcal{L}\f$ is the identity but the user <em>must</em> implement \f$f\f$.
+where \f$u:\Omega \mapsto \mathbb{R}^{m}\f$ (and \f$\Omega \subseteq \mathbb{R}^{d}\f$) is the function that we are trying to represent with local functions such that \f$u(x) \approx \Phi_{\hat{x}}(x) p\f$ near \f$\hat{x}\f$. The matrix \f$\Phi_{\hat{x}}(x)\f$ is the matrix of basis functions associated with the clf::SupportPoint at \f$\hat{x}\f$. 
+
+This class allows the user to implement \f$\mathcal{L}\f$ and/or \f$f\f$. 
 
 <B>Configuration Parameters:</B>
 Parameter Key | Type | Default Value | Description |
@@ -115,7 +117,7 @@ public:
   @param[in] numCoeffs The total number of basis functions, defaults to zero which means we need to compute this value by summing over the given basis functions
   \return The Jacobian of the identity operator
   */
-  Eigen::MatrixXd IdentityOperatorJacboian(Eigen::VectorXd const& x, std::vector<std::shared_ptr<const BasisFunctions> > const& bases, std::size_t numCoeffs = 0) const;
+  Eigen::MatrixXd IdentityOperatorJacobian(Eigen::VectorXd const& x, std::vector<std::shared_ptr<const BasisFunctions> > const& bases, std::size_t numCoeffs = 0) const;
 
   /// Compute the Hessian of the operator with respect to the basis coefficients
   /**
@@ -176,7 +178,7 @@ protected:
   @param[in] bases The basis functions for each output
   \return The evaluation of \f$\mathcal{L}(u)\f$
   */
-  virtual Eigen::VectorXd OperatorImpl(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases) const;
+  virtual Eigen::VectorXd OperatorImpl(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases) const = 0;
 
   /// Implement the Jacobian of action of the operator \f$\mathcal{L}(u)\f$
   /**

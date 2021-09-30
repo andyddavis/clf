@@ -62,9 +62,9 @@ public:
 
   virtual ~Optimizer() = default;
 
-  /// Minimize the cost function using the Levenberg Marquardt algorithm
+  /// Minimize the cost function 
   /**
-  @param[in,out] beta In: The initial guess for the Levenberg Marquardt algorithm; Out: The paramter values that minimize the cost function
+  @param[in,out] beta In: The initial guess for the optimization algorithm; Out: The paramter values that minimize the cost function
   \return First: Information about convergence or failure, Second: The current cost
   */
   virtual std::pair<Optimization::Convergence, double> Minimize(Eigen::VectorXd& beta) = 0;
@@ -105,6 +105,15 @@ public:
     if( iter==map->end() ) { throw exceptions::OptimizerNameException<Optimizer<MatrixType> >(name); }
     return iter->second(cost, options);
   }
+
+  /// Solve a linear system \f$A x = b\f$
+  /**
+  Must be specialized for each <tt>MatrixType</tt>.
+  @param[in] mat The matrix \f$A\f$ 
+  @param[in] rhs The right hand side \f$b\f$
+  \return The solution \f$x\f$
+  */
+  Eigen::VectorXd SolveLinearSystem(MatrixType const& mat, Eigen::VectorXd const& rhs) const;
 
   /// The tolerance for convergence based on the gradient norm
   const double gradTol;

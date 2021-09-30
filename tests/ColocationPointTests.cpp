@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include "clf/LinearModel.hpp"
 #include "clf/ColocationPoint.hpp"
 
 namespace pt = boost::property_tree;
@@ -13,7 +14,7 @@ TEST(ColocationPointTests, Construction) {
   pt::ptree pt;
   pt.put("InputDimension", indim);
   pt.put("OutputDimension", outdim);
-  auto model = std::make_shared<Model>(pt);
+  auto model = std::make_shared<LinearModel>(pt);
 
   const Eigen::VectorXd loc = Eigen::VectorXd::Random(indim);
 

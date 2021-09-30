@@ -72,6 +72,7 @@ set(CLF_SOURCE
 
     src/ModelExceptions.cpp
     src/Model.cpp
+    src/LinearModel.cpp
 
     src/DOFIndices.cpp
 
@@ -80,6 +81,7 @@ set(CLF_SOURCE
     src/ColocationCost.cpp
     src/GlobalCost.cpp
 
+    src/Optimizer.cpp
     src/LevenbergMarquardt.cpp
     src/NLoptOptimizer.cpp
 
@@ -154,6 +156,7 @@ if( NOT CLF_BUILD_FROM_PIP )
 	tests/OptimizerTests.cpp
         tests/LevenbergMarquardtTests.cpp
         tests/NLoptOptimizerTests.cpp
+        tests/MinimizeQuadraticCostTests.cpp
 
         tests/CostFunctionTests.cpp
         tests/UncoupledCostTests.cpp

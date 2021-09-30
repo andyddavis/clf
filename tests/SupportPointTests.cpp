@@ -3,19 +3,11 @@
 #include "clf/UtilityFunctions.hpp"
 #include "clf/PolynomialBasis.hpp"
 #include "clf/SinCosBasis.hpp"
+#include "clf/LinearModel.hpp"
 #include "clf/SupportPoint.hpp"
 
 namespace pt = boost::property_tree;
 using namespace clf;
-
-class ExampleModelForSupportPointTests : public Model {
-public:
-
-  inline ExampleModelForSupportPointTests(pt::ptree const& pt) : Model(pt) {}
-
-  virtual ~ExampleModelForSupportPointTests() = default;
-private:
-};
 
 class SupportPointTests : public::testing::Test {
 protected:
@@ -24,7 +16,7 @@ protected:
     pt::ptree modelOptions;
     modelOptions.put("InputDimension", indim);
     modelOptions.put("OutputDimension", outdim);
-    model = std::make_shared<ExampleModelForSupportPointTests>(modelOptions);
+    model = std::make_shared<LinearModel>(modelOptions);
 
     // choose a random location
     x = Eigen::VectorXd::Random(indim);
@@ -178,7 +170,7 @@ TEST(SupportPointExceptionHandlingTests, WrongNumberOfNearestNeighbors) {
   pt::ptree modelOptions;
   modelOptions.put("InputDimension", indim);
   modelOptions.put("OutputDimension", outdim);
-  auto model = std::make_shared<ExampleModelForSupportPointTests>(modelOptions);
+  auto model = std::make_shared<LinearModel>(modelOptions);
 
   // options for the support point
   pt::ptree pt;
@@ -207,7 +199,7 @@ TEST(SupportPointExceptionHandlingTests, WrongNumberOfBases) {
   pt::ptree modelOptions;
   modelOptions.put("InputDimension", indim);
   modelOptions.put("OutputDimension", outdim);
-  auto model = std::make_shared<ExampleModelForSupportPointTests>(modelOptions);
+  auto model = std::make_shared<LinearModel>(modelOptions);
 
   // options for the support point
   pt::ptree pt;
@@ -261,7 +253,7 @@ TEST(SupportPointExceptionHandlingTests, InvalidBasisCheck) {
   pt::ptree modelOptions;
   modelOptions.put("InputDimension", 1);
   modelOptions.put("OutputDimension", 1);
-  auto model = std::make_shared<ExampleModelForSupportPointTests>(modelOptions);
+  auto model = std::make_shared<LinearModel>(modelOptions);
 
   // choose a random location
   const Eigen::VectorXd x = Eigen::VectorXd::Random(9);

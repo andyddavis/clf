@@ -3,6 +3,7 @@
 #include <MUQ/Modeling/Distributions/RandomVariable.h>
 #include <MUQ/Modeling/Distributions/Gaussian.h>
 
+#include "clf/LinearModel.hpp"
 #include "clf/ColocationPointCloud.hpp"
 
 namespace pt = boost::property_tree;
@@ -16,7 +17,7 @@ protected:
     pt::ptree modelOptions;
     modelOptions.put("InputDimension", indim);
     modelOptions.put("OutputDimension", outdim);
-    model = std::make_shared<Model>(modelOptions);
+    model = std::make_shared<LinearModel>(modelOptions);
 
     pt::ptree ptSupportPoints;
     ptSupportPoints.put("BasisFunctions", "Basis1, Basis2, Basis3, Basis4");

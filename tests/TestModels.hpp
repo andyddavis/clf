@@ -231,6 +231,16 @@ protected:
   @param[in] bases The basis functions for each output
   \return The evaluation of \f$\mathcal{L}(u)\f$
   */
+  inline virtual Eigen::VectorXd OperatorImpl(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases) const override {
+    return IdentityOperator(x, coefficients, bases);
+  }
+
+  /**
+  @param[in] x The point \f$x \in \Omega \f$
+  @param[in] coefficients The coefficients for each basis---this vector is devided into segments that correspond to coefficients of the bases. The length is the sum of the dimension of each basis.
+  @param[in] bases The basis functions for each output
+  \return The evaluation of the Hessian of \f$\mathcal{L}(u)\f$
+  */
   inline virtual std::vector<Eigen::MatrixXd> OperatorHessianImpl(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases) const override {
     std::vector<Eigen::MatrixXd> hess(outputDimension, Eigen::MatrixXd(coefficients.size(), coefficients.size()));
     hess[0] = Eigen::MatrixXd(coefficients.size()+1, coefficients.size()+1);

@@ -155,7 +155,10 @@ public:
     OPERATOR_JACOBIAN,
 
     /// The Hessian of the operator with respect to the coefficients is wrong
-    OPERATOR_HESSIAN
+    OPERATOR_HESSIAN,
+
+    /// The matrix that defines a linear model 
+    LINEAR_MODEL_MATRIX
   };
 
 

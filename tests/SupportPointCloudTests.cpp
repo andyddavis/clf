@@ -3,6 +3,7 @@
 #include <MUQ/Modeling/Distributions/RandomVariable.h>
 #include <MUQ/Modeling/Distributions/Gaussian.h>
 
+#include "clf/LinearModel.hpp"
 #include "clf/SupportPointCloud.hpp"
 
 namespace pt = boost::property_tree;
@@ -20,7 +21,7 @@ protected:
     pt::ptree modelOptions;
     modelOptions.put("InputDimension", indim);
     modelOptions.put("OutputDimension", outdim);
-    model = std::make_shared<Model>(modelOptions);
+    model = std::make_shared<LinearModel>(modelOptions);
 
     ptSupportPoints.put("BasisFunctions", "Basis1, Basis2, Basis3, Basis4");
     ptSupportPoints.put("Basis1.Type", "TotalOrderPolynomials");
@@ -156,9 +157,9 @@ TEST(SupportPointCloudErrorTests, InputDimensionCheck) {
   pt::ptree modelOptions;
   modelOptions.put("InputDimension", 3);
   modelOptions.put("OutputDimension", 1);
-  auto model1 = std::make_shared<Model>(modelOptions);
+  auto model1 = std::make_shared<LinearModel>(modelOptions);
   modelOptions.put("InputDimension", 5);
-  auto model2 = std::make_shared<Model>(modelOptions);
+  auto model2 = std::make_shared<LinearModel>(modelOptions);
 
   std::vector<std::shared_ptr<SupportPoint> > supportPoints(2);
 
@@ -184,9 +185,9 @@ TEST(SupportPointCloudErrorTests, OutputDimensionCheck) {
   pt::ptree modelOptions;
   modelOptions.put("InputDimension", 5);
   modelOptions.put("OutputDimension", 2);
-  auto model1 = std::make_shared<Model>(modelOptions);
+  auto model1 = std::make_shared<LinearModel>(modelOptions);
   modelOptions.put("OutputDimension", 8);
-  auto model2 = std::make_shared<Model>(modelOptions);
+  auto model2 = std::make_shared<LinearModel>(modelOptions);
 
   std::vector<std::shared_ptr<SupportPoint> > supportPoints(2);
 
@@ -221,7 +222,7 @@ TEST(SupportPointCloudErrorTests, OutputDimensionCheck) {
 TEST(SupportPointCloudErrorTests, NotEnoughPoints) {
   pt::ptree modelOptions;
   modelOptions.put("InputDimension", 3);
-  auto model = std::make_shared<Model>(modelOptions);
+  auto model = std::make_shared<LinearModel>(modelOptions);
 
   std::vector<std::shared_ptr<SupportPoint> > supportPoints(2);
 
@@ -246,7 +247,7 @@ TEST(SupportPointCloudErrorTests, NotEnoughPoints) {
 TEST(SupportPointCloudErrorTests, NotConnected) {
   pt::ptree modelOptions;
   modelOptions.put("InputDimension", 3);
-  auto model = std::make_shared<Model>(modelOptions);
+  auto model = std::make_shared<LinearModel>(modelOptions);
 
   std::vector<std::shared_ptr<SupportPoint> > supportPoints(4);
 
