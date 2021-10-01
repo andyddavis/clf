@@ -44,6 +44,7 @@ Parameter Key | Type | Default Value | Description |
 "GradientTolerance"   | <tt>double</tt> | <tt>1.0e-10</tt> | The tolerance for the gradient norm. |
 "FunctionTolerance"   | <tt>double</tt> | <tt>1.0e-10</tt> | The tolerance for the cost function. |
 "MaximumFunctionEvaluations"   | <tt>std::size_t</tt> | <tt>1000</tt> | The maximum number of function evaluations. |
+"LinearSolver"   | <tt>std::string</tt> | <tt>"LU"</tt> | The linear solver used by clf::SolveLinearSystem; either <tt>"LU"</tt> (requires a full rank matrix) or <tt>"QR"</tt>. The solver will default to \f$LU\f$ for any invalid input string. |
 */
 template<typename MatrixType>
 class Optimizer {
@@ -57,7 +58,8 @@ public:
   cost(cost),
   gradTol(pt.get<double>("GradientTolerance", 1.0e-10)),
   funcTol(pt.get<double>("FunctionTolerance", 1.0e-10)),
-  maxEvals(pt.get<std::size_t>("MaximumFunctionEvaluations", 1000))
+  maxEvals(pt.get<std::size_t>("MaximumFunctionEvaluations", 1000)), 
+  linSolver((pt.get<std::string>("LinearSolver", "LU")=="QR"? Optimizer::QR : Optimizer::LU))
   {}
 
   virtual ~Optimizer() = default;
@@ -126,10 +128,41 @@ public:
 
 protected:
 
+  /// Solve a linear system \f$A x = b\f$ using a \f$QR\f$ decomposition
+  /**
+  If \f$A\f$ is not full rank, return the least-squares solution.
+  @param[in] solver The \f$QR\f$ decomposition of \f$A\f$
+  @param[in] rhs The right hand side \f$b\f$
+  \return The solution \f$x\f$
+  */
+  template<typename QRSolver>
+  inline Eigen::VectorXd SolveLinearSystemQR(QRSolver const& solver, Eigen::VectorXd const& rhs) const {
+    const Eigen::Index rank = solver.rank();
+    
+    Eigen::VectorXd soln(solver.cols());
+    soln.tail(soln.size()-rank).setZero();
+    soln.head(rank) = solver.matrixR().topLeftCorner(rank, rank).template triangularView<Eigen::Upper>().solve((solver.matrixQ().adjoint()*rhs).head(rank));
+    soln = solver.colsPermutation()*soln;
+    
+    return soln;
+  }
+
   /// The cost function that we need to minimize
   std::shared_ptr<CostFunction<MatrixType> > cost;
 
 private:
+
+  /// Which solver should we use to solve a linear system?
+  enum LinearSolver {
+    /// Use a QR solver 
+    QR, 
+
+    /// Use an LU solver
+    LU
+  };
+
+  /// The linear solver used for this optimizer 
+  const LinearSolver linSolver;
 };
 
 } // namespace clf

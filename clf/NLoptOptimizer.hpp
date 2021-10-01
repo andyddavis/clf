@@ -57,7 +57,7 @@ public:
     // if the cost function is not small enough, but the gradient is small we still have converged
     const Eigen::VectorXd grad = this->cost->Gradient(0, beta, Eigen::VectorXd::Ones(1).eval());
 
-    if( grad.maxCoeff()<this->gradTol ) { return std::pair<Optimization::Convergence, double>(Optimization::Convergence::CONVERGED_GRADIENT_SMALL, costVal); }
+    if( grad.array().abs().maxCoeff()<this->gradTol ) { return std::pair<Optimization::Convergence, double>(Optimization::Convergence::CONVERGED_GRADIENT_SMALL, costVal); }
 
     if( std::isnan(costVal) | std::isinf(costVal) ) { std::pair<Optimization::Convergence, double>(Optimization::Convergence::FAILED, costVal); }
 

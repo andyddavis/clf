@@ -110,7 +110,7 @@ TEST_F(NLoptOptimizerTests, Dense_COBYLA) {
 
   options.put("Algorithm", "COBYLA");
   auto nlopt = std::make_shared<DenseNLoptOptimizer>(cost, options);
-  TestOptimizer(nlopt, cost);
+  TestOptimizer(nlopt, cost, 1.0e-6);
 }
 
 TEST_F(NLoptOptimizerTests, Dense_LMVM) {
@@ -134,7 +134,7 @@ TEST_F(NLoptOptimizerTests, Sparse_BOBYQA) {
 
   options.put("Algorithm", "BOBYQA");
   auto nlopt = std::make_shared<SparseNLoptOptimizer>(cost, options);
-  TestOptimizer(nlopt, cost);
+  TestOptimizer(nlopt, cost, 1.0e-6);
 }
 
 TEST_F(NLoptOptimizerTests, Sparse_NEWUOA) {

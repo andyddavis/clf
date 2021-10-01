@@ -148,16 +148,8 @@ private:
     jac = jac.transpose()*jac;
     if( damping>1.0e-14 ) { AddScaledIdentity(damping, jac); }
 
-    // compute the QR factorization of J^T J
-    QRSolver qrfac(jac);
-    assert(qrfac.info()==Eigen::Success);
-
-    // solve for the step direction
-    Eigen::VectorXd stepDir(this->cost->inputDimension);
-    const Eigen::Index rank = qrfac.rank();
-    stepDir.tail(this->cost->inputDimension-rank).setZero();
-    stepDir.head(rank) = qrfac.matrixR().topLeftCorner(rank, rank).template triangularView<Eigen::Upper>().solve((qrfac.matrixQ().adjoint()*JTcost).head(rank));
-    stepDir = qrfac.colsPermutation()*stepDir;
+    // solve the linear system to compute the step direction
+    const Eigen::VectorXd stepDir = this->SolveLinearSystem(jac, JTcost);
 
     // take a step
     beta -= stepDir;
