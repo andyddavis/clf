@@ -37,6 +37,13 @@ public:
   */
   std::vector<std::shared_ptr<CoupledCost> > GetCoupledCost(std::size_t const i) const;
 
+  /// Is this a quadratic cost function?
+  /**
+  The global cost is quadratic if all of the clf::UncoupledCost functions are quadratic
+  \return <tt>true</tt>: The cost function is quadratic, <tt>false</tt>: The cost function is not quadratic
+  */
+  virtual bool IsQuadratic() const override;
+
 protected:
 
   /// Evaluate the \f$i^{th}\f$ penalty function \f$f_i(\beta)\f$

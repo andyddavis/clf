@@ -31,6 +31,13 @@ public:
   */
   Eigen::VectorXd ComputeCost(Eigen::MatrixXd const& data) const;
 
+  /// Is this a quadratic cost function?
+  /**
+  This colocation cost is quadratic if all of the models are linear
+  \return <tt>true</tt>: The cost function is quadratic, <tt>false</tt>: The cost function is not quadratic
+  */
+  virtual bool IsQuadratic() const override;
+
 private:
 
   /// Evaluate the \f$i^{th}\f$ penalty function \f$f_i(\beta)\f$

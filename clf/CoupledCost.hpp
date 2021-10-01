@@ -88,6 +88,13 @@ public:
   */
   Eigen::VectorXd PenaltyFunctionGradient(Eigen::VectorXd const& coeffPoint, Eigen::VectorXd const& coeffNeigh) const;
 
+  /// Is this a quadratic cost function?
+  /**
+  The coupling cost is always quadratic.
+  \return <tt>true</tt>: The cost function is quadratic
+  */
+  virtual bool IsQuadratic() const override;
+
 protected:
 
   /// Evaluate the penalty function given the coefficients \f$\beta = [p, s]^{\top} \in \mathbb{R}^{\tilde{q}_{\hat{x}}+\tilde{q}_i}\f$

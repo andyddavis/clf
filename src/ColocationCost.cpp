@@ -89,3 +89,8 @@ void ColocationCost::JacobianImpl(Eigen::VectorXd const& data, Eigen::SparseMatr
 
   jac.setFromTriplets(triplets.begin(), triplets.end());
 }
+
+bool ColocationCost::IsQuadratic() const {
+  assert(false);
+  return false;
+}

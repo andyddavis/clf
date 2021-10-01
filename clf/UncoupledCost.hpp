@@ -67,6 +67,13 @@ public:
   */
   void UnsetForcingEvaluations();
 
+  /// Is this a quadratic cost function?
+  /**
+  The uncoupled cost is quadratic if all of the functions are linear
+  \return <tt>true</tt>: The cost function is quadratic, <tt>false</tt>: The cost function is not quadratic
+  */
+  virtual bool IsQuadratic() const override;
+
   /// The point \f$\hat{x}\f$ that is associated with this cost
   std::weak_ptr<const SupportPoint> point;
 
@@ -105,7 +112,6 @@ protected:
   \return The gradient of the \f$i^{th}\f$ penalty function
   */
   virtual Eigen::VectorXd PenaltyFunctionGradientImpl(std::size_t const ind, Eigen::VectorXd const& beta) const override;
-
 private:
 
   /// The parameter that scales the uncoupled cost

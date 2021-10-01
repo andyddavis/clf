@@ -103,6 +103,13 @@ public:
   */
   virtual void Jacobian(Eigen::VectorXd const& beta, MatrixType& jac) const = 0;
 
+  /// Is this a quadratic cost function?
+  /**
+  Defaults to <tt>false</tt>, but can be overriden by children. 
+  \return <tt>true</tt>: The cost function is quadratic, <tt>false</tt>: The cost function is not quadratic
+  */
+  virtual bool IsQuadratic() const = 0;
+
   /// The dimension of the input parameter \f$n\f$
   const std::size_t inputDimension;
 

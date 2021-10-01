@@ -23,6 +23,12 @@ public:
 
   virtual ~DenseCostTest() = default;
 
+  /// Is this a quadratic cost function? No, it is not.
+  /**
+  \return <tt>false</tt>: The cost function is not quadratic
+  */
+  virtual inline bool IsQuadratic() const override { return false; }
+
 protected:
 
   /// Implement the pentalty functions
@@ -96,6 +102,12 @@ public:
   inline SparseCostTest() : SparseCostFunction(3, 4) {}
 
   virtual ~SparseCostTest() = default;
+
+  /// Is this a quadratic cost function? No, it is not.
+  /**
+  \return <tt>false</tt>: The cost function is not quadratic
+  */
+  virtual inline bool IsQuadratic() const override { return false; }
 
 protected:
 

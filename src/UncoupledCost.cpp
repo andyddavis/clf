@@ -77,3 +77,14 @@ Eigen::VectorXd UncoupledCost::EvaluateForcingFunction(std::shared_ptr<SupportPo
   // otherwise use the precomputed value
   return (*forcing).col(pnt->GlobalIndex());
 }
+
+bool UncoupledCost::IsQuadratic() const {
+  // get the support point
+  auto pnt = point.lock();
+  assert(pnt);
+
+  // if a model is nonlinear, than this cost function is not quadratic
+  for( std::size_t i=0; i<pnt->NumNeighbors(); ++i ) { if( !pnt->NearestNeighbor(i)->model->IsLinear() ) { return false; } }
+
+  return true;
+}

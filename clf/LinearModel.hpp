@@ -21,6 +21,13 @@ public:
    */
   virtual Eigen::MatrixXd ModelMatrix(Eigen::VectorXd const& x, std::vector<std::shared_ptr<const BasisFunctions> > const& bases) const;
 
+  /// Is this a linear model?
+  /**
+  Returns <tt>true</tt> since clearly this model must be linear.
+  \return <tt>true</tt>: The model is linear
+  */
+  virtual bool IsLinear() const final override;
+
 protected:
 
   /// Implement the linear model 

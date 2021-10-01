@@ -200,3 +200,5 @@ double Model::FunctionDerivative(Eigen::VectorXd const& x, Eigen::VectorXd const
 
   return bases[i]->FunctionDerivative(x, coefficients.segment(firstind, bases[i]->NumBasisFunctions()), j, k);
 }
+
+bool Model::IsLinear() const { return false; }

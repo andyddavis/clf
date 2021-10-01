@@ -18,6 +18,7 @@ TEST(ModelTests, RightHandSideEvaluationNotImplementedException) {
   pt.put("InputDimension", indim);
   pt.put("OutputDimension", outdim);
   auto model = std::make_shared<LinearModel>(pt);
+  EXPECT_TRUE(model->IsLinear());
 
   // check in the input/output sizes
   EXPECT_EQ(model->inputDimension, indim);
@@ -113,6 +114,7 @@ TEST(ModelTests, RightHandSideEvaluationVectorValuedImplementation) {
   pt.put("InputDimension", indim);
   pt.put("OutputDimension", outdim);
   auto model = std::make_shared<tests::ComponentWiseSquaredModel>(pt);
+  EXPECT_FALSE(model->IsLinear());
 
   // check in the input/output sizes
   EXPECT_EQ(model->inputDimension, indim);

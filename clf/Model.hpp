@@ -156,6 +156,13 @@ public:
   */
   Eigen::VectorXd RightHandSide(Eigen::VectorXd const& x) const;
 
+  /// Is this a linear model?
+  /**
+  Defaults to <tt>false</tt>, but can be overriden by children. 
+  \return <tt>true</tt>: The model is linear, <tt>false</tt>: The model is nonlinear
+  */
+  virtual bool IsLinear() const;
+
   /// The input dimension \f$d\f$
   const std::size_t inputDimension;
 

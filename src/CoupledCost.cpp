@@ -130,3 +130,5 @@ double CoupledCost::CoupledScale() const {
   assert(pnt);
   return (Coupled()? 2.0*scale*scale/pnt->NearestNeighborKernel(localNeighborInd) : 0.0); 
 }
+
+bool CoupledCost::IsQuadratic() const { return true; }

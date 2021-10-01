@@ -148,11 +148,8 @@ private:
     jac = jac.transpose()*jac;
     if( damping>1.0e-14 ) { AddScaledIdentity(damping, jac); }
 
-    // solve the linear system to compute the step direction
-    const Eigen::VectorXd stepDir = this->SolveLinearSystem(jac, JTcost);
-
-    // take a step
-    beta -= stepDir;
+    // solve the linear system to compute the step direction and take a step 
+    beta -= this->SolveLinearSystem(jac, JTcost);
 
     return std::pair<Optimization::Convergence, double>(Optimization::Convergence::CONTINUE_RUNNING, costVal);
   }

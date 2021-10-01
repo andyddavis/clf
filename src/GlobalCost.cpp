@@ -95,3 +95,8 @@ void GlobalCost::JacobianImpl(Eigen::VectorXd const& beta, Eigen::SparseMatrix<d
 
   jac.setFromTriplets(triplets.begin(), triplets.end());
 }
+
+bool GlobalCost::IsQuadratic() const {
+  assert(false);
+  return false;
+}

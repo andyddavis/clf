@@ -14,6 +14,7 @@ TEST(LinearModelTests, Identity) {
   options.put("InputDimension", indim);
   options.put("OutputDimension", outdim);
   auto model = std::make_shared<LinearModel>(options);
+  EXPECT_TRUE(model->IsLinear());
 
   std::vector<std::shared_ptr<const BasisFunctions> > bases(outdim);
   

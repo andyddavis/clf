@@ -82,6 +82,7 @@ TEST_F(CoupledCostTests, CostEvaluationAndDerivatives) {
     pt::ptree costOptions;
     costOptions.put("CoupledScale", couplingScale);
     auto cost = std::make_shared<CoupledCost>(point, coupledPoint, costOptions);
+    EXPECT_TRUE(cost->IsQuadratic()); // we use a linear model in this test
     EXPECT_EQ(cost->Coupled(), coupledPoint!=point & point->IsNeighbor(coupledPoint->GlobalIndex()));
     EXPECT_EQ(cost->inputDimension, point->NumCoefficients()+coupledPoint->NumCoefficients());
     EXPECT_EQ(cost->numPenaltyFunctions, 1);

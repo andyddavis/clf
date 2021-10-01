@@ -33,3 +33,5 @@ Eigen::MatrixXd LinearModel::ModelMatrix(Eigen::VectorXd const& x, std::vector<s
   throw exceptions::ModelHasNotImplemented(exceptions::ModelHasNotImplemented::Type::BOTH, exceptions::ModelHasNotImplemented::Function::LINEAR_MODEL_MATRIX);
   return Eigen::MatrixXd();
 }
+
+bool LinearModel::IsLinear() const { return true; }

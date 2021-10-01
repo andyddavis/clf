@@ -62,6 +62,7 @@ public:
 
   /// Check the cost function
   virtual void TearDown() override {
+    EXPECT_FALSE(cost->IsQuadratic());
     EXPECT_EQ(cost->inputDimension, point->NumCoefficients());
     EXPECT_DOUBLE_EQ(cost->UncoupledScale(), uncoupledScale);
 
@@ -182,7 +183,7 @@ TEST_F(UncoupledCostTests, MinimizeCost_LevenbergMarquardt) {
   auto lm = std::make_shared<DenseLevenbergMarquardt>(cost, pt);
 
   // choose the vector of coefficients
-  Eigen::VectorXd coefficients = Eigen::VectorXd::Random(point->NumCoefficients());
+  Eigen::VectorXd coefficients = Eigen::VectorXd::Ones(point->NumCoefficients());
 
   const std::pair<Optimization::Convergence, double> info = lm->Minimize(coefficients);
   EXPECT_TRUE(info.first>0);
