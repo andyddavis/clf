@@ -25,7 +25,7 @@ Parameter Key | Type | Default Value | Description |
 "MaximumIterations"   | <tt>std::size_t</tt> | <tt>1000</tt> | The maximum number of iterations. |
 "InitialDampling"   | <tt>double</tt> | <tt>0.0</tt> | The value of the damping parameter at the first iteration. |
 */
-template<typename MatrixType, typename QRSolver>
+template<typename MatrixType>
 class LevenbergMarquardt : public Optimizer<MatrixType> {
 public:
 
@@ -189,7 +189,7 @@ private:
 /**
 See clf::LevenbergMarquardt for parameter options.
 */
-class DenseLevenbergMarquardt : public LevenbergMarquardt<Eigen::MatrixXd, Eigen::ColPivHouseholderQR<Eigen::MatrixXd> > {
+class DenseLevenbergMarquardt : public LevenbergMarquardt<Eigen::MatrixXd> {
 public:
   /**
   @param[in] cost The cost function that we need to minimize
@@ -215,7 +215,7 @@ private:
 /**
 See clf::LevenbergMarquardt for parameter options.
 */
-class SparseLevenbergMarquardt : public LevenbergMarquardt<Eigen::SparseMatrix<double>, Eigen::SparseQR<Eigen::SparseMatrix<double>, Eigen::COLAMDOrdering<int> > > {
+class SparseLevenbergMarquardt : public LevenbergMarquardt<Eigen::SparseMatrix<double> > {
 public:
 
   /**

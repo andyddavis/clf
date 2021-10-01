@@ -18,7 +18,7 @@ class MinimizeQuadraticCost : public Optimizer<MatrixType> {
 public:
 
   /**
-  @param[in] cost The cost function that we need to minimize
+  @param[in] cost The cost function that we need to minimize (clf::CostFunction::IsQuadratic must be true)
   @param[in] pt Options for the algorithm
   */
   inline MinimizeQuadraticCost(std::shared_ptr<CostFunction<MatrixType> > const& cost, boost::property_tree::ptree const& pt) :
