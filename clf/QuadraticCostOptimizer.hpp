@@ -23,7 +23,10 @@ public:
   */
   inline QuadraticCostOptimizer(std::shared_ptr<CostFunction<MatrixType> > const& cost, boost::property_tree::ptree const& pt) :
   Optimizer<MatrixType>(cost, pt)
-  {}
+  {
+    //MatrixType jac;
+    //cost->Jacobian();
+  }
 
   virtual ~QuadraticCostOptimizer() = default;
 

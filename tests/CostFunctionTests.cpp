@@ -71,8 +71,6 @@ protected:
 TEST_F(CostFunctionTests, Dense) {
   auto cost = std::make_shared<tests::DenseCostTest>();
   TestCostFunction<Eigen::MatrixXd>(cost);
-
-  const Eigen::VectorXd beta = Eigen::VectorXd::Random(cost->inputDimension);
 }
 
 TEST_F(CostFunctionTests, Sparse) {

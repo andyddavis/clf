@@ -12,7 +12,7 @@ namespace clf {
 /**
 The cost function is the some of squared penalty function \f$f_i\f$---
 \f{equation*}{
-C = \min_{\boldsymbol{\beta} \in \mathbb{R}^{n}} \sum_{i=1}^{m} f_i(\boldsymbol{\beta})^{2}
+C = \min_{\boldsymbol{\beta} \in \mathbb{R}^{n}} \sum_{i=1}^{m} f_i(\boldsymbol{\beta})^{2}.
 \f}
 */
 template<typename MatrixType>
@@ -108,7 +108,7 @@ public:
   Defaults to <tt>false</tt>, but can be overriden by children. 
   \return <tt>true</tt>: The cost function is quadratic, <tt>false</tt>: The cost function is not quadratic
   */
-  virtual bool IsQuadratic() const = 0;
+  inline virtual bool IsQuadratic() const { return false; }
 
   /// The dimension of the input parameter \f$n\f$
   const std::size_t inputDimension;
@@ -170,7 +170,7 @@ public:
   @param[in] inputDimension The dimension of the input parameter \f$n\f$
   @param[in] numPenaltyFunctions The number of sub-cost functions \f$m\f$
   */
-  inline DenseCostFunction(std::size_t const inputDimension, std::size_t const numPenaltyFunctions) : CostFunction(inputDimension, numPenaltyFunctions) {}
+  DenseCostFunction(std::size_t const inputDimension, std::size_t const numPenaltyFunctions);
 
   virtual ~DenseCostFunction() = default;
 
@@ -182,10 +182,7 @@ public:
   @param[in] beta The current parameter value
   @param[out] jac The Jacobian matrix
   */
-  inline virtual void Jacobian(Eigen::VectorXd const& beta, Eigen::MatrixXd& jac) const final override {
-    jac.resize(numPenaltyFunctions, inputDimension);
-    for( std::size_t i=0; i<numPenaltyFunctions; ++i ) { jac.row(i) = PenaltyFunctionGradient(i, beta); }
-  }
+  virtual void Jacobian(Eigen::VectorXd const& beta, Eigen::MatrixXd& jac) const final override;
 
 private:
 };
@@ -197,7 +194,7 @@ public:
   @param[in] inputDimension The dimension of the input parameter \f$n\f$
   @param[in] numPenaltyFunctions The number of sub-cost functions \f$m\f$
   */
-  inline SparseCostFunction(std::size_t const inputDimension, std::size_t const numPenaltyFunctions) : CostFunction(inputDimension, numPenaltyFunctions) {}
+  SparseCostFunction(std::size_t const inputDimension, std::size_t const numPenaltyFunctions);
 
   virtual ~SparseCostFunction() = default;
 
@@ -207,13 +204,7 @@ public:
   @param[in] beta The input parameter
   \return The gradient of the \f$i^{th}\f$ penalty function \f$\nabla_{\beta} f_i(\beta)\f$, each entry holds the index and value of a non-zero entry
   */
-  inline std::vector<std::pair<std::size_t, double> > PenaltyFunctionGradientSparse(std::size_t const ind, Eigen::VectorXd const& beta) const {
-    assert(beta.size()==inputDimension);
-    assert(ind<numPenaltyFunctions);
-    const std::vector<std::pair<std::size_t, double> > grad = PenaltyFunctionGradientSparseImpl(ind, beta);
-    assert(grad.size()<=inputDimension);
-    return grad;
-  }
+  std::vector<std::pair<std::size_t, double> > PenaltyFunctionGradientSparse(std::size_t const ind, Eigen::VectorXd const& beta) const;
 
   /// Compute the Jacobian matrix
   /**
@@ -223,17 +214,7 @@ public:
   @param[in] beta The current parameter value
   @param[out] jac The Jacobian matrix
   */
-  inline virtual void Jacobian(Eigen::VectorXd const& beta, Eigen::SparseMatrix<double>& jac) const final override {
-    // resize the jacobian---this sets every entry to zero, but does not free the memory
-    jac.resize(numPenaltyFunctions, inputDimension);
-    std::vector<Eigen::Triplet<double> > triplets;
-    for( std::size_t i=0; i<numPenaltyFunctions; ++i ) {
-      const std::vector<std::pair<std::size_t, double> > rowi = PenaltyFunctionGradientSparse(i, beta);
-      for( const auto& it : rowi ) { triplets.emplace_back(i, it.first, it.second); }
-    }
-    jac.setFromTriplets(triplets.begin(), triplets.end());
-    jac.makeCompressed();
-  }
+  virtual void Jacobian(Eigen::VectorXd const& beta, Eigen::SparseMatrix<double>& jac) const final override;
 
 protected:
 
@@ -244,13 +225,7 @@ protected:
   @param[in] beta The input parameter
   \return The gradient of the \f$i^{th}\f$ penalty function \f$\nabla_{\beta} f_i(\beta)\f$
   */
-  inline virtual Eigen::VectorXd PenaltyFunctionGradientImpl(std::size_t const ind, Eigen::VectorXd const& beta) const final override {
-    const std::vector<std::pair<std::size_t, double> > sparseGrad = PenaltyFunctionGradientSparseImpl(ind, beta);
-
-    Eigen::VectorXd grad = Eigen::VectorXd::Zero(inputDimension);
-    for( const auto& it : sparseGrad ) { grad(it.first) = it.second; }
-    return grad;
-  }
+  virtual Eigen::VectorXd PenaltyFunctionGradientImpl(std::size_t const ind, Eigen::VectorXd const& beta) const final override;
 
   /// Evaluate the gradient \f$\nabla_{\beta} f_i(\beta)\f$
   /**
@@ -259,14 +234,7 @@ protected:
   @param[in] beta The input parameter
   \return The gradient of the \f$i^{th}\f$ penalty function \f$\nabla_{\beta} f_i(\beta)\f$, each entry holds the index and value of a non-zero entry
   */
-  inline virtual std::vector<std::pair<std::size_t, double> > PenaltyFunctionGradientSparseImpl(std::size_t const ind, Eigen::VectorXd const& beta) const {
-    const Eigen::VectorXd grad = PenaltyFunctionGradientByFD(ind, beta);
-    std::vector<std::pair<std::size_t, double> > sparseGrad;
-    for( std::size_t i=0; i<inputDimension; ++i ) {
-      if( std::abs(grad(i))>sparsityTol ) { sparseGrad.emplace_back(i, grad(i)); }
-    }
-    return sparseGrad;
-  }
+  virtual std::vector<std::pair<std::size_t, double> > PenaltyFunctionGradientSparseImpl(std::size_t const ind, Eigen::VectorXd const& beta) const;
 
   /// The sparsity tolerance ignores entries in the Jacobian that are less then this value 
   /**

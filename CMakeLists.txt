@@ -76,6 +76,8 @@ set(CLF_SOURCE
 
     src/DOFIndices.cpp
 
+    src/CostFunction.cpp
+    src/QuadraticCostFunction.cpp
     src/UncoupledCost.cpp
     src/CoupledCost.cpp
     src/ColocationCost.cpp
@@ -159,6 +161,7 @@ if( NOT CLF_BUILD_FROM_PIP )
         tests/QuadraticCostOptimizerTests.cpp
 
         tests/CostFunctionTests.cpp
+        tests/QuadraticCostFunctionTests.cpp
         tests/UncoupledCostTests.cpp
         tests/CoupledCostTests.cpp
         tests/ColocationCostTests.cpp

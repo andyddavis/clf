@@ -111,6 +111,12 @@ TEST_F(CoupledCostTests, CostEvaluationAndDerivatives) {
     const Eigen::VectorXd grad1 = cost->PenaltyFunctionGradient(pointCoeffs, neighCoeffs);
     EXPECT_NEAR((grad0-grad1).norm(), 0.0, 1.0e-14);
     EXPECT_NEAR((grad0-gradFD).norm(), 0.0, 1.0e-6);
+
+    std::cout << grad1.transpose() << std::endl;
+    std::cout << cost->PenaltyFunctionGradient(Eigen::VectorXd::Random(point->NumCoefficients()), Eigen::VectorXd::Random(coupledPoint->NumCoefficients())).transpose() << std::endl;
+
+    std::cout << std::endl << std::endl;
+
   }
 }
 
