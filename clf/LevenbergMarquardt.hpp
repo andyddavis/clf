@@ -17,13 +17,17 @@ Used to minimize cost functions that are children of clf::CostFunction.
 Requires all of the configuration parameters in clf::Optimizer and
 Parameter Key | Type | Default Value | Description |
 ------------- | ------------- | ------------- | ------------- |
-"GradientTolerance"   | <tt>double</tt> | <tt>1.0e-10</tt> | The tolerance for the gradient norm. |
-"FunctionTolerance"   | <tt>double</tt> | <tt>1.0e-10</tt> | The tolerance for the cost function. |
-"ParameterTolerance"   | <tt>double</tt> | <tt>1.0e-10</tt> | The tolerance for the parameter norm. |
-"MaximumFunctionEvaluations"   | <tt>std::size_t</tt> | <tt>1000</tt> | The maximum number of function evaluations. |
-"MaximumJacobianEvaluations"   | <tt>std::size_t</tt> | <tt>1000</tt> | The maximum number of Jacobian evaluations. |
-"MaximumIterations"   | <tt>std::size_t</tt> | <tt>1000</tt> | The maximum number of iterations. |
-"InitialDampling"   | <tt>double</tt> | <tt>0.0</tt> | The value of the damping parameter at the first iteration. |
+"GradientTolerance"   | <tt>double</tt> | <tt>1.0e-10</tt> | The tolerance for the gradient norm |
+"FunctionTolerance"   | <tt>double</tt> | <tt>1.0e-10</tt> | The tolerance for the cost function |
+"ParameterTolerance"   | <tt>double</tt> | <tt>1.0e-10</tt> | The tolerance for the parameter norm |
+"MaximumFunctionEvaluations"   | <tt>std::size_t</tt> | <tt>1000</tt> | The maximum number of function evaluations |
+"MaximumJacobianEvaluations"   | <tt>std::size_t</tt> | <tt>1000</tt> | The maximum number of Jacobian evaluations |
+"MaximumIterations"   | <tt>std::size_t</tt> | <tt>1000</tt> | The maximum number of iterations |
+"InitialDampling"   | <tt>double</tt> | <tt>1.0</tt> | The value of the damping parameter at the first iteration |
+"DampingShrinkFactor"   | <tt>double</tt> | <tt>0.5</tt> | The factor multiplying the damping factor if the error has decreased |
+"DampingGrowFactor"   | <tt>double</tt> | <tt>1.5</tt> | The factor multiplying the damping factor if the error has increased |
+"LineSearchFactor"   | <tt>double</tt> | <tt>0.5</tt> | Each iteration of the line search parameter decreases the step size by this factor |
+"MaxLineSearchSteps"   | <tt>std::size_t</tt> | <tt>10</tt> | The maximum number of line search iterations |
 */
 template<typename MatrixType>
 class LevenbergMarquardt : public Optimizer<MatrixType> {
@@ -38,7 +42,11 @@ public:
   betaTol(pt.get<double>("ParameterTolerance", 1.0e-10)),
   maxJacEvals(pt.get<std::size_t>("MaximumJacobianEvaluations", 1000)),
   maxIters(pt.get<std::size_t>("MaximumIterations", 1000)),
-  initialDamping(pt.get<double>("InitialDamping", 0.0))
+  initialDamping(pt.get<double>("InitialDamping", 1.0)),
+  dampingShrinkFactor(pt.get<double>("DampingShrinkFactor", 0.5)),
+  dampingGrowFactor(pt.get<double>("DampingGrowFactor", 1.5)),
+  lineSearchFactor(pt.get<double>("LineSearchFactor", 0.5)),
+  maxLineSearchSteps(pt.get<std::size_t>("MaxLineSearchSteps", 10))
   {}
 
   virtual ~LevenbergMarquardt() = default;
@@ -67,13 +75,12 @@ public:
 
     // evaluate the cost at the initial guess
     EvaluateCost(beta, costVec);
-
     double prevCost = costVec.dot(costVec);
 
     std::size_t iter = 0;
     double damping = initialDamping;
     while( iter<maxIters ) {
-      const std::pair<Optimization::Convergence, double> convergenceInfo = Iteration(iter, damping, beta, costVec);
+      const std::pair<Optimization::Convergence, double> convergenceInfo = Iteration(prevCost, damping, beta, costVec);
 
       // check for convergence
       if( convergenceInfo.first>0 ) { return convergenceInfo; }
@@ -85,8 +92,11 @@ public:
       if( numJacEvals>maxJacEvals ) { return std::pair<Optimization::Convergence, double>(Optimization::Convergence::FAILED_MAX_NUM_JACOBIAN_EVALS, convergenceInfo.second); }
 
       // update damping parameter and previous cost
-      damping *= (convergenceInfo.second<prevCost? 0.75 : 2.0);
+      damping *= (convergenceInfo.second<prevCost? dampingShrinkFactor : dampingGrowFactor);
       prevCost = convergenceInfo.second;
+
+      // increment the iteration
+      ++iter;
     }
   }
 
@@ -122,18 +132,13 @@ private:
 
   /// Perform one iteration of the Levenberg Marquardt algorithm
   /**
-  @param[in,out] iter In: The current iteration number, Out: The incremeneted iterationnumber
+  @param[in] costVal The current value of the cost function
   @param[in,out] beta In: The current parameter value, Out: The updated parameter value
   @param[in,out] costVec In: The cost given the current parameter value, Out: The cost at the next iteration
   \return First: Information about convergence or failure, Second: The current cost
   */
-  inline std::pair<Optimization::Convergence, double> Iteration(std::size_t& iter, double const damping, Eigen::VectorXd& beta, Eigen::VectorXd& costVec) {
-    // increment the iteration
-    ++iter;
-
+  inline std::pair<Optimization::Convergence, double> Iteration(double const costVal, double const damping, Eigen::VectorXd& beta, Eigen::VectorXd& costVec) {
     // evaluate the cost at the initial guess
-    EvaluateCost(beta, costVec);
-    const double costVal = costVec.dot(costVec);
     if( costVal<this->funcTol ) { return std::pair<Optimization::Convergence, double>(Optimization::Convergence::CONVERGED_FUNCTION_SMALL, costVal); }
 
     // compute the Jacobian matrix
@@ -141,17 +146,11 @@ private:
     Jacobian(beta, jac);
     if( (jac.adjoint()*costVec).norm()<this->gradTol ) { return std::pair<Optimization::Convergence, double>(Optimization::Convergence::CONVERGED_GRADIENT_SMALL, costVal); }
 
-    // form J^T costVec
-    Eigen::VectorXd JTcost = jac.transpose()*costVec;
+    // compute the step direction
+    const Eigen::VectorXd stepDir = StepDirection(damping, jac, costVec);
 
-    // compute the QR factorization of the Jacobian matrix
-    jac = jac.transpose()*jac;
-    if( damping>1.0e-14 ) { AddScaledIdentity(damping, jac); }
-
-    // solve the linear system to compute the step direction and take a step 
-    beta -= this->SolveLinearSystem(jac, JTcost);
-
-    return std::pair<Optimization::Convergence, double>(Optimization::Convergence::CONTINUE_RUNNING, costVal);
+    // do a line search to make a step and return the result
+    return std::pair<Optimization::Convergence, double>(Optimization::Convergence::CONTINUE_RUNNING, LineSearch(costVal, stepDir, beta, costVec));
   }
 
   /// Evaluate the cost function
@@ -175,14 +174,70 @@ private:
     ++numJacEvals;
   }
 
+  /// Compute the step direction
+  /**
+  @param[in] damping The damping constant that scales the step size
+  @param[in, out] jac In: The Jacobian matrix \f$J\f$ (gradient of each penalty function), Out: The symmetric matrix \f$J^{\top} J\f$
+  @param[in, out] costVec In: The vector \f$c\f$ of penalty function evaluations Out: The vector \f$J^{\top} c\f$
+  \return The step direction
+  */
+  inline Eigen::VectorXd StepDirection(double const damping, MatrixType& jac, Eigen::VectorXd& costVec) const {
+    costVec = jac.transpose()*costVec;
+
+    // compute the QR factorization of the Jacobian matrix
+    jac = jac.transpose()*jac;
+    if( damping>1.0e-14 ) { AddScaledIdentity(damping, jac); }
+
+    return this->SolveLinearSystem(jac, costVec);
+  }
+
+  /// Do a line search
+  /**
+  @param[in] costVal The current value of the cost function
+  @param[in] stepDir The step direction
+  @param[in, out] beta In: The current parameter value, Out: the updated parameter value
+  @param[out] costVec The penalty functions evaluated at the updated parameter value
+  \return The new value of the cost function
+  */
+  inline double LineSearch(double const costVal, Eigen::VectorXd const& stepDir, Eigen::VectorXd& beta, Eigen::VectorXd& costVec) {
+    double alpha = 1.0;
+
+    // evaluate the cost at the initial guess
+    EvaluateCost(beta - stepDir, costVec);
+    double newCost = costVec.dot(costVec);
+    std::size_t iter = 0;
+    while( newCost>costVal & iter++<maxLineSearchSteps ) {
+      alpha *= lineSearchFactor;
+      EvaluateCost(beta - alpha*stepDir, costVec);
+      newCost = costVec.dot(costVec);
+    }
+
+    // take a step
+    beta -= alpha*stepDir;
+
+    return newCost;
+  }
+
   /// The number of cost function evaluations
   std::size_t numCostEvals = 0;
 
   /// The number of Jacobian evaluations
   std::size_t numJacEvals = 0;
 
-  /// The dampling parameter at the first iteration 
+  /// The damping parameter at the first iteration
   const double initialDamping;
+
+  /// The factor multiplying the damping factor if the error has decreased
+  const double dampingShrinkFactor;
+
+  /// The factor multiplying the damping factor if the error has increased
+  const double dampingGrowFactor;
+
+  /// Each iteration of the line search parameter decreases the step size by this factor
+  const double lineSearchFactor;
+
+  /// The maximum number of line search iterations
+  const std::size_t maxLineSearchSteps;
 };
 
 /// An implementation of the Levenberg Marquardt algorithm using a dense Jacobian matrix

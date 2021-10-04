@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "clf/MinimizeQuadraticCost.hpp"
+#include "clf/QuadraticCostOptimizer.hpp"
 
 #include "TestCostFunctions.hpp"
 
@@ -9,6 +9,9 @@ using namespace clf;
 
 TEST(MinimizeQuadraticCostTests, DenseLU) {
   auto cost = std::make_shared<tests::DenseQuadraticCostTest>();
+
+  pt::ptree pt;
+  auto opt = std::make_shared<DenseQuadraticCostOptimizer>(cost, pt);
 
   EXPECT_TRUE(false);
 }

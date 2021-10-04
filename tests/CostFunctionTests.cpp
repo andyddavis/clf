@@ -42,7 +42,7 @@ protected:
 
     const Eigen::VectorXd grad1 = cost->PenaltyFunctionGradient(1, beta);
     const Eigen::VectorXd grad1FD = cost->PenaltyFunctionGradientByFD(1, beta);
-    EXPECT_NEAR((grad1-grad1FD).norm(), 0.0, 1.0e-8);
+    EXPECT_NEAR((grad1-grad1FD).norm(), 0.0, 1.0e-7);
 
     const Eigen::VectorXd grad2 = cost->PenaltyFunctionGradient(2, beta);
     const Eigen::VectorXd grad2FD = cost->PenaltyFunctionGradientByFD(2, beta);
@@ -50,7 +50,7 @@ protected:
 
     const Eigen::VectorXd grad3 = cost->PenaltyFunctionGradient(3, beta);
     const Eigen::VectorXd grad3FD = cost->PenaltyFunctionGradientByFD(3, beta);
-    EXPECT_NEAR((grad3-grad3FD).norm(), 0.0, 1.0e-8);
+    EXPECT_NEAR((grad3-grad3FD).norm(), 0.0, 1.0e-7);
 
     MATTYPE jac;
     cost->Jacobian(beta, jac);
@@ -80,5 +80,5 @@ TEST_F(CostFunctionTests, Sparse) {
   TestCostFunction<Eigen::SparseMatrix<double> >(cost);
 }
 
-} // namespace tests 
+} // namespace tests
 } // namespace clf

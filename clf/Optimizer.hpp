@@ -58,11 +58,48 @@ public:
   cost(cost),
   gradTol(pt.get<double>("GradientTolerance", 1.0e-10)),
   funcTol(pt.get<double>("FunctionTolerance", 1.0e-10)),
-  maxEvals(pt.get<std::size_t>("MaximumFunctionEvaluations", 1000)), 
+  maxEvals(pt.get<std::size_t>("MaximumFunctionEvaluations", 1000)),
   linSolver((pt.get<std::string>("LinearSolver", "LU")=="QR"? Optimizer::QR : Optimizer::LU))
   {}
 
   virtual ~Optimizer() = default;
+
+  /// The constructor for an optimizer
+  typedef boost::function<std::shared_ptr<Optimizer<MatrixType> >(std::shared_ptr<CostFunction<MatrixType> > const& cost, boost::property_tree::ptree const&)> OptimizerConstructor;
+
+  /// A map from the optimizer type to its constructor
+  typedef std::unordered_map<std::string, OptimizerConstructor> OptimizerConstructorMap;
+
+  /// Get the map from the optimizer type to its constructor
+  /**
+  \return A map from the optimizer type to its constructor
+  */
+  inline static std::shared_ptr<OptimizerConstructorMap> GetOptimizerConstructorMap() {
+    // define a static map
+    static std::shared_ptr<OptimizerConstructorMap> map;
+    if( !map ) { // if the map has not yet been created ...
+      // ... create the map
+      map = std::make_shared<OptimizerConstructorMap>();
+    }
+
+    return map;
+  }
+
+  /// Static constructor for the optimizer
+  /**
+  @param[in] options Parameters/options for the optimizer
+  \return The newly constructed optimizer
+  */
+  inline static std::shared_ptr<Optimizer<MatrixType> > Construct(std::shared_ptr<CostFunction<MatrixType> > const& cost, boost::property_tree::ptree const& options) {
+    // get the name of the method
+    const std::string& name = options.get<std::string>("Method");
+
+    // construct the optimizer from the map
+    auto map = GetOptimizerConstructorMap();
+    auto iter = map->find(name);
+    if( iter==map->end() ) { throw exceptions::OptimizerNameException<Optimizer<MatrixType> >(name); }
+    return iter->second(cost, options);
+  }
 
   /// Minimize the cost function 
   /**
@@ -71,47 +108,10 @@ public:
   */
   virtual std::pair<Optimization::Convergence, double> Minimize(Eigen::VectorXd& beta) = 0;
 
-  /// The constructor for an optimizer
-  typedef boost::function<std::shared_ptr<Optimizer<MatrixType> >(std::shared_ptr<CostFunction<MatrixType> > const& cost, boost::property_tree::ptree const&)> OptimizerConstructor;
-
-  /// A map from the optimizer type to its constructor 
-  typedef std::unordered_map<std::string, OptimizerConstructor> OptimizerConstructorMap;
-
-  /// Get the map from the optimizer type to its constructor 
-  /**
-  \return A map from the optimizer type to its constructor 
-  */
-  inline static std::shared_ptr<OptimizerConstructorMap> GetOptimizerConstructorMap() {
-    // define a static map 
-    static std::shared_ptr<OptimizerConstructorMap> map;
-    if( !map ) { // if the map has not yet been created ... 
-      // ... create the map 
-      map = std::make_shared<OptimizerConstructorMap>();
-    }
-
-    return map;
-  }
-
-  /// Static constructor for the optimizer 
-  /**
-  @param[in] options Parameters/options for the optimizer
-  \return The newly constructed optimizer 
-  */
-  inline static std::shared_ptr<Optimizer<MatrixType> > Construct(std::shared_ptr<CostFunction<MatrixType> > const& cost, boost::property_tree::ptree const& options) {
-    // get the name of the method 
-    const std::string& name = options.get<std::string>("Method");
-   
-    // construct the optimizer from the map 
-    auto map = GetOptimizerConstructorMap();
-    auto iter = map->find(name);
-    if( iter==map->end() ) { throw exceptions::OptimizerNameException<Optimizer<MatrixType> >(name); }
-    return iter->second(cost, options);
-  }
-
   /// Solve a linear system \f$A x = b\f$
   /**
   Must be specialized for each <tt>MatrixType</tt>.
-  @param[in] mat The matrix \f$A\f$ 
+  @param[in] mat The matrix \f$A\f$
   @param[in] rhs The right hand side \f$b\f$
   \return The solution \f$x\f$
   */
@@ -138,12 +138,12 @@ protected:
   template<typename QRSolver>
   inline Eigen::VectorXd SolveLinearSystemQR(QRSolver const& solver, Eigen::VectorXd const& rhs) const {
     const Eigen::Index rank = solver.rank();
-    
+
     Eigen::VectorXd soln(solver.cols());
     soln.tail(soln.size()-rank).setZero();
     soln.head(rank) = solver.matrixR().topLeftCorner(rank, rank).template triangularView<Eigen::Upper>().solve((solver.matrixQ().adjoint()*rhs).head(rank));
     soln = solver.colsPermutation()*soln;
-    
+
     return soln;
   }
 
@@ -154,14 +154,14 @@ private:
 
   /// Which solver should we use to solve a linear system?
   enum LinearSolver {
-    /// Use a QR solver 
-    QR, 
+    /// Use a QR solver
+    QR,
 
     /// Use an LU solver
     LU
   };
 
-  /// The linear solver used for this optimizer 
+  /// The linear solver used for this optimizer
   const LinearSolver linSolver;
 };
 

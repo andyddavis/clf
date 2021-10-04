@@ -9,7 +9,7 @@
 
 namespace pt = boost::property_tree;
 
-namespace clf { 
+namespace clf {
 namespace tests {
 
 /// A class that runs the tests for clf::UncoupledCost
@@ -77,22 +77,22 @@ public:
   /// The output dimension
   const std::size_t outdim = 2;
 
-  /// The (nonlinear) model that we are using to test the uncoupled cost 
+  /// The (nonlinear) model that we are using to test the uncoupled cost
   std::shared_ptr<Model> model;
 
   /// A list of the support points (all of them are nearest neighborts to UncoupledCostTests::point)
   std::vector<std::shared_ptr<SupportPoint> > supportPoints;
 
-  /// The point that is associated with this cost function 
+  /// The point that is associated with this cost function
   std::shared_ptr<SupportPoint> point;
-  
+
   /// A cloud that contains all of the support points
   std::shared_ptr<SupportPointCloud> cloud;
 
   /// The scale parameter that multiplies the residual in the cost function
   const double uncoupledScale = 1.25;
 
-  /// The cost function that we are testing 
+  /// The cost function that we are testing
   std::shared_ptr<UncoupledCost> cost;
 };
 
@@ -121,7 +121,7 @@ TEST_F(UncoupledCostTests, CostEvaluationAndDerivatives_ZeroRegularization) {
   EXPECT_EQ(computedCost.size(), point->NumNeighbors());
   EXPECT_EQ(computedCost.size(), trueCost.size());
   for( std::size_t i=0; i<computedCost.size(); ++i ) { EXPECT_NEAR(computedCost(i), trueCost(i), 1.0e-12); }
-    
+
   for( std::size_t i=0; i<supportPoints.size(); ++i ) {
     const Eigen::VectorXd gradFD = cost->PenaltyFunctionGradientByFD(i, coefficients);
     const Eigen::VectorXd grad = cost->PenaltyFunctionGradient(i, coefficients);
@@ -131,7 +131,7 @@ TEST_F(UncoupledCostTests, CostEvaluationAndDerivatives_ZeroRegularization) {
 
 
 TEST_F(UncoupledCostTests, CostEvaluationAndDerivatives_NonZeroRegularization) {
-  // the regularization parameter for the uncoupled cost 
+  // the regularization parameter for the uncoupled cost
   const double regularizationScale = 0.5;
 
   // create the uncoupled cost
@@ -180,6 +180,7 @@ TEST_F(UncoupledCostTests, MinimizeCost_LevenbergMarquardt) {
 
   pt::ptree pt;
   pt.put("FunctionTolerance", 1.0e-9);
+  pt.put("InitialDamping", 1.0);
   auto lm = std::make_shared<DenseLevenbergMarquardt>(cost, pt);
 
   // choose the vector of coefficients
@@ -219,5 +220,5 @@ TEST_F(UncoupledCostTests, MinimizeCost_NLopt) {
   EXPECT_NEAR(uncoupledScale*(eval-rhs).dot(eval-rhs), 0.0, 1.0e-6);
 }
 
-} // namespace tests 
+} // namespace tests
 } // namespace clf

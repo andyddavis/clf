@@ -156,7 +156,7 @@ if( NOT CLF_BUILD_FROM_PIP )
 	tests/OptimizerTests.cpp
         tests/LevenbergMarquardtTests.cpp
         tests/NLoptOptimizerTests.cpp
-        tests/MinimizeQuadraticCostTests.cpp
+        tests/QuadraticCostOptimizerTests.cpp
 
         tests/CostFunctionTests.cpp
         tests/UncoupledCostTests.cpp
