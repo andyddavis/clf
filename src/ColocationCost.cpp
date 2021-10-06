@@ -3,7 +3,7 @@
 using namespace clf;
 
 ColocationCost::ColocationCost(std::shared_ptr<ColocationPointCloud> const& colocationCloud) :
-SparseCostFunction(colocationCloud->OutputDimension()*colocationCloud->supportCloud->NumPoints(), colocationCloud->OutputDimension()*colocationCloud->numColocationPoints),
+SparseCostFunction(colocationCloud->OutputDimension()*colocationCloud->supportCloud->NumPoints(), colocationCloud->OutputDimension()*colocationCloud->numColocationPoints, 1),
 colocationCloud(colocationCloud)
 {}
 
@@ -39,9 +39,9 @@ Eigen::VectorXd ColocationCost::ComputeCost(Eigen::MatrixXd const& data) const {
   return cost;
 }
 
-double ColocationCost::PenaltyFunctionImpl(std::size_t const ind, Eigen::VectorXd const& beta) const {
+Eigen::VectorXd ColocationCost::PenaltyFunctionImpl(std::size_t const ind, Eigen::VectorXd const& beta) const {
   assert(false);
-  return 0.0;
+  return Eigen::VectorXd();
 }
 
 Eigen::VectorXd ColocationCost::CostImpl(Eigen::VectorXd const& data) const {

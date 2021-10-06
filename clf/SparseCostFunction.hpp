@@ -3,9 +3,9 @@
 
 #include "clf/CostFunction.hpp"
 
-namespace clf { 
+namespace clf {
 
-/// A clf::CostFunction using a sparse Jacobian matrix 
+/// A clf::CostFunction using a sparse Jacobian matrix
 class SparseCostFunction : public CostFunction<Eigen::SparseMatrix<double> > {
 public:
 
@@ -25,7 +25,7 @@ public:
   @param[in] beta The input parameter
   \return The gradient of the \f$i^{th}\f$ penalty function \f$\nabla_{\beta} f_i(\beta)\f$, each entry holds the index and value of a non-zero entry
   */
-  std::vector<std::pair<std::size_t, double> > PenaltyFunctionGradientSparse(std::size_t const ind, Eigen::VectorXd const& beta) const;
+  std::vector<std::pair<std::size_t, double> > PenaltyFunctionJacobianSparse(std::size_t const ind, Eigen::VectorXd const& beta) const;
 
   /// Compute the Jacobian matrix
   /**
@@ -46,7 +46,7 @@ protected:
   @param[in] beta The input parameter
   \return The gradient of the \f$i^{th}\f$ penalty function \f$\nabla_{\beta} f_i(\beta)\f$
   */
-  virtual Eigen::VectorXd PenaltyFunctionGradientImpl(std::size_t const ind, Eigen::VectorXd const& beta) const final override;
+  virtual Eigen::MatrixXd PenaltyFunctionJacobianImpl(std::size_t const ind, Eigen::VectorXd const& beta) const final override;
 
   /// Evaluate the gradient \f$\nabla_{\beta} f_i(\beta)\f$
   /**
@@ -55,9 +55,9 @@ protected:
   @param[in] beta The input parameter
   \return The gradient of the \f$i^{th}\f$ penalty function \f$\nabla_{\beta} f_i(\beta)\f$, each entry holds the index and value of a non-zero entry
   */
-  virtual std::vector<std::pair<std::size_t, double> > PenaltyFunctionGradientSparseImpl(std::size_t const ind, Eigen::VectorXd const& beta) const;
+  virtual std::vector<std::pair<std::size_t, double> > PenaltyFunctionJacobianSparseImpl(std::size_t const ind, Eigen::VectorXd const& beta) const;
 
-  /// The sparsity tolerance ignores entries in the Jacobian that are less then this value 
+  /// The sparsity tolerance ignores entries in the Jacobian that are less then this value
   /**
   Defaults to \f$1.0e-14\f$
   */
@@ -69,4 +69,3 @@ private:
 } // namespace clf
 
 #endif
-

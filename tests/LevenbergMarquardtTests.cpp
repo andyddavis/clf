@@ -8,8 +8,8 @@
 
 namespace pt = boost::property_tree;
 
-namespace clf { 
-namespace tests { 
+namespace clf {
+namespace tests {
 
 /// A class that runs the tests for clf::LevenbergMarquardt
 class LevenbergMarquardtTests : public::testing::Test {
@@ -43,7 +43,7 @@ protected:
 };
 
 TEST_F(LevenbergMarquardtTests, Dense) {
-  auto cost = std::make_shared<tests::DenseCostTest>();
+  auto cost = std::make_shared<tests::DenseCostFunctionTest>();
 
   pt::ptree pt;
   auto lm = std::make_shared<DenseLevenbergMarquardt>(cost, pt);
@@ -51,7 +51,7 @@ TEST_F(LevenbergMarquardtTests, Dense) {
 }
 
 TEST_F(LevenbergMarquardtTests, Sparse) {
-  auto cost = std::make_shared<tests::SparseCostTest>();
+  auto cost = std::make_shared<tests::SparseCostFunctionTest>();
 
   pt::ptree pt;
   auto lm = std::make_shared<SparseLevenbergMarquardt>(cost, pt);

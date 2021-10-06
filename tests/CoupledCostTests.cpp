@@ -48,9 +48,6 @@ public:
     cloud = SupportPointCloud::Construct(supportPoints, ptSupportPointCloud);
   }
 
-  /// Make sure everything is what we expect
-  virtual void TearDown() override {}
-
   /// The input dimension
   const std::size_t indim = 2;
 
@@ -60,7 +57,7 @@ public:
   /// Associate the coupled cost with this point
   std::shared_ptr<SupportPoint> point;
 
-  /// A support point cloud that holds all the support points 
+  /// A support point cloud that holds all the support points
   std::shared_ptr<SupportPointCloud> cloud;
 
   /// The coupling scale (parameter \f$c_i\f$ in the coupled cost---see clf::CoupledCost)
@@ -97,28 +94,31 @@ TEST_F(CoupledCostTests, CostEvaluationAndDerivatives) {
     coefficients.head(point->NumCoefficients()) = pointCoeffs;
     coefficients.tail(coupledPoint->NumCoefficients()) = neighCoeffs;
 
-    // evaluate the penalty function 
-    const double penaltyFunc0 = cost->CostFunction::PenaltyFunction(0, coefficients);
-    const double penaltyFunc1 = cost->PenaltyFunction(pointCoeffs, neighCoeffs);
-    EXPECT_NEAR(penaltyFunc0, penaltyFunc1, 1.0e-14);
+    // evaluate the penalty function
+    const Eigen::VectorXd penaltyFunc0 = cost->CostFunction::PenaltyFunction(0, coefficients);
+    const Eigen::VectorXd penaltyFunc1 = cost->PenaltyFunction(pointCoeffs, neighCoeffs);
+    EXPECT_NEAR((penaltyFunc0-penaltyFunc1).norm(), 0.0, 1.0e-14);
 
-    const double expectedPenaltyFunc = (cost->Coupled()? std::sqrt(0.5*couplingScale*point->NearestNeighborKernel(point->LocalIndex(coupledPoint->GlobalIndex())))*(point->EvaluateLocalFunction(coupledPoint->x, pointCoeffs) - coupledPoint->EvaluateLocalFunction(coupledPoint->x, neighCoeffs)).norm() : 0.0);
-    EXPECT_NEAR(penaltyFunc0, expectedPenaltyFunc, 1.0e-14);
+    const Eigen::VectorXd expectedPenaltyFunc = (cost->Coupled()?
+    std::sqrt(0.5*couplingScale*point->NearestNeighborKernel(point->LocalIndex(coupledPoint->GlobalIndex())))*(point->EvaluateLocalFunction(coupledPoint->x, pointCoeffs) - coupledPoint->EvaluateLocalFunction(coupledPoint->x, neighCoeffs))
+    :
+    Eigen::VectorXd::Zero(coupledPoint->model->outputDimension).eval() );
+    EXPECT_NEAR((penaltyFunc0-expectedPenaltyFunc).norm(), 0.0, 1.0e-14);
 
     // compute the gradient of the penalty function
-    const Eigen::VectorXd gradFD = cost->PenaltyFunctionGradientByFD(0, coefficients);
-    const Eigen::VectorXd grad0 = cost->CostFunction::PenaltyFunctionGradient(0, coefficients);
-    const Eigen::VectorXd grad1 = cost->PenaltyFunctionGradient(pointCoeffs, neighCoeffs);
+    const Eigen::VectorXd gradFD = cost->PenaltyFunctionJacobianByFD(0, coefficients);
+    const Eigen::VectorXd grad0 = cost->CostFunction::PenaltyFunctionJacobian(0, coefficients);
+    const Eigen::VectorXd grad1 = cost->PenaltyFunctionJacobian(pointCoeffs, neighCoeffs);
     EXPECT_NEAR((grad0-grad1).norm(), 0.0, 1.0e-14);
     EXPECT_NEAR((grad0-gradFD).norm(), 0.0, 1.0e-6);
 
     std::cout << grad1.transpose() << std::endl;
-    std::cout << cost->PenaltyFunctionGradient(Eigen::VectorXd::Random(point->NumCoefficients()), Eigen::VectorXd::Random(coupledPoint->NumCoefficients())).transpose() << std::endl;
+    std::cout << cost->PenaltyFunctionJacobian(Eigen::VectorXd::Random(point->NumCoefficients()), Eigen::VectorXd::Random(coupledPoint->NumCoefficients())).transpose() << std::endl;
 
     std::cout << std::endl << std::endl;
 
   }
 }
 
-} // namespace tests 
+} // namespace tests
 } // namespace clf

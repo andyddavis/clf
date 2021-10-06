@@ -29,13 +29,13 @@ public:
 
   /// Evaluate the gradient \f$\nabla_{\beta} f_i(\beta)\f$
   /**
-  The gradient should be independent of \f$\beta\f$ since \f$f_i\f$ is linear in this case. 
+  The gradient should be independent of \f$\beta\f$ since \f$f_i\f$ is linear in this case.
   @param[in] ind The index of the penalty function
   \return The gradient of the \f$i^{th}\f$ penalty function \f$\nabla_{\beta} f_i(\beta)\f$
   */
-  inline Eigen::VectorXd PenaltyFunctionGradient(std::size_t const ind) const {
+  inline Eigen::MatrixXd PenaltyFunctionJacobian(std::size_t const ind) const {
     assert(ind<this->numPenaltyFunctions);
-    const Eigen::VectorXd grad = PenaltyFunctionGradientImpl(ind);
+    const Eigen::MatrixXd grad = PenaltyFunctionJacobianImpl(ind);
     assert(grad.size()==this->inputDimension);
     return grad;
   }
@@ -44,7 +44,7 @@ public:
   /**
   The Jacobian matrix is \f$\boldsymbol{J} \in \mathbb{R}^{m \times n}\f$. Each row is the gradient of the penalty function \f$f_i\f$ with respect to the input parameters \f$\boldsymbol{\beta} \in \mathbb{R}^{n}\f$. Since each penalty function is linear with respect to \f$\beta\f$, this matrix is independent of the parameter \f$\beta\f$.
 
-  This function resets the Jacobian to zero and then calls clf::CostFunction::PenaltyFunctionGradientImpl to compute the Jacobian matrix.
+  This function resets the Jacobian to zero and then calls clf::CostFunction::PenaltyFunctionJacobianImpl to compute the Jacobian matrix.
   @param[out] jac The Jacobian matrix
   */
   virtual void Jacobian(MatrixType& jac) const = 0;
@@ -74,7 +74,7 @@ protected:
   @param[in] beta The input parameter
   \return The gradient of the \f$i^{th}\f$ penalty function \f$\nabla_{\beta} f_i(\beta)\f$
   */
-  inline virtual Eigen::VectorXd PenaltyFunctionGradientImpl(std::size_t const ind, Eigen::VectorXd const& beta) const final override { return PenaltyFunctionGradientImpl(ind); }
+  inline virtual Eigen::MatrixXd PenaltyFunctionJacobianImpl(std::size_t const ind, Eigen::VectorXd const& beta) const final override { return PenaltyFunctionJacobianImpl(ind); }
 
   /// Evaluate the gradient \f$\nabla_{\beta} f_i(\beta)\f$
   /**
@@ -82,11 +82,11 @@ protected:
   @param[in] ind The index of the penalty function
   \return The gradient of the \f$i^{th}\f$ penalty function \f$\nabla_{\beta} f_i(\beta)\f$
   */
-  inline virtual Eigen::VectorXd PenaltyFunctionGradientImpl(std::size_t const ind) const { return this->PenaltyFunctionGradientByFD(ind, Eigen::VectorXd::Zero(this->inputDimension)); }
+  inline virtual Eigen::MatrixXd PenaltyFunctionJacobianImpl(std::size_t const ind) const { return this->PenaltyFunctionJacobianByFD(ind, Eigen::VectorXd::Zero(this->inputDimension)); }
 
 private:
 };
 
 } // namespace clf
 
-#endif 
+#endif

@@ -24,7 +24,7 @@ public:
   @param[in] ind The index of the penalty function
   \return The gradient of the \f$i^{th}\f$ penalty function \f$\nabla_{\beta} f_i(\beta)\f$, each entry holds the index and value of a non-zero entry
   */
-  std::vector<std::pair<std::size_t, double> > PenaltyFunctionGradientSparse(std::size_t const ind) const;
+  std::vector<std::pair<std::size_t, double> > PenaltyFunctionJacobianSparse(std::size_t const ind) const;
 
   /// Compute the Jacobian matrix
   /**
@@ -43,7 +43,7 @@ protected:
   @param[in] ind The index of the penalty function
   \return The gradient of the \f$i^{th}\f$ penalty function \f$\nabla_{\beta} f_i(\beta)\f$
   */
-  virtual Eigen::VectorXd PenaltyFunctionGradientImpl(std::size_t const ind) const final override;
+  virtual Eigen::MatrixXd PenaltyFunctionJacobianImpl(std::size_t const ind) const final override;
 
   /// Evaluate the gradient \f$\nabla_{\beta} f_i(\beta)\f$
   /**
@@ -51,9 +51,9 @@ protected:
   @param[in] ind The index of the penalty function
   \return The gradient of the \f$i^{th}\f$ penalty function \f$\nabla_{\beta} f_i(\beta)\f$, each entry holds the index and value of a non-zero entry
   */
-  virtual std::vector<std::pair<std::size_t, double> > PenaltyFunctionGradientSparseImpl(std::size_t const ind) const;
+  virtual std::vector<std::pair<std::size_t, double> > PenaltyFunctionJacobianSparseImpl(std::size_t const ind) const;
 
-  /// The sparsity tolerance ignores entries in the Jacobian that are less then this value 
+  /// The sparsity tolerance ignores entries in the Jacobian that are less then this value
   /**
   Defaults to \f$1.0e-14\f$
   */
@@ -62,6 +62,6 @@ protected:
 private:
 };
 
-} // namespace clf 
+} // namespace clf
 
 #endif

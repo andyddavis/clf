@@ -123,8 +123,8 @@ TEST_F(UncoupledCostTests, CostEvaluationAndDerivatives_ZeroRegularization) {
   for( std::size_t i=0; i<computedCost.size(); ++i ) { EXPECT_NEAR(computedCost(i), trueCost(i), 1.0e-12); }
 
   for( std::size_t i=0; i<supportPoints.size(); ++i ) {
-    const Eigen::VectorXd gradFD = cost->PenaltyFunctionGradientByFD(i, coefficients);
-    const Eigen::VectorXd grad = cost->PenaltyFunctionGradient(i, coefficients);
+    const Eigen::VectorXd gradFD = cost->PenaltyFunctionJacobianByFD(i, coefficients);
+    const Eigen::VectorXd grad = cost->PenaltyFunctionJacobian(i, coefficients);
     EXPECT_NEAR((grad-gradFD).norm(), 0.0, 1.0e-5);
   }
 }
@@ -163,13 +163,13 @@ TEST_F(UncoupledCostTests, CostEvaluationAndDerivatives_NonZeroRegularization) {
   for( std::size_t i=0; i<computedCost.size(); ++i ) { EXPECT_NEAR(computedCost(i), trueCost(i), 1.0e-12); }
 
   for( std::size_t i=0; i<supportPoints.size(); ++i ) {
-    const Eigen::VectorXd gradFD = cost->PenaltyFunctionGradientByFD(i, coefficients);
-    const Eigen::VectorXd grad = cost->PenaltyFunctionGradient(i, coefficients);
+    const Eigen::VectorXd gradFD = cost->PenaltyFunctionJacobianByFD(i, coefficients);
+    const Eigen::VectorXd grad = cost->PenaltyFunctionJacobian(i, coefficients);
     EXPECT_NEAR((grad-gradFD).norm(), 0.0, 1.0e-5);
   }
 
-  const Eigen::VectorXd gradFD = cost->PenaltyFunctionGradientByFD(supportPoints.size(), coefficients);
-  const Eigen::VectorXd grad = cost->PenaltyFunctionGradient(supportPoints.size(), coefficients);
+  const Eigen::VectorXd gradFD = cost->PenaltyFunctionJacobianByFD(supportPoints.size(), coefficients);
+  const Eigen::VectorXd grad = cost->PenaltyFunctionJacobian(supportPoints.size(), coefficients);
   EXPECT_NEAR((grad-gradFD).norm(), 0.0, 1.0e-5);
 }
 

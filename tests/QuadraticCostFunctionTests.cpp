@@ -23,34 +23,34 @@ protected:
     const Eigen::VectorXd beta = Eigen::VectorXd::Random(cost->inputDimension);
 
     // check the penalty function implementation
-    EXPECT_NEAR(cost->PenaltyFunction(0, beta), beta(0), 1.0e-14);
-    EXPECT_NEAR(cost->PenaltyFunction(1, beta), 1.0-beta(1), 1.0e-14);
-    EXPECT_NEAR(cost->PenaltyFunction(2, beta), beta(2)+beta(1), 1.0e-14);
-    EXPECT_NEAR(cost->PenaltyFunction(3, beta), 3.0*beta(2), 1.0e-14);
+    EXPECT_NEAR(cost->PenaltyFunction(0, beta) (0), beta(0), 1.0e-14);
+    EXPECT_NEAR(cost->PenaltyFunction(1, beta) (0), 1.0-beta(1), 1.0e-14);
+    EXPECT_NEAR(cost->PenaltyFunction(2, beta) (0), beta(2)+beta(1), 1.0e-14);
+    EXPECT_NEAR(cost->PenaltyFunction(3, beta) (0), 3.0*beta(2), 1.0e-14);
 
     // compute the gradient with finite difference
-    const Eigen::VectorXd grad0 = cost->PenaltyFunctionGradient(0);
-    const Eigen::VectorXd grad0beta = cost->CostFunction<MATTYPE>::PenaltyFunctionGradient(0, beta);
+    const Eigen::VectorXd grad0 = cost->PenaltyFunctionJacobian(0);
+    const Eigen::VectorXd grad0beta = cost->CostFunction<MATTYPE>::PenaltyFunctionJacobian(0, beta);
     EXPECT_NEAR((grad0-grad0beta).norm(), 0.0, 1.0e-12);
-    const Eigen::VectorXd grad0FD = cost->PenaltyFunctionGradientByFD(0, beta);
+    const Eigen::VectorXd grad0FD = cost->PenaltyFunctionJacobianByFD(0, beta);
     EXPECT_NEAR((grad0-grad0FD).norm(), 0.0, 1.0e-7);
 
-    const Eigen::VectorXd grad1 = cost->PenaltyFunctionGradient(1);
-    const Eigen::VectorXd grad1beta = cost->CostFunction<MATTYPE>::PenaltyFunctionGradient(1, beta);
+    const Eigen::VectorXd grad1 = cost->PenaltyFunctionJacobian(1);
+    const Eigen::VectorXd grad1beta = cost->CostFunction<MATTYPE>::PenaltyFunctionJacobian(1, beta);
     EXPECT_NEAR((grad1-grad1beta).norm(), 0.0, 1.0e-12);
-    const Eigen::VectorXd grad1FD = cost->PenaltyFunctionGradientByFD(1, beta);
+    const Eigen::VectorXd grad1FD = cost->PenaltyFunctionJacobianByFD(1, beta);
     EXPECT_NEAR((grad1-grad1FD).norm(), 0.0, 1.0e-7);
 
-    const Eigen::VectorXd grad2 = cost->PenaltyFunctionGradient(2);
-    const Eigen::VectorXd grad2beta = cost->CostFunction<MATTYPE>::PenaltyFunctionGradient(2, beta);
+    const Eigen::VectorXd grad2 = cost->PenaltyFunctionJacobian(2);
+    const Eigen::VectorXd grad2beta = cost->CostFunction<MATTYPE>::PenaltyFunctionJacobian(2, beta);
     EXPECT_NEAR((grad2-grad2beta).norm(), 0.0, 1.0e-12);
-    const Eigen::VectorXd grad2FD = cost->PenaltyFunctionGradientByFD(2, beta);
+    const Eigen::VectorXd grad2FD = cost->PenaltyFunctionJacobianByFD(2, beta);
     EXPECT_NEAR((grad2-grad2FD).norm(), 0.0, 1.0e-7);
 
-    const Eigen::VectorXd grad3 = cost->PenaltyFunctionGradient(3);
-    const Eigen::VectorXd grad3beta = cost->CostFunction<MATTYPE>::PenaltyFunctionGradient(3, beta);
+    const Eigen::VectorXd grad3 = cost->PenaltyFunctionJacobian(3);
+    const Eigen::VectorXd grad3beta = cost->CostFunction<MATTYPE>::PenaltyFunctionJacobian(3, beta);
     EXPECT_NEAR((grad3-grad3beta).norm(), 0.0, 1.0e-12);
-    const Eigen::VectorXd grad3FD = cost->PenaltyFunctionGradientByFD(3, beta);
+    const Eigen::VectorXd grad3FD = cost->PenaltyFunctionJacobianByFD(3, beta);
     EXPECT_NEAR((grad3-grad3FD).norm(), 0.0, 1.0e-7);
 
     MATTYPE jacbeta;

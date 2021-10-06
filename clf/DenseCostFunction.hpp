@@ -5,7 +5,7 @@
 
 namespace clf {
 
-/// A clf::CostFunction using a dense Jacobian matrix 
+/// A clf::CostFunction using a dense Jacobian matrix
 class DenseCostFunction : public CostFunction<Eigen::MatrixXd> {
 public:
 
@@ -16,6 +16,14 @@ public:
   @param[in] outputDimension The output dimension \f$d\f$
   */
   DenseCostFunction(std::size_t const inputDimension, std::size_t const numPenaltyFunctions, std::size_t const outputDimension);
+
+  /// Create a cost function with \f$m\f$ penalty terms that all have different output dimension
+  /**
+  @param[in] inputDimension The dimension of the input parameter \f$n\f$
+  @param[in] numPenaltyFunctions The number of penalty functions \f$m\f$
+  @param[in] outputDimensions Each component indicates there is <tt>outputDimension[i].first</tt> penalty functions with dimension <tt>outputDimension[i].second</tt>
+  */
+  DenseCostFunction(std::size_t const inputDimension, std::size_t const numPenaltyFunctions, std::vector<std::pair<std::size_t, std::size_t> > const& outputDimension);
 
   virtual ~DenseCostFunction() = default;
 

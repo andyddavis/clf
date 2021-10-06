@@ -23,7 +23,7 @@ public:
   /**
   The Jacobian matrix is \f$\boldsymbol{J} \in \mathbb{R}^{m \times n}\f$. Each row is the gradient of the penalty function \f$f_i\f$ with respect to the input parameters \f$\boldsymbol{\beta} \in \mathbb{R}^{n}\f$. Since each penalty function is linear with respect to \f$\beta\f$, this matrix is independent of the parameter \f$\beta\f$.
 
-  This function resets the Jacobian to zero and then calls clf::CostFunction::PenaltyFunctionGradientImpl to compute the Jacobian matrix.
+  This function resets the Jacobian to zero and then calls clf::CostFunction::PenaltyFunctionJacobianImpl to compute the Jacobian matrix.
   @param[out] jac The Jacobian matrix
   */
   virtual void Jacobian(Eigen::MatrixXd& jac) const final override;
@@ -33,6 +33,6 @@ protected:
 private:
 };
 
-} // namespace clf 
+} // namespace clf
 
 #endif

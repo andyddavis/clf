@@ -4,7 +4,7 @@ namespace pt = boost::property_tree;
 using namespace clf;
 
 GlobalCost::GlobalCost(std::shared_ptr<SupportPointCloud> const& cloud, pt::ptree const& pt) :
-SparseCostFunction(cloud->numCoefficients, NumCostFunctions(cloud)),
+SparseCostFunction(cloud->numCoefficients, NumCostFunctions(cloud), 1),
 dofIndices(cloud)
 {}
 
@@ -36,9 +36,9 @@ std::vector<std::shared_ptr<CoupledCost> > GlobalCost::GetCoupledCost(std::size_
   return dofIndices.cloud->GetSupportPoint(i)->coupledCost;
 }
 
-double GlobalCost::PenaltyFunctionImpl(std::size_t const ind, Eigen::VectorXd const& beta) const {
+Eigen::VectorXd GlobalCost::PenaltyFunctionImpl(std::size_t const ind, Eigen::VectorXd const& beta) const {
   assert(false);
-  return 0.0;
+  return Eigen::VectorXd();
 }
 
 Eigen::VectorXd GlobalCost::CostImpl(Eigen::VectorXd const& beta) const {

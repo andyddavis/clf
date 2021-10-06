@@ -2,7 +2,7 @@
 #define COLOCATIONCOST_HPP_
 
 #include "clf/ColocationPointCloud.hpp"
-#include "clf/CostFunction.hpp"
+#include "clf/SparseCostFunction.hpp"
 
 namespace clf {
 
@@ -46,7 +46,7 @@ private:
   @param[in] beta The input parameter
   \return The evaluation of the \f$i^{th}\f$ penalty function
   */
-  virtual double PenaltyFunctionImpl(std::size_t const ind, Eigen::VectorXd const& beta) const override;
+  virtual Eigen::VectorXd PenaltyFunctionImpl(std::size_t const ind, Eigen::VectorXd const& beta) const override;
 
   /// Implement the sub-cost functions
   /**

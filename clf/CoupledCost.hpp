@@ -3,7 +3,7 @@
 
 #include <boost/property_tree/ptree.hpp>
 
-#include "clf/CostFunction.hpp"
+#include "clf/DenseCostFunction.hpp"
 
 namespace clf {
 
@@ -12,7 +12,7 @@ class SupportPoint;
 
 /// Compute the coupling cost associated with a support point \f$\hat{x}\f$ and its \f$i^{th}\f$ nearest neighbor \f$x_i\f$
 /**
-Let \f$\Phi_{\hat{x}}(x)\f$ be the \f$m \times \tilde{q}_{\hat{x}}\f$ matrix that defines the local function \f$\ell_{\hat{x}}(x) = \Phi_{\hat{x}}(x) p\f$ for \f$p \in \mathbb{R}^{\tilde{q}_{\hat{x}}}\f$ (see clf::SupportPoint). Similarly, let \f$\Phi_{x_i}(x)\f$ be the \f$m \times \tilde{q}_i\f$ matrix that defines the local function \f$\ell_{x_i}(x) = \Phi_{x_i}(x) s\f$ for \f$s \in \mathbb{R}^{\tilde{q}_i}\f$ associated with the neighbor point. The coupling cost function between support point \f$\hat{x}\f$ and its \f$i^{th}\f$ nearest neighbor \f$x_i\f$ is 
+Let \f$\Phi_{\hat{x}}(x)\f$ be the \f$m \times \tilde{q}_{\hat{x}}\f$ matrix that defines the local function \f$\ell_{\hat{x}}(x) = \Phi_{\hat{x}}(x) p\f$ for \f$p \in \mathbb{R}^{\tilde{q}_{\hat{x}}}\f$ (see clf::SupportPoint). Similarly, let \f$\Phi_{x_i}(x)\f$ be the \f$m \times \tilde{q}_i\f$ matrix that defines the local function \f$\ell_{x_i}(x) = \Phi_{x_i}(x) s\f$ for \f$s \in \mathbb{R}^{\tilde{q}_i}\f$ associated with the neighbor point. The coupling cost function between support point \f$\hat{x}\f$ and its \f$i^{th}\f$ nearest neighbor \f$x_i\f$ is
 \f{equation*}{
 J(p, s) = \frac{c_i}{2} \| \Phi_{\hat{x}}(x_i) p - \Phi_{x_i}(x_i) s \|^2 K_i(\hat{x}, x_{i}).
 \f}
@@ -60,7 +60,7 @@ public:
 
   /// Evaluate the penalty function given the coefficients \f$[p, s]^{\top} \in \mathbb{R}^{\tilde{q}_{\hat{x}}+\tilde{q}_i}\f$
   /**
-  The penalty function is 
+  The penalty function is
   \f{equation*}{
   \sqrt{\frac{c_i}{2} K_i(\hat{x}, x_{i})} \| \Phi_{\hat{x}}(x_i) p - \Phi_{x_i}(x_i) s \|.
   \f}
@@ -68,13 +68,13 @@ public:
   @param[in] coeffNeigh The coefficients \f$s \in \mathbb{R}^{\tilde{q}_i}\f$
   \return The evaluation of the penalty function
   */
-  double PenaltyFunction(Eigen::VectorXd const& coeffPoint, Eigen::VectorXd const& coeffNeigh) const;
+  Eigen::VectorXd PenaltyFunction(Eigen::VectorXd const& coeffPoint, Eigen::VectorXd const& coeffNeigh) const;
 
   /// Evaluate the gradient of the penalty function given the coefficients \f$[p, s]^{\top} \in \mathbb{R}^{\tilde{q}_{\hat{x}}+\tilde{q}_i}\f$
   /**
-  The gradient of the penalty function is 
+  The gradient of the penalty function is
   \f{equation*}{
-  \frac{ \sqrt{\frac{c_i}{2} K_i(\hat{x}, x_{i})} }{ \| \Phi_{\hat{x}}(x_i) p - \Phi_{x_i}(x_i) s \| } \left[ 
+  \frac{ \sqrt{\frac{c_i}{2} K_i(\hat{x}, x_{i})} }{ \| \Phi_{\hat{x}}(x_i) p - \Phi_{x_i}(x_i) s \| } \left[
   \begin{array}{c}
   \Phi_{\hat{x}}(x_i)^{\top} (\Phi_{\hat{x}}(x_i) p - \Phi_{x_i}(x_i) s) \\
   - \Phi_{x_i}(x_i)^{\top} (\Phi_{\hat{x}}(x_i) p - \Phi_{x_i}(x_i) s)
@@ -86,7 +86,7 @@ public:
   @param[in] coeffNeigh The coefficients \f$s \in \mathbb{R}^{\tilde{q}_i}\f$
   \return The gradient of the penalty function
   */
-  Eigen::VectorXd PenaltyFunctionGradient(Eigen::VectorXd const& coeffPoint, Eigen::VectorXd const& coeffNeigh) const;
+  Eigen::MatrixXd PenaltyFunctionJacobian(Eigen::VectorXd const& coeffPoint, Eigen::VectorXd const& coeffNeigh) const;
 
   /// Is this a quadratic cost function?
   /**
@@ -99,7 +99,7 @@ protected:
 
   /// Evaluate the penalty function given the coefficients \f$\beta = [p, s]^{\top} \in \mathbb{R}^{\tilde{q}_{\hat{x}}+\tilde{q}_i}\f$
   /**
-  The penalty function is 
+  The penalty function is
   \f{equation*}{
   \sqrt{\frac{c_i}{2} K_i(\hat{x}, x_{i})} \| \Phi_{\hat{x}}(x_i) p - \Phi_{x_i}(x_i) s \|.
   \f}
@@ -108,13 +108,13 @@ protected:
   @param[in] beta The input parameters \f$\beta = [p, s]^{\top} \in \mathbb{R}^{\tilde{q}_{\hat{x}}+\tilde{q}_i}\f$
   \return The evaluation of the penalty function
   */
-  virtual double PenaltyFunctionImpl(std::size_t const ind, Eigen::VectorXd const& beta) const override;
+  virtual Eigen::VectorXd PenaltyFunctionImpl(std::size_t const ind, Eigen::VectorXd const& beta) const override;
 
   /// Evaluate the gradient of the penalty function given the coefficients \f$\beta = [p, s]^{\top} \in \mathbb{R}^{\tilde{q}_{\hat{x}}+\tilde{q}_i}\f$
   /**
-  The gradient of the penalty function is 
+  The gradient of the penalty function is
   \f{equation*}{
-  \frac{ \sqrt{\frac{c_i}{2} K_i(\hat{x}, x_{i})} }{ \| \Phi_{\hat{x}}(x_i) p - \Phi_{x_i}(x_i) s \| } \left[ 
+  \frac{ \sqrt{\frac{c_i}{2} K_i(\hat{x}, x_{i})} }{ \| \Phi_{\hat{x}}(x_i) p - \Phi_{x_i}(x_i) s \| } \left[
   \begin{array}{c}
   \Phi_{\hat{x}}(x_i)^{\top} (\Phi_{\hat{x}}(x_i) p - \Phi_{x_i}(x_i) s) \\
   - \Phi_{x_i}(x_i)^{\top} (\Phi_{\hat{x}}(x_i) p - \Phi_{x_i}(x_i) s)
@@ -126,7 +126,7 @@ protected:
   @param[in] beta The input parameters \f$\beta = [p, s]^{\top} \in \mathbb{R}^{\tilde{q}_{\hat{x}}+\tilde{q}_i}\f$
   \return The gradient of the penalty function
   */
-  virtual Eigen::VectorXd PenaltyFunctionGradientImpl(std::size_t const ind, Eigen::VectorXd const& beta) const override;
+  virtual Eigen::MatrixXd PenaltyFunctionJacobianImpl(std::size_t const ind, Eigen::VectorXd const& beta) const override;
 
 private:
 

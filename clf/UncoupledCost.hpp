@@ -4,7 +4,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/optional.hpp>
 
-#include "clf/CostFunction.hpp"
+#include "clf/DenseCostFunction.hpp"
 
 namespace clf {
 
@@ -13,7 +13,7 @@ class SupportPoint;
 
 /// Compute the uncoupled cost associated with the support point at \f$\hat{x}\f$
 /**
-   Let \f$\Phi_{\hat{x}}(x)\f$ be the \f$m \times \tilde{q}\f$ matrix that defines the local function \f$\ell_{\hat{x}}(x) = \Phi_{\hat{x}}(x) p\f$ for \f$p \in \mathbb{R}^{\tilde{q}}\f$ (see clf::SupportPoint). The uncoupled cost function associated with the support point is
+Let \f$\Phi_{\hat{x}}(x)\f$ be the \f$m \times \tilde{q}\f$ matrix that defines the local function \f$\ell_{\hat{x}}(x) = \Phi_{\hat{x}}(x) p\f$ for \f$p \in \mathbb{R}^{\tilde{q}}\f$ (see clf::SupportPoint). The uncoupled cost function associated with the support point is
 \f{equation*}{
 p_{\hat{x}} = \mbox{arg min}_{p \in \mathbb{R}^{\tilde{q}}} J(p) = \sum_{j=0}^{k_{nn}} \frac{m}{2} \| \mathcal{L}_{\hat{x}}(\Phi_{\hat{x}} (x_{I(\hat{x},j)}) p) - f(x_{I(\hat{x},j)}) \|^2 {K_{\hat{x}}(\hat{x}, x_{I(\hat{x},j)})} + \frac{a}{2} \|p\|^2,
 \f}
@@ -51,9 +51,9 @@ public:
 
   /// Evaluate the forcing function \f$f\f$ at the \f$i^{th}\f$ support point \f$x_i\f$
   /**
-  @param[in] pnt We need the forcing function \f$f\f$ evaluated at this support point 
+  @param[in] pnt We need the forcing function \f$f\f$ evaluated at this support point
   */
-  Eigen::VectorXd EvaluateForcingFunction(std::shared_ptr<SupportPoint> const& pnt) const;  
+  Eigen::VectorXd EvaluateForcingFunction(std::shared_ptr<SupportPoint> const& pnt) const;
 
   /// Set clf::UncoupledCost::forcing so that we use precoupled values the forcing function \f$f(x_i)\f$ at each support point \f$x_i\f$.
   /**
@@ -79,7 +79,7 @@ public:
 
 protected:
 
-  /// Evaluate the \f$i^{th}\f$ penalty function 
+  /// Evaluate the \f$i^{th}\f$ penalty function
   /**
   For \f$i \in [0, k_{nn}]\f$ where \f$k_{nn}\f$ is the number of nearest neighbors the \f$i^{th}\f$ penalty function is
   \f{equation*}{
@@ -94,7 +94,7 @@ protected:
   @param[in] beta The input parameter
   \return The evaluation of the \f$i^{th}\f$ penalty function
   */
-  virtual double PenaltyFunctionImpl(std::size_t const ind, Eigen::VectorXd const& beta) const override;
+  virtual Eigen::VectorXd PenaltyFunctionImpl(std::size_t const ind, Eigen::VectorXd const& beta) const override;
 
   /// Evaluate the gradient of the \f$i^{th}\f$ penalty function
   /**
@@ -111,7 +111,7 @@ protected:
   @param[in] beta The input parameter
   \return The gradient of the \f$i^{th}\f$ penalty function
   */
-  virtual Eigen::VectorXd PenaltyFunctionGradientImpl(std::size_t const ind, Eigen::VectorXd const& beta) const override;
+  virtual Eigen::MatrixXd PenaltyFunctionJacobianImpl(std::size_t const ind, Eigen::VectorXd const& beta) const override;
 private:
 
   /// The parameter that scales the uncoupled cost

@@ -6,5 +6,5 @@ DenseQuadraticCostFunction::DenseQuadraticCostFunction(std::size_t const inputDi
 
 void DenseQuadraticCostFunction::Jacobian(Eigen::MatrixXd& jac) const {
   jac.resize(numPenaltyFunctions, inputDimension);
-  for( std::size_t i=0; i<numPenaltyFunctions; ++i ) { jac.row(i) = PenaltyFunctionGradient(i); }
+  for( std::size_t i=0; i<numPenaltyFunctions; ++i ) { jac.row(i) = PenaltyFunctionJacobian(i); }
 }
