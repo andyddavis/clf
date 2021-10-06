@@ -1,15 +1,8 @@
-#include "clf/CostFunction.hpp"
+#include "clf/SparseCostFunction.hpp"
 
 using namespace clf;
 
-DenseCostFunction::DenseCostFunction(std::size_t const inputDimension, std::size_t const numPenaltyFunctions) : CostFunction(inputDimension, numPenaltyFunctions) {}
-
-void DenseCostFunction::Jacobian(Eigen::VectorXd const& beta, Eigen::MatrixXd& jac) const {
-  jac.resize(numPenaltyFunctions, inputDimension);
-  for( std::size_t i=0; i<numPenaltyFunctions; ++i ) { jac.row(i) = PenaltyFunctionGradient(i, beta); }
-}
-
-SparseCostFunction::SparseCostFunction(std::size_t const inputDimension, std::size_t const numPenaltyFunctions) : CostFunction(inputDimension, numPenaltyFunctions) {}
+SparseCostFunction::SparseCostFunction(std::size_t const inputDimension, std::size_t const numPenaltyFunctions, std::size_t const outputDimension) : CostFunction(inputDimension, numPenaltyFunctions, outputDimension) {}
 
 std::vector<std::pair<std::size_t, double> > SparseCostFunction::PenaltyFunctionGradientSparse(std::size_t const ind, Eigen::VectorXd const& beta) const {
   assert(beta.size()==inputDimension);

@@ -76,8 +76,10 @@ set(CLF_SOURCE
 
     src/DOFIndices.cpp
 
-    src/CostFunction.cpp
-    src/QuadraticCostFunction.cpp
+    src/DenseCostFunction.cpp
+    src/SparseCostFunction.cpp
+    src/DenseQuadraticCostFunction.cpp
+    src/SparseQuadraticCostFunction.cpp
     src/UncoupledCost.cpp
     src/CoupledCost.cpp
     src/ColocationCost.cpp

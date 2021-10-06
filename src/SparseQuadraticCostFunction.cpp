@@ -1,15 +1,8 @@
-#include "clf/QuadraticCostFunction.hpp"
+#include "clf/SparseQuadraticCostFunction.hpp"
 
 using namespace clf;
 
-DenseQuadraticCostFunction::DenseQuadraticCostFunction(std::size_t const inputDimension, std::size_t const numPenaltyFunctions) : QuadraticCostFunction<Eigen::MatrixXd>(inputDimension, numPenaltyFunctions) {}
-
-void DenseQuadraticCostFunction::Jacobian(Eigen::MatrixXd& jac) const {
-  jac.resize(numPenaltyFunctions, inputDimension);
-  for( std::size_t i=0; i<numPenaltyFunctions; ++i ) { jac.row(i) = PenaltyFunctionGradient(i); }
-}
-
-SparseQuadraticCostFunction::SparseQuadraticCostFunction(std::size_t const inputDimension, std::size_t const numPenaltyFunctions) : QuadraticCostFunction<Eigen::SparseMatrix<double> >(inputDimension, numPenaltyFunctions) {}
+SparseQuadraticCostFunction::SparseQuadraticCostFunction(std::size_t const inputDimension, std::size_t const numPenaltyFunctions, std::size_t const outputDimension) : QuadraticCostFunction<Eigen::SparseMatrix<double> >(inputDimension, numPenaltyFunctions, outputDimension) {}
 
 std::vector<std::pair<std::size_t, double> > SparseQuadraticCostFunction::PenaltyFunctionGradientSparse(std::size_t const ind) const {
   assert(ind<numPenaltyFunctions);
