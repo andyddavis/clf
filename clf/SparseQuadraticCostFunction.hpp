@@ -19,12 +19,12 @@ public:
 
   virtual ~SparseQuadraticCostFunction() = default;
 
-  /// Evaluate the gradient \f$\nabla_{\beta} f_i(\beta)\f$
+  /// Compute the Jacobian matrix \f$A_i\f$ of the linear penalty function \f$f_i\f$
   /**
   @param[in] ind The index of the penalty function
   \return The gradient of the \f$i^{th}\f$ penalty function \f$\nabla_{\beta} f_i(\beta)\f$, each entry holds the index and value of a non-zero entry
   */
-  std::vector<std::pair<std::size_t, double> > PenaltyFunctionJacobianSparse(std::size_t const ind) const;
+  std::vector<Eigen::Triplet<double> > PenaltyFunctionJacobianSparse(std::size_t const ind) const;
 
   /// Compute the Jacobian matrix
   /**
@@ -37,7 +37,7 @@ public:
 
 protected:
 
-  /// Evaluate the gradient \f$\nabla_{\beta} f_i(\beta)\f$
+  /// Compute the Jacobian matrix \f$A_i\f$ of the linear penalty function \f$f_i\f$
   /**
   The user can no longer override this function. They must override the sparse version.
   @param[in] ind The index of the penalty function
@@ -45,19 +45,12 @@ protected:
   */
   virtual Eigen::MatrixXd PenaltyFunctionJacobianImpl(std::size_t const ind) const final override;
 
-  /// Evaluate the gradient \f$\nabla_{\beta} f_i(\beta)\f$
+  /// Compute the Jacobian matrix \f$A_i\f$ of the linear penalty function \f$f_i\f$
   /**
-  Default to using finite difference with \f$\beta=0\f$. By children can implement more efficient gradient computations
   @param[in] ind The index of the penalty function
   \return The gradient of the \f$i^{th}\f$ penalty function \f$\nabla_{\beta} f_i(\beta)\f$, each entry holds the index and value of a non-zero entry
   */
-  virtual std::vector<std::pair<std::size_t, double> > PenaltyFunctionJacobianSparseImpl(std::size_t const ind) const;
-
-  /// The sparsity tolerance ignores entries in the Jacobian that are less then this value
-  /**
-  Defaults to \f$1.0e-14\f$
-  */
-  const double sparsityTol = 1.0e-14;
+  virtual std::vector<Eigen::Triplet<double> > PenaltyFunctionJacobianSparseImpl(std::size_t const ind) const = 0;
 
 private:
 };

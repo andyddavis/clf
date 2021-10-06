@@ -11,7 +11,7 @@ The cost function is the sum of \f$m\f$ squared penalty functions \f$f_i: \mathb
 \f{equation*}{
 C = \min_{\boldsymbol{\beta} \in \mathbb{R}^{n}} \sum_{i=1}^{m} \| f_i(\boldsymbol{\beta}) \|^{2}.
 \f}
-In the case of a quadratic cost function the penalty functions \f$f_i\f$ are all linear with respect to \f$\beta\f$.
+In the case of a quadratic cost function the penalty functions \f$f_i\f$ are all linear with respect to \f$\beta\f$, implying that \f$f_i(\beta) = A_i \beta - g_i\f$ for \f$A \in \mathbb{R}^{d_i \times n}\f$ and \f$g_i \in \mathbb{R}^{d_i}\f$. The matrix \f$A_i\f$ as the Jacobian of \f$f_i\f$ and \f$g_i\f$ is the right hand side.
 */
 template<typename MatrixType>
 class QuadraticCostFunction : public CostFunction<MatrixType> {
@@ -27,17 +27,28 @@ public:
 
   virtual ~QuadraticCostFunction() = default;
 
-  /// Evaluate the gradient \f$\nabla_{\beta} f_i(\beta)\f$
+  /// Compute the Jacobian matrix \f$A_i\f$ of the linear penalty function \f$f_i\f$
   /**
   The gradient should be independent of \f$\beta\f$ since \f$f_i\f$ is linear in this case.
   @param[in] ind The index of the penalty function
-  \return The gradient of the \f$i^{th}\f$ penalty function \f$\nabla_{\beta} f_i(\beta)\f$
+  \return The gradient of the \f$i^{th}\f$ penalty function \f$\nabla_{\beta} f_i(\beta)\f$ (equivalently, \f$A_i\f$)
   */
   inline Eigen::MatrixXd PenaltyFunctionJacobian(std::size_t const ind) const {
     assert(ind<this->numPenaltyFunctions);
-    const Eigen::MatrixXd grad = PenaltyFunctionJacobianImpl(ind);
-    assert(grad.size()==this->inputDimension);
-    return grad;
+    const Eigen::MatrixXd jac = PenaltyFunctionJacobianImpl(ind);
+    assert(jac.cols()==this->inputDimension);
+    return jac;
+  }
+
+  /// Return the right hand side \f$g_i\f$ of the linear penalty function \f$f_i\f$
+  /**
+  By default, return the zero vector for the right hand side function.
+  @param[in] ind The index of the penalty function
+  \return The right hand side \f$g_i\f$
+  */
+  inline Eigen::VectorXd PenaltyFunctionRHS(std::size_t const ind) const {
+    assert(ind<this->numPenaltyFunctions);
+    return PenaltyFunctionRHSImpl(ind);
   }
 
   /// Compute the Jacobian matrix
@@ -67,6 +78,14 @@ public:
 
 protected:
 
+  /// Evaluate the \f$i^{th}\f$ penalty function \f$f_i: \mathbb{R}^{n} \mapsto \mathbb{R}^{d_i}\f$
+  /**
+  @param[in] ind The index of the penalty function
+  @param[in] beta The input parameter
+  \return The evaluation of the \f$i^{th}\f$ penalty function
+  */
+  inline virtual Eigen::VectorXd PenaltyFunctionImpl(std::size_t const ind, Eigen::VectorXd const& beta) const final override { return PenaltyFunctionJacobian(ind)*beta + PenaltyFunctionRHS(ind); }
+
   /// Evaluate the gradient \f$\nabla_{\beta} f_i(\beta)\f$
   /**
   The gradient should be independent of \f$\beta\f$ since \f$f_i\f$ is linear in this case. Therefore, override this function to just call the implementation without \f$\beta\f$.
@@ -76,13 +95,25 @@ protected:
   */
   inline virtual Eigen::MatrixXd PenaltyFunctionJacobianImpl(std::size_t const ind, Eigen::VectorXd const& beta) const final override { return PenaltyFunctionJacobianImpl(ind); }
 
+  /// Return the right hand side \f$g_i\f$ of the linear penalty function \f$f_i\f$
+  /**
+  By default, return the zero vector for the right hand side function.
+  @param[in] ind The index of the penalty function
+  \return The right hand side \f$g_i\f$
+  */
+  inline virtual Eigen::VectorXd PenaltyFunctionRHSImpl(std::size_t const ind) const {
+    assert(ind<this->numPenaltyFunctions);
+    const std::size_t outputDimension = this->PenaltyFunctionOutputDimension(ind);
+    return Eigen::VectorXd::Zero(outputDimension);
+  }
+
   /// Evaluate the gradient \f$\nabla_{\beta} f_i(\beta)\f$
   /**
   This function computes the gradient using finite difference around \f$\beta=0\f$. More efficient gradient calculation can be implemented by children.
   @param[in] ind The index of the penalty function
   \return The gradient of the \f$i^{th}\f$ penalty function \f$\nabla_{\beta} f_i(\beta)\f$
   */
-  inline virtual Eigen::MatrixXd PenaltyFunctionJacobianImpl(std::size_t const ind) const { return this->PenaltyFunctionJacobianByFD(ind, Eigen::VectorXd::Zero(this->inputDimension)); }
+  inline virtual Eigen::MatrixXd PenaltyFunctionJacobianImpl(std::size_t const ind) const = 0;
 
 private:
 };

@@ -7,8 +7,8 @@ using namespace clf;
 
 UncoupledCost::UncoupledCost(std::shared_ptr<SupportPoint> const& point, pt::ptree const& pt) :
 DenseCostFunction(point->NumCoefficients(), point->NumNeighbors() + (pt.get<double>("RegularizationParameter", 0.0)<1.0e-14? 0.0 : 1), std::vector<std::pair<std::size_t, std::size_t> >({
-  std::pair<std::size_t, std::size_t>(point->NumNeighbors(), point->model->outputDimension),
-  std::pair<std::size_t, std::size_t>((pt.get<double>("RegularizationParameter", 0.0)<1.0e-14? 0 : 1), 1),
+    std::pair<std::size_t, std::size_t>(point->NumNeighbors(), point->model->outputDimension),
+    std::pair<std::size_t, std::size_t>((pt.get<double>("RegularizationParameter", 0.0)<1.0e-14? 0 : 1), point->NumCoefficients())
 })),
 point(point),
 uncoupledScale(std::sqrt(0.5*pt.get<double>("UncoupledScale", 1.0))),
@@ -48,25 +48,17 @@ Eigen::MatrixXd UncoupledCost::PenaltyFunctionJacobianImpl(std::size_t const ind
   // the regularization cost term
   if( ind==pnt->NumNeighbors() ) {
     assert(regularizationScale>1.0e-14);
-    const double coeffNorm = coefficients.norm();
-    return (coeffNorm<1.0e-14? Eigen::VectorXd::Zero(inputDimension).eval() : (regularizationScale*coefficients/coeffNorm).eval());
+    return regularizationScale*Eigen::MatrixXd::Identity(inputDimension, inputDimension);
   }
 
   // get the ind^th support point
   std::shared_ptr<SupportPoint> neigh = pnt->NearestNeighbor(ind);
 
-  // the residual vector
-  const Eigen::VectorXd resid = neigh->model->Operator(neigh->x, coefficients, pnt->GetBasisFunctions()) - EvaluateForcingFunction(neigh);
-  const double residNorm = resid.norm();
-
-  // if the residual is zero, the gradient is also zero
-  if( residNorm<1.0e-14 ) { return Eigen::VectorXd::Zero(inputDimension); }
-
   // get the kernel evaluation
   const double kernel = uncoupledScale*std::sqrt(pnt->NearestNeighborKernel(ind));
 
   // compute the gradient vector
-  return kernel*neigh->model->OperatorJacobian(neigh->x, coefficients, pnt->GetBasisFunctions()).transpose()*resid/residNorm;
+  return kernel*neigh->model->OperatorJacobian(neigh->x, coefficients, pnt->GetBasisFunctions());
 }
 
 void UncoupledCost::SetForcingEvaluations(Eigen::MatrixXd const& force) { forcing = force; }

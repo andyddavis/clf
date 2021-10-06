@@ -102,33 +102,35 @@ TEST_F(UncoupledCostTests, CostEvaluationAndDerivatives_ZeroRegularization) {
   costOptions.put("UncoupledScale", uncoupledScale);
   cost = std::make_shared<UncoupledCost>(point, costOptions);
   EXPECT_EQ(cost->numPenaltyFunctions, point->NumNeighbors());
+  EXPECT_EQ(cost->numPenaltyTerms, model->outputDimension*point->NumNeighbors());
   EXPECT_DOUBLE_EQ(cost->RegularizationScale(), 0.0);
 
   // choose the vector of coefficients
   const Eigen::VectorXd coefficients = Eigen::VectorXd::Random(point->NumCoefficients());
 
   // compute the true cost
-  Eigen::VectorXd trueCost(point->NumNeighbors());
+  Eigen::VectorXd trueCost(point->NumNeighbors()*model->outputDimension);
   {
     const Eigen::VectorXd kernel = point->NearestNeighborKernel();
     EXPECT_EQ(kernel.size(), supportPoints.size());
+    std::size_t cnt = 0;
     for( std::size_t i=0; i<supportPoints.size(); ++i ) {
-      trueCost(i) = std::sqrt(0.5*uncoupledScale*kernel(i))*(model->Operator(supportPoints[point->GlobalNeighborIndex(i)]->x, coefficients, point->GetBasisFunctions()) - model->RightHandSide(supportPoints[point->GlobalNeighborIndex(i)]->x)).norm();
+      trueCost.segment(cnt, model->outputDimension) = std::sqrt(0.5*uncoupledScale*kernel(i))*(model->Operator(supportPoints[point->GlobalNeighborIndex(i)]->x, coefficients, point->GetBasisFunctions()) - model->RightHandSide(supportPoints[point->GlobalNeighborIndex(i)]->x));
+      cnt += model->outputDimension;
     }
   }
 
   const Eigen::VectorXd computedCost = cost->CostVector(coefficients);
-  EXPECT_EQ(computedCost.size(), point->NumNeighbors());
+  EXPECT_EQ(computedCost.size(), cost->numPenaltyTerms);
   EXPECT_EQ(computedCost.size(), trueCost.size());
   for( std::size_t i=0; i<computedCost.size(); ++i ) { EXPECT_NEAR(computedCost(i), trueCost(i), 1.0e-12); }
 
   for( std::size_t i=0; i<supportPoints.size(); ++i ) {
-    const Eigen::VectorXd gradFD = cost->PenaltyFunctionJacobianByFD(i, coefficients);
-    const Eigen::VectorXd grad = cost->PenaltyFunctionJacobian(i, coefficients);
-    EXPECT_NEAR((grad-gradFD).norm(), 0.0, 1.0e-5);
+    const Eigen::MatrixXd jacFD = cost->PenaltyFunctionJacobianByFD(i, coefficients);
+    const Eigen::MatrixXd jac = cost->PenaltyFunctionJacobian(i, coefficients);
+    EXPECT_NEAR((jac-jacFD).norm(), 0.0, 1.0e-5);
   }
 }
-
 
 TEST_F(UncoupledCostTests, CostEvaluationAndDerivatives_NonZeroRegularization) {
   // the regularization parameter for the uncoupled cost
@@ -140,37 +142,40 @@ TEST_F(UncoupledCostTests, CostEvaluationAndDerivatives_NonZeroRegularization) {
   costOptions.put("UncoupledScale", uncoupledScale);
   cost = std::make_shared<UncoupledCost>(point, costOptions);
   EXPECT_EQ(cost->numPenaltyFunctions, point->NumNeighbors()+1);
+  EXPECT_EQ(cost->numPenaltyTerms, point->model->outputDimension*point->NumNeighbors()+point->NumCoefficients());
   EXPECT_DOUBLE_EQ(cost->RegularizationScale(), regularizationScale);
 
   // choose the vector of coefficients
   const Eigen::VectorXd coefficients = Eigen::VectorXd::Ones(point->NumCoefficients());
 
   // compute the true cost
-  Eigen::VectorXd trueCost(point->NumNeighbors()+1);
+  Eigen::VectorXd trueCost(point->NumNeighbors()*model->outputDimension+point->NumCoefficients());
   {
     const Eigen::VectorXd kernel = point->NearestNeighborKernel();
     EXPECT_EQ(kernel.size(), supportPoints.size());
+    std::size_t cnt = 0;
     for( std::size_t i=0; i<supportPoints.size(); ++i ) {
-      trueCost(i) = std::sqrt(0.5*uncoupledScale*kernel(i))*(model->Operator(supportPoints[point->GlobalNeighborIndex(i)]->x, coefficients, point->GetBasisFunctions()) - model->RightHandSide(supportPoints[point->GlobalNeighborIndex(i)]->x)).norm();
+      trueCost.segment(cnt, model->outputDimension) = std::sqrt(0.5*uncoupledScale*kernel(i))*(model->Operator(supportPoints[point->GlobalNeighborIndex(i)]->x, coefficients, point->GetBasisFunctions()) - model->RightHandSide(supportPoints[point->GlobalNeighborIndex(i)]->x));
+      cnt += model->outputDimension;
     }
 
-    trueCost(supportPoints.size()) = std::sqrt(0.5*regularizationScale)*coefficients.norm();
+    trueCost.tail(point->NumCoefficients()) = regularizationScale*coefficients;
   }
 
   const Eigen::VectorXd computedCost = cost->CostVector(coefficients);
-  EXPECT_EQ(computedCost.size(), point->NumNeighbors()+1);
+  EXPECT_EQ(computedCost.size(), cost->numPenaltyTerms);
   EXPECT_EQ(computedCost.size(), trueCost.size());
   for( std::size_t i=0; i<computedCost.size(); ++i ) { EXPECT_NEAR(computedCost(i), trueCost(i), 1.0e-12); }
 
   for( std::size_t i=0; i<supportPoints.size(); ++i ) {
-    const Eigen::VectorXd gradFD = cost->PenaltyFunctionJacobianByFD(i, coefficients);
-    const Eigen::VectorXd grad = cost->PenaltyFunctionJacobian(i, coefficients);
-    EXPECT_NEAR((grad-gradFD).norm(), 0.0, 1.0e-5);
+    const Eigen::MatrixXd jacFD = cost->PenaltyFunctionJacobianByFD(i, coefficients);
+    const Eigen::MatrixXd jac = cost->PenaltyFunctionJacobian(i, coefficients);
+    EXPECT_NEAR((jac-jacFD).norm(), 0.0, 1.0e-5);
   }
 
-  const Eigen::VectorXd gradFD = cost->PenaltyFunctionJacobianByFD(supportPoints.size(), coefficients);
-  const Eigen::VectorXd grad = cost->PenaltyFunctionJacobian(supportPoints.size(), coefficients);
-  EXPECT_NEAR((grad-gradFD).norm(), 0.0, 1.0e-5);
+  const Eigen::MatrixXd jacFD = cost->PenaltyFunctionJacobianByFD(supportPoints.size(), coefficients);
+  const Eigen::MatrixXd jac = cost->PenaltyFunctionJacobian(supportPoints.size(), coefficients);
+  EXPECT_NEAR((jac-jacFD).norm(), 0.0, 1.0e-5);
 }
 
 TEST_F(UncoupledCostTests, MinimizeCost_LevenbergMarquardt) {
@@ -209,6 +214,8 @@ TEST_F(UncoupledCostTests, MinimizeCost_NLopt) {
 
   // choose the vector of coefficients
   Eigen::VectorXd coefficients = Eigen::VectorXd::Random(point->NumCoefficients());
+
+  const std::vector<Eigen::VectorXd> inputs({coefficients});
 
   const std::pair<Optimization::Convergence, double> info = lm->Minimize(coefficients);
   EXPECT_TRUE(info.first>0);

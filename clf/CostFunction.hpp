@@ -43,7 +43,7 @@ public:
   muq::Optimization::CostFunction(Eigen::VectorXi::Constant(1, inputDimension)),
   inputDimension(inputDimension),
   numPenaltyFunctions(numPenaltyFunctions),
-  numPenaltyTerms(numPenaltyFunctions*NumPenaltyTerms(outputDimension)),
+  numPenaltyTerms(NumPenaltyTerms(outputDimension)),
   outputDimension(outputDimension)
   {}
 
@@ -197,11 +197,8 @@ protected:
   \return The gradient of the total cost
   */
   inline virtual void GradientImpl(unsigned int const inputDimWrt, muq::Modeling::ref_vector<Eigen::VectorXd> const& input, Eigen::VectorXd const& sensitivity) override {
-    assert(false);
     gradient = Eigen::VectorXd::Zero(inputDimension);
-    for( std::size_t i=0; i<numPenaltyFunctions; ++i ) {
-      gradient += 2.0*PenaltyFunction(i, input[0])*PenaltyFunctionJacobian(i, input[0]);
-    }
+    for( std::size_t i=0; i<numPenaltyFunctions; ++i ) { gradient += 2.0*PenaltyFunctionJacobian(i, input[0]).transpose()*PenaltyFunction(i, input[0]); }
   }
 
   /// Each component indicates there is <tt>outputDimension[i].first</tt> penalty functions with dimension <tt>outputDimension[i].second</tt>
