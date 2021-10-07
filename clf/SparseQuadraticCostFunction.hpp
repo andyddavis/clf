@@ -52,6 +52,14 @@ protected:
   */
   virtual std::vector<Eigen::Triplet<double> > PenaltyFunctionJacobianSparseImpl(std::size_t const ind) const = 0;
 
+  /// Apply the Jacobian matrix of the \f$i^{th}\f$ penalty function to the parameters 
+  /**
+  @param[in] ind The index of the penalty function
+  @param[in] beta The input parameter
+  \return The application of the \f$i^{th}\f$ penalty function's Jacobian matrix on \f$\beta\f$
+  */
+  virtual Eigen::VectorXd ApplyPenaltyFunctionJacobian(std::size_t const ind, Eigen::VectorXd const& beta) const override;
+
 private:
 };
 

@@ -84,7 +84,15 @@ protected:
   @param[in] beta The input parameter
   \return The evaluation of the \f$i^{th}\f$ penalty function
   */
-  inline virtual Eigen::VectorXd PenaltyFunctionImpl(std::size_t const ind, Eigen::VectorXd const& beta) const final override { return PenaltyFunctionJacobian(ind)*beta + PenaltyFunctionRHS(ind); }
+  inline virtual Eigen::VectorXd PenaltyFunctionImpl(std::size_t const ind, Eigen::VectorXd const& beta) const final override { return ApplyPenaltyFunctionJacobian(ind, beta) + PenaltyFunctionRHS(ind); }
+
+  /// Apply the Jacobian matrix of the \f$i^{th}\f$ penalty function to the parameters 
+  /**
+  @param[in] ind The index of the penalty function
+  @param[in] beta The input parameter
+  \return The application of the \f$i^{th}\f$ penalty function's Jacobian matrix on \f$\beta\f$
+  */
+  inline virtual Eigen::VectorXd ApplyPenaltyFunctionJacobian(std::size_t const ind, Eigen::VectorXd const& beta) const { return PenaltyFunctionJacobian(ind)*beta; }
 
   /// Evaluate the gradient \f$\nabla_{\beta} f_i(\beta)\f$
   /**

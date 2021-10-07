@@ -17,7 +17,7 @@ public:
     pt::ptree modelOptions;
     modelOptions.put("InputDimension", indim);
     modelOptions.put("OutputDimension", outdim);
-    auto model = std::make_shared<LinearModel>(modelOptions);
+    model = std::make_shared<LinearModel>(modelOptions);
 
     // the order of the total order polynomial and sin/cos bases
     const std::size_t orderPoly = 5, orderSinCos = 2;
@@ -66,6 +66,9 @@ public:
   /// The number of points in the cloud will be <tt>4*npoints*npoints+1</tt>
   const std::size_t npoints = 6;
 
+  /// The model that we are using to test the coupling cost
+  std::shared_ptr<LinearModel> model;
+
 private:
 };
 
@@ -83,6 +86,7 @@ TEST_F(CoupledCostTests, CostEvaluationAndDerivatives) {
     EXPECT_EQ(cost->Coupled(), coupledPoint!=point & point->IsNeighbor(coupledPoint->GlobalIndex()));
     EXPECT_EQ(cost->inputDimension, point->NumCoefficients()+coupledPoint->NumCoefficients());
     EXPECT_EQ(cost->numPenaltyFunctions, 1);
+    EXPECT_EQ(cost->numPenaltyTerms, model->outputDimension);
     EXPECT_EQ(cost->GetPoint(), point);
     EXPECT_EQ(cost->GetNeighbor(), coupledPoint);
     EXPECT_NEAR(cost->CoupledScale(), (cost->Coupled()? couplingScale : 0.0), 1.0e-14);
@@ -97,26 +101,26 @@ TEST_F(CoupledCostTests, CostEvaluationAndDerivatives) {
     // evaluate the penalty function
     const Eigen::VectorXd penaltyFunc0 = cost->CostFunction::PenaltyFunction(0, coefficients);
     const Eigen::VectorXd penaltyFunc1 = cost->PenaltyFunction(pointCoeffs, neighCoeffs);
+    EXPECT_EQ(penaltyFunc0.size(), penaltyFunc1.size());
     EXPECT_NEAR((penaltyFunc0-penaltyFunc1).norm(), 0.0, 1.0e-14);
 
     const Eigen::VectorXd expectedPenaltyFunc = (cost->Coupled()?
     std::sqrt(0.5*couplingScale*point->NearestNeighborKernel(point->LocalIndex(coupledPoint->GlobalIndex())))*(point->EvaluateLocalFunction(coupledPoint->x, pointCoeffs) - coupledPoint->EvaluateLocalFunction(coupledPoint->x, neighCoeffs))
     :
     Eigen::VectorXd::Zero(coupledPoint->model->outputDimension).eval() );
+    EXPECT_EQ(penaltyFunc0.size(), expectedPenaltyFunc.size());
     EXPECT_NEAR((penaltyFunc0-expectedPenaltyFunc).norm(), 0.0, 1.0e-14);
 
     // compute the gradient of the penalty function
-    const Eigen::VectorXd gradFD = cost->PenaltyFunctionJacobianByFD(0, coefficients);
-    const Eigen::VectorXd grad0 = cost->CostFunction::PenaltyFunctionJacobian(0, coefficients);
-    const Eigen::VectorXd grad1 = cost->PenaltyFunctionJacobian(pointCoeffs, neighCoeffs);
-    EXPECT_NEAR((grad0-grad1).norm(), 0.0, 1.0e-14);
-    EXPECT_NEAR((grad0-gradFD).norm(), 0.0, 1.0e-6);
-
-    std::cout << grad1.transpose() << std::endl;
-    std::cout << cost->PenaltyFunctionJacobian(Eigen::VectorXd::Random(point->NumCoefficients()), Eigen::VectorXd::Random(coupledPoint->NumCoefficients())).transpose() << std::endl;
-
-    std::cout << std::endl << std::endl;
-
+    const Eigen::MatrixXd jacFD = cost->PenaltyFunctionJacobianByFD(0, coefficients);
+    const Eigen::MatrixXd jac0 = cost->CostFunction::PenaltyFunctionJacobian(0, coefficients);
+    EXPECT_EQ(jacFD.rows(), jac0.rows());
+    EXPECT_EQ(jacFD.cols(), jac0.cols());
+    const std::vector<Eigen::Triplet<double> > entries = cost->PenaltyFunctionJacobian();
+    Eigen::SparseMatrix<double> jac1(jac0.rows(), jac0.cols());
+    jac1.setFromTriplets(entries.begin(), entries.end());
+    EXPECT_NEAR((jac0-Eigen::MatrixXd(jac1)).norm(), 0.0, 1.0e-14);
+    EXPECT_NEAR((jac0-jacFD).norm(), 0.0, 1.0e-6);
   }
 }
 

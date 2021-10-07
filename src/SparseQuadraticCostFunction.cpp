@@ -25,6 +25,14 @@ void SparseQuadraticCostFunction::Jacobian(Eigen::SparseMatrix<double>& jac) con
   jac.makeCompressed();
 }
 
+Eigen::VectorXd SparseQuadraticCostFunction::ApplyPenaltyFunctionJacobian(std::size_t const ind, Eigen::VectorXd const& beta) const {
+  const std::vector<Eigen::Triplet<double> > triplets = PenaltyFunctionJacobianSparse(ind);
+
+  Eigen::SparseMatrix<double> jac(PenaltyFunctionOutputDimension(ind), inputDimension);
+  jac.setFromTriplets(triplets.begin(), triplets.end());
+  return jac*beta;
+}
+
 Eigen::MatrixXd SparseQuadraticCostFunction::PenaltyFunctionJacobianImpl(std::size_t const ind) const {
   const std::vector<Eigen::Triplet<double> > sparseJac = PenaltyFunctionJacobianSparseImpl(ind);
 

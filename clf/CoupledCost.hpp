@@ -3,7 +3,7 @@
 
 #include <boost/property_tree/ptree.hpp>
 
-#include "clf/DenseCostFunction.hpp"
+#include "clf/SparseQuadraticCostFunction.hpp"
 
 namespace clf {
 
@@ -23,7 +23,7 @@ Parameter Key | Type | Default Value | Description |
 ------------- | ------------- | ------------- | ------------- |
 "CoupledScale"   | <tt>double</tt> | <tt>1.0</tt> | The scale parameter \f$c_i\f$. |
 */
-class CoupledCost : public DenseCostFunction {
+class CoupledCost : public SparseQuadraticCostFunction {
 public:
   /**
   @param[in] point The point use uncoupled cost we are computing
@@ -70,45 +70,20 @@ public:
   */
   Eigen::VectorXd PenaltyFunction(Eigen::VectorXd const& coeffPoint, Eigen::VectorXd const& coeffNeigh) const;
 
-  /// Evaluate the gradient of the penalty function given the coefficients \f$[p, s]^{\top} \in \mathbb{R}^{\tilde{q}_{\hat{x}}+\tilde{q}_i}\f$
+  /// Evaluate the Jacobian of the penalty function given the coefficients \f$[p, s]^{\top} \in \mathbb{R}^{\tilde{q}_{\hat{x}}+\tilde{q}_i}\f$
   /**
-  The gradient of the penalty function is
+  The Jacobian of the penalty function is
   \f{equation*}{
-  \frac{ \sqrt{\frac{c_i}{2} K_i(\hat{x}, x_{i})} }{ \| \Phi_{\hat{x}}(x_i) p - \Phi_{x_i}(x_i) s \| } \left[
-  \begin{array}{c}
-  \Phi_{\hat{x}}(x_i)^{\top} (\Phi_{\hat{x}}(x_i) p - \Phi_{x_i}(x_i) s) \\
-  - \Phi_{x_i}(x_i)^{\top} (\Phi_{\hat{x}}(x_i) p - \Phi_{x_i}(x_i) s)
-  \end{array}
-  \right].
+  \left[ \begin{array}{cc}
+  \Phi_{\hat{x}}(x_i) & 0 \\
+  0 & \Phi_{x_i}(x_i)
+  \end{array} \right].
   \f}
-  Note that the gradient is zero if \f$\| \Phi_{\hat{x}}(x_i) p - \Phi_{x_i}(x_i) s \| = 0\f$.
-  @param[in] coeffPoint The coefficients \f$p \in \mathbb{R}^{\tilde{q}_{\hat{x}}}\f$
-  @param[in] coeffNeigh The coefficients \f$s \in \mathbb{R}^{\tilde{q}_i}\f$
-  \return The gradient of the penalty function
+  \return The entries of the matrices \f$\Phi_{\hat{x}}(x_i)\f$ and \f$\Phi_{x_i}(x_i)\f$. If the points are uncoupled, return no entires, indicatiing zero.
   */
-  Eigen::MatrixXd PenaltyFunctionJacobian(Eigen::VectorXd const& coeffPoint, Eigen::VectorXd const& coeffNeigh) const;
-
-  /// Is this a quadratic cost function?
-  /**
-  The coupling cost is always quadratic.
-  \return <tt>true</tt>: The cost function is quadratic
-  */
-  virtual bool IsQuadratic() const override;
+  std::vector<Eigen::Triplet<double> > PenaltyFunctionJacobian() const;
 
 protected:
-
-  /// Evaluate the penalty function given the coefficients \f$\beta = [p, s]^{\top} \in \mathbb{R}^{\tilde{q}_{\hat{x}}+\tilde{q}_i}\f$
-  /**
-  The penalty function is
-  \f{equation*}{
-  \sqrt{\frac{c_i}{2} K_i(\hat{x}, x_{i})} \| \Phi_{\hat{x}}(x_i) p - \Phi_{x_i}(x_i) s \|.
-  \f}
-  The input coefficeints are \f$\beta = [p, s]^{\top} \in \mathbb{R}^{\tilde{q}_{\hat{x}}+\tilde{q}_i}\f$.
-  @param[in] ind The index of the penalty function (must be \f$0\f$ since there is only one penalty function)
-  @param[in] beta The input parameters \f$\beta = [p, s]^{\top} \in \mathbb{R}^{\tilde{q}_{\hat{x}}+\tilde{q}_i}\f$
-  \return The evaluation of the penalty function
-  */
-  virtual Eigen::VectorXd PenaltyFunctionImpl(std::size_t const ind, Eigen::VectorXd const& beta) const override;
 
   /// Evaluate the gradient of the penalty function given the coefficients \f$\beta = [p, s]^{\top} \in \mathbb{R}^{\tilde{q}_{\hat{x}}+\tilde{q}_i}\f$
   /**
@@ -123,10 +98,9 @@ protected:
   \f}
   The input coefficeints are \f$\beta = [p, s]^{\top} \in \mathbb{R}^{\tilde{q}_{\hat{x}}+\tilde{q}_i}\f$. Note that the gradient is zero if \f$\| \Phi_{\hat{x}}(x_i) p - \Phi_{x_i}(x_i) s \| = 0\f$.
   @param[in] ind The index of the penalty function (must be \f$0\f$ since there is only one penalty function)
-  @param[in] beta The input parameters \f$\beta = [p, s]^{\top} \in \mathbb{R}^{\tilde{q}_{\hat{x}}+\tilde{q}_i}\f$
-  \return The gradient of the penalty function
+  \return The entries of the Jacobian
   */
-  virtual Eigen::MatrixXd PenaltyFunctionJacobianImpl(std::size_t const ind, Eigen::VectorXd const& beta) const override;
+  virtual std::vector<Eigen::Triplet<double> > PenaltyFunctionJacobianSparseImpl(std::size_t const ind) const override;
 
 private:
 

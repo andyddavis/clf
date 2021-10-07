@@ -6,7 +6,7 @@ namespace pt = boost::property_tree;
 using namespace clf;
 
 CoupledCost::CoupledCost(std::shared_ptr<SupportPoint> const& point, std::shared_ptr<SupportPoint> const& neighbor, pt::ptree const& pt) :
-DenseCostFunction(point->NumCoefficients()+neighbor->NumCoefficients(), 1, point->model->outputDimension),
+SparseQuadraticCostFunction(point->NumCoefficients()+neighbor->NumCoefficients(), 1, point->model->outputDimension),
 point(point),
 neighbor(neighbor),
 pointBasisEvals(point->EvaluateBasisFunctions(neighbor->x)),
@@ -26,10 +26,7 @@ std::size_t CoupledCost::LocalIndex(std::shared_ptr<SupportPoint> const& point, 
 bool CoupledCost::Coupled() const { return localNeighborInd!=std::numeric_limits<std::size_t>::max(); }
 
 Eigen::VectorXd CoupledCost::PenaltyFunction(Eigen::VectorXd const& coeffPoint, Eigen::VectorXd const& coeffNeigh) const {
-  if( !Coupled() ) {
-    assert(false);
-    return Eigen::VectorXd();
-  }
+  if( !Coupled() ) { return Eigen::VectorXd(outputDimension[0].second); }
 
   auto pnt = point.lock(); assert(pnt);
   auto neigh = neighbor.lock(); assert(neigh);
@@ -38,62 +35,34 @@ Eigen::VectorXd CoupledCost::PenaltyFunction(Eigen::VectorXd const& coeffPoint, 
   return scale*(pnt->EvaluateLocalFunction(coeffPoint, pointBasisEvals) - neigh->EvaluateLocalFunction(coeffNeigh, neighborBasisEvals));
 }
 
-Eigen::VectorXd CoupledCost::PenaltyFunctionImpl(std::size_t const ind, Eigen::VectorXd const& beta) const {
-  if( !Coupled() ) {
-    assert(false);
-    return Eigen::VectorXd();
+std::vector<Eigen::Triplet<double> > CoupledCost::PenaltyFunctionJacobian() const {
+  auto pnt = point.lock(); assert(pnt);
+  auto neigh = neighbor.lock(); assert(neigh);
+
+  if( !Coupled() ) { return std::vector<Eigen::Triplet<double> >(); }
+
+  std::vector<Eigen::Triplet<double> > triplets; 
+
+  std::size_t cnt = 0;
+  for( std::size_t i=0; i<pnt->model->outputDimension; ++i ) {
+    for( std::size_t j=0; j<pointBasisEvals[i].size(); ++j ) { 
+      if( std::abs(pointBasisEvals[i](j))>1.0e-15 ) { triplets.emplace_back(i, cnt+j, scale*pointBasisEvals[i](j)); }		      
+    }
+    cnt += pointBasisEvals[i].size();
   }
 
-  auto pnt = point.lock(); assert(pnt);
-  auto neigh = neighbor.lock(); assert(neigh);
-
-  // the coefficients for the point and its neighbor
-  const Eigen::Map<const Eigen::VectorXd> pointCoeffs(&beta(0), pnt->NumCoefficients());
-  const Eigen::Map<const Eigen::VectorXd> neighCoeffs(&beta(pnt->NumCoefficients()), neigh->NumCoefficients());
-
-  return PenaltyFunction(pointCoeffs, neighCoeffs);
-}
-
-Eigen::MatrixXd CoupledCost::PenaltyFunctionJacobian(Eigen::VectorXd const& coeffPoint, Eigen::VectorXd const& coeffNeigh) const {
-  if( !Coupled() ) { return Eigen::VectorXd::Zero(inputDimension); }
-
-  auto pnt = point.lock(); assert(pnt);
-  auto neigh = neighbor.lock(); assert(neigh);
-
-  Eigen::VectorXd resid = pnt->EvaluateLocalFunction(coeffPoint, pointBasisEvals) - neigh->EvaluateLocalFunction(coeffNeigh, neighborBasisEvals);
-  const double residNorm = resid.norm();
-  if( residNorm<1.0e-14 ) { return Eigen::VectorXd::Zero(inputDimension); }
-  assert(resid.size()==pointBasisEvals.size());
-  assert(resid.size()==neighborBasisEvals.size());
-
-  // scale the residual rather than the gradient because the output size will likely be much smaller than the number of inputs
-  resid *= scale/residNorm;
-
-  Eigen::VectorXd grad(inputDimension);
-  std::size_t ind = 0;
-  std::size_t jnd = pnt->NumCoefficients();
-  for( std::size_t i=0; i<resid.size(); ++i ) {
-    grad.segment(ind, pointBasisEvals[i].size()) = resid(i)*pointBasisEvals[i];
-    ind += pointBasisEvals[i].size();
-    grad.segment(jnd, neighborBasisEvals[i].size()) = -resid(i)*neighborBasisEvals[i];
-    jnd += neighborBasisEvals[i].size();
+  cnt = pnt->NumCoefficients();
+  for( std::size_t i=0; i<neigh->model->outputDimension; ++i ) {
+    for( std::size_t j=0; j<neighborBasisEvals[i].size(); ++j ) { 
+      if( std::abs(neighborBasisEvals[i](j))>1.0e-15 ) { triplets.emplace_back(i, cnt+j, -scale*neighborBasisEvals[i](j)); }		      
+    }
+    cnt += neighborBasisEvals[i].size();
   }
 
-  return grad;
+  return triplets;
 }
 
-Eigen::MatrixXd CoupledCost::PenaltyFunctionJacobianImpl(std::size_t const ind, Eigen::VectorXd const& beta) const {
-  if( !Coupled() ) { return Eigen::VectorXd::Zero(inputDimension); }
-
-  auto pnt = point.lock(); assert(pnt);
-  auto neigh = neighbor.lock(); assert(neigh);
-
-  // the coefficients for the point and its neighbor
-  const Eigen::Map<const Eigen::VectorXd> pointCoeffs(&beta(0), pnt->NumCoefficients());
-  const Eigen::Map<const Eigen::VectorXd> neighCoeffs(&beta(pnt->NumCoefficients()), neigh->NumCoefficients());
-
-  return PenaltyFunctionJacobian(pointCoeffs, neighCoeffs);
-}
+std::vector<Eigen::Triplet<double> > CoupledCost::PenaltyFunctionJacobianSparseImpl(std::size_t const ind) const { return PenaltyFunctionJacobian(); }
 
 std::shared_ptr<const SupportPoint> CoupledCost::GetPoint() const {
   auto pnt = point.lock();
@@ -113,4 +82,3 @@ double CoupledCost::CoupledScale() const {
   return (Coupled()? 2.0*scale*scale/pnt->NearestNeighborKernel(localNeighborInd) : 0.0);
 }
 
-bool CoupledCost::IsQuadratic() const { return true; }
