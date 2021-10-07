@@ -34,6 +34,16 @@ enum Convergence {
   /// Converged because the gradient is small
   CONVERGED_GRADIENT_SMALL = 3,
 };
+  
+/// Which solver should we use to solve a linear system?
+enum LinearSolver {
+  /// Use a QR solver
+  QR,
+
+  /// Use an LU solver
+  LU
+};
+
 } // namespace Optimization
 
 /// A generic optimization algorithm
@@ -59,7 +69,7 @@ public:
   gradTol(pt.get<double>("GradientTolerance", 1.0e-10)),
   funcTol(pt.get<double>("FunctionTolerance", 1.0e-10)),
   maxEvals(pt.get<std::size_t>("MaximumFunctionEvaluations", 1000)),
-  linSolver((pt.get<std::string>("LinearSolver", "LU")=="QR"? Optimizer::QR : Optimizer::LU))
+  linSolver((pt.get<std::string>("LinearSolver", "LU")=="QR"? Optimization::LinearSolver::QR : Optimization::LinearSolver::LU))
   {}
 
   virtual ~Optimizer() = default;
@@ -150,19 +160,10 @@ protected:
   /// The cost function that we need to minimize
   std::shared_ptr<CostFunction<MatrixType> > cost;
 
-private:
-
-  /// Which solver should we use to solve a linear system?
-  enum LinearSolver {
-    /// Use a QR solver
-    QR,
-
-    /// Use an LU solver
-    LU
-  };
-
   /// The linear solver used for this optimizer
-  const LinearSolver linSolver;
+  const Optimization::LinearSolver linSolver;
+
+private:
 };
 
 } // namespace clf

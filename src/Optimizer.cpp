@@ -8,7 +8,7 @@ using namespace clf;
 template<>
 Eigen::VectorXd Optimizer<Eigen::MatrixXd>::SolveLinearSystem(Eigen::MatrixXd const& mat, Eigen::VectorXd const& rhs) const {
   assert(mat.rows()==rhs.size());
-  if( linSolver==Optimizer::QR ) { 
+  if( linSolver==Optimization::LinearSolver::QR ) { 
     Eigen::ColPivHouseholderQR<Eigen::MatrixXd> solver(mat);
     assert(solver.info()==Eigen::Success);
     return SolveLinearSystemQR(solver, rhs);
@@ -21,7 +21,7 @@ Eigen::VectorXd Optimizer<Eigen::MatrixXd>::SolveLinearSystem(Eigen::MatrixXd co
 template<>
 Eigen::VectorXd Optimizer<Eigen::SparseMatrix<double> >::SolveLinearSystem(Eigen::SparseMatrix<double> const& mat, Eigen::VectorXd const& rhs) const {
   assert(mat.rows()==rhs.size());
-  if( linSolver==Optimizer::QR ) { 
+  if( linSolver==Optimization::LinearSolver::QR ) { 
     Eigen::SparseQR<Eigen::SparseMatrix<double>, Eigen::COLAMDOrdering<int> > solver(mat);
     assert(solver.info()==Eigen::Success);
     return SolveLinearSystemQR(solver, rhs);

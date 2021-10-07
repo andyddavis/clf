@@ -391,9 +391,9 @@ protected:
   inline virtual Eigen::VectorXd PenaltyFunctionRHSImpl(std::size_t const ind) const override {
     switch( ind ) {
     case 1:
-      return Eigen::Vector2d(1.0, -5.0);
+      return Eigen::Vector2d(-1.0, 5.0);
     case 2:
-      return Eigen::Vector2d(-1.0, 0.0);
+      return Eigen::Vector2d(1.0, 0.0);
     }
     return Eigen::VectorXd::Zero(2);
   }
@@ -501,9 +501,9 @@ protected:
   inline virtual Eigen::VectorXd PenaltyFunctionRHSImpl(std::size_t const ind) const override {
     switch( ind ) {
     case 1:
-      return Eigen::Vector2d(1.0, -5.0);
+      return Eigen::Vector2d(-1.0, 5.0);
     case 2:
-      return Eigen::Vector2d(-1.0, 0.0);
+      return Eigen::Vector2d(1.0, 0.0);
     }
     return Eigen::VectorXd::Zero(2);
   }
