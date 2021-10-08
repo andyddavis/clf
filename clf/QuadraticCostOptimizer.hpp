@@ -21,10 +21,10 @@ class QuadraticCostOptimizer : public Optimizer<MatrixType> {
 public:
 
   /// The type for the LU solver
-  typedef typename std::conditional<std::is_same<Eigen::MatrixXd, MatrixType>::value, Eigen::PartialPivLU<Eigen::MatrixXd>, Eigen::SparseLU<Eigen::SparseMatrix<double>, Eigen::COLAMDOrdering<int> > >::type SolverLU;
+  //typedef typename std::conditional<std::is_same<Eigen::MatrixXd, MatrixType>::value, Eigen::PartialPivLU<Eigen::MatrixXd>, Eigen::SparseLU<Eigen::SparseMatrix<double>, Eigen::COLAMDOrdering<int> > >::type SolverLU;
 
   /// The type for the QR solver
-  typedef typename std::conditional<std::is_same<Eigen::MatrixXd, MatrixType>::value, Eigen::ColPivHouseholderQR<Eigen::MatrixXd>, Eigen::SparseQR<Eigen::SparseMatrix<double>, Eigen::COLAMDOrdering<int> > >::type SolverQR;
+  //typedef typename std::conditional<std::is_same<Eigen::MatrixXd, MatrixType>::value, Eigen::ColPivHouseholderQR<Eigen::MatrixXd>, Eigen::SparseQR<Eigen::SparseMatrix<double>, Eigen::COLAMDOrdering<int> > >::type SolverQR;
 
   /**
   @param[in] cost The cost function that we need to minimize (clf::CostFunction::IsQuadratic must be true)
@@ -37,11 +37,13 @@ public:
     assert(cost->IsQuadratic());
     
     // construct the jacobian matrix (this should be independent of the parameter values, we can can just pass a dummy vector)
+    MatrixType jac;
     cost->Jacobian(Eigen::VectorXd(cost->inputDimension), jac);
     //resid = -jac.transpose()*this->cost->CostVector(Eigen::VectorXd::Zero(cost->inputDimension));
 
+    linSolve = std::make_shared<LinearSolver<MatrixType> >(jac, this->linSolver, jac.rows()!=jac.cols());
     // comptue the matrix decomposition based on which solver we are using
-    if( this->linSolver==Optimization::LinearSolver::QR ) { solverQR.emplace(jac.transpose()*jac); } else { solverLU.emplace(jac.transpose()*jac); }
+    //if( this->linSolver==Optimization::LinearSolver::QR ) { solverQR.emplace(jac.transpose()*jac); } else { solverLU.emplace(jac.transpose()*jac); }
   }
 
   virtual ~QuadraticCostOptimizer() = default;
@@ -57,27 +59,30 @@ public:
   \return First: Information about convergence or failure, Second: The current cost
   */
   inline virtual std::pair<Optimization::Convergence, double> Minimize(Eigen::VectorXd& beta) override {
-    const Eigen::VectorXd resid = -jac.transpose()*this->cost->CostVector(beta);
-    beta += ( this->linSolver==Optimization::LinearSolver::QR? this->SolveLinearSystemQR(*solverQR, resid) : solverLU->solve(resid) );
+    beta += linSolve->Solve(-this->cost->CostVector(beta));
+    /*const Eigen::VectorXd resid = -jac.transpose()*this->cost->CostVector(beta);
+      beta += ( this->linSolver==Optimization::LinearSolver::QR? this->SolveLinearSystemQR(*solverQR, resid) : solverLU->solve(resid) );*/
     return std::pair<Optimization::Convergence, double>(Optimization::Convergence::CONVERGED, 0.0);
   }
 
 private:
 
+  std::shared_ptr<LinearSolver<MatrixType> > linSolve;
+
   /// The Jacobian matrix \f$J\f$ stored so that we can compute \f$-J^{top} f(p_0)\f$
-  MatrixType jac;
+  //MatrixType jac;
 
   /// The LU solver used to compute the optimal solution 
   /**
   The decomposition is precomputed at construction if we are using an LU solve.
   */
-  std::optional<SolverLU> solverLU;
+  //std::optional<SolverLU> solverLU;
 
   /// The QR solver used to compute the optimal solution
   /**
   The decomposition is precomputed at construction if we are using an QR solve.
   */
-  std::optional<SolverQR> solverQR;
+  //std::optional<SolverQR> solverQR;
 };
 
 typedef QuadraticCostOptimizer<Eigen::MatrixXd> DenseQuadraticCostOptimizer;

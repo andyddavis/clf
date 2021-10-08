@@ -182,13 +182,15 @@ private:
   \return The step direction
   */
   inline Eigen::VectorXd StepDirection(double const damping, MatrixType& jac, Eigen::VectorXd& costVec) const {
-    costVec = jac.transpose()*costVec;
-
     // compute the QR factorization of the Jacobian matrix
-    jac = jac.transpose()*jac;
-    if( damping>1.0e-14 ) { AddScaledIdentity(damping, jac); }
+    if( damping>1.0e-14 ) {
+      costVec = jac.transpose()*costVec;
+      jac = jac.transpose()*jac;
+      AddScaledIdentity(damping, jac); 
+    }
 
-    return this->SolveLinearSystem(jac, costVec);
+    auto linSolve = std::make_shared<LinearSolver<MatrixType> >(jac, this->linSolver, damping<=1.0e-14);
+    return linSolve->Solve(costVec);
   }
 
   /// Do a line search

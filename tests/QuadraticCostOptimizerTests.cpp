@@ -27,10 +27,29 @@ protected:
   }
 };
 
+TEST_F(QuadraticCostOptimizerTests, DenseCholesky) {
+  auto cost = std::make_shared<tests::DenseQuadraticCostTest>();
+
+  pt::ptree pt;
+  pt.put("LinearSolver", "Cholesky");
+  auto opt = std::make_shared<DenseQuadraticCostOptimizer>(cost, pt);
+  Check(cost, opt);
+}
+
+TEST_F(QuadraticCostOptimizerTests, DenseCholeskyPivot) {
+  auto cost = std::make_shared<tests::DenseQuadraticCostTest>();
+
+  pt::ptree pt;
+  pt.put("LinearSolver", "CholeskyPivot");
+  auto opt = std::make_shared<DenseQuadraticCostOptimizer>(cost, pt);
+  Check(cost, opt);
+}
+
 TEST_F(QuadraticCostOptimizerTests, DenseLU) {
   auto cost = std::make_shared<tests::DenseQuadraticCostTest>();
 
   pt::ptree pt;
+  pt.put("LinearSolver", "LU");
   auto opt = std::make_shared<DenseQuadraticCostOptimizer>(cost, pt);
   Check(cost, opt);
 }
@@ -44,10 +63,29 @@ TEST_F(QuadraticCostOptimizerTests, DenseQR) {
   Check(cost, opt);
 }
 
+TEST_F(QuadraticCostOptimizerTests, SparseCholesky) {
+  auto cost = std::make_shared<tests::SparseQuadraticCostTest>();
+
+  pt::ptree pt;
+  pt.put("LinearSolver", "Cholesky");
+  auto opt = std::make_shared<SparseQuadraticCostOptimizer>(cost, pt);
+  Check(cost, opt);
+}
+
+TEST_F(QuadraticCostOptimizerTests, SparseCholeskyPivot) {
+  auto cost = std::make_shared<tests::SparseQuadraticCostTest>();
+
+  pt::ptree pt;
+  pt.put("LinearSolver", "CholeskyPivot");
+  auto opt = std::make_shared<SparseQuadraticCostOptimizer>(cost, pt);
+  Check(cost, opt);
+}
+
 TEST_F(QuadraticCostOptimizerTests, SparseLU) {
   auto cost = std::make_shared<tests::SparseQuadraticCostTest>();
 
   pt::ptree pt;
+  pt.put("LinearSolver", "LU");
   auto opt = std::make_shared<SparseQuadraticCostOptimizer>(cost, pt);
   Check(cost, opt);
 }

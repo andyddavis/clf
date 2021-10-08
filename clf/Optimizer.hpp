@@ -5,6 +5,7 @@
 #include <boost/function.hpp>
 
 #include "clf/SharedFactory.hpp"
+#include "clf/LinearSolver.hpp"
 #include "clf/CostFunction.hpp"
 #include "clf/OptimizerExceptions.hpp"
 
@@ -35,15 +36,6 @@ enum Convergence {
   CONVERGED_GRADIENT_SMALL = 3,
 };
   
-/// Which solver should we use to solve a linear system?
-enum LinearSolver {
-  /// Use a QR solver
-  QR,
-
-  /// Use an LU solver
-  LU
-};
-
 } // namespace Optimization
 
 /// A generic optimization algorithm
@@ -54,7 +46,7 @@ Parameter Key | Type | Default Value | Description |
 "GradientTolerance"   | <tt>double</tt> | <tt>1.0e-10</tt> | The tolerance for the gradient norm. |
 "FunctionTolerance"   | <tt>double</tt> | <tt>1.0e-10</tt> | The tolerance for the cost function. |
 "MaximumFunctionEvaluations"   | <tt>std::size_t</tt> | <tt>1000</tt> | The maximum number of function evaluations. |
-"LinearSolver"   | <tt>std::string</tt> | <tt>"LU"</tt> | The linear solver used by clf::SolveLinearSystem; either <tt>"LU"</tt> (requires a full rank matrix) or <tt>"QR"</tt>. The solver will default to \f$LU\f$ for any invalid input string. |
+"LinearSolver"   | <tt>std::string</tt> | <tt>"Choleskty"</tt> | The linear solver used by clf::SolveLinearSystem; Choose between: <tt>"Cholesky"</tt>, <tt>"CholeskyPivot"</tt>, <tt>"LU"</tt>, or <tt>"QR"</tt>. The solver will default to Cholesky for any invalid input string. See clf::LinearSolver. |
 */
 template<typename MatrixType>
 class Optimizer {
@@ -69,7 +61,7 @@ public:
   gradTol(pt.get<double>("GradientTolerance", 1.0e-10)),
   funcTol(pt.get<double>("FunctionTolerance", 1.0e-10)),
   maxEvals(pt.get<std::size_t>("MaximumFunctionEvaluations", 1000)),
-  linSolver((pt.get<std::string>("LinearSolver", "LU")=="QR"? Optimization::LinearSolver::QR : Optimization::LinearSolver::LU))
+  linSolver(SolverType(pt.get<std::string>("LinearSolver", "Cholesky")))
   {}
 
   virtual ~Optimizer() = default;
@@ -118,15 +110,6 @@ public:
   */
   virtual std::pair<Optimization::Convergence, double> Minimize(Eigen::VectorXd& beta) = 0;
 
-  /// Solve a linear system \f$A x = b\f$
-  /**
-  Must be specialized for each <tt>MatrixType</tt>.
-  @param[in] mat The matrix \f$A\f$
-  @param[in] rhs The right hand side \f$b\f$
-  \return The solution \f$x\f$
-  */
-  Eigen::VectorXd SolveLinearSystem(MatrixType const& mat, Eigen::VectorXd const& rhs) const;
-
   /// The tolerance for convergence based on the gradient norm
   const double gradTol;
 
@@ -138,32 +121,26 @@ public:
 
 protected:
 
-  /// Solve a linear system \f$A x = b\f$ using a \f$QR\f$ decomposition
-  /**
-  If \f$A\f$ is not full rank, return the least-squares solution.
-  @param[in] solver The \f$QR\f$ decomposition of \f$A\f$
-  @param[in] rhs The right hand side \f$b\f$
-  \return The solution \f$x\f$
-  */
-  template<typename QRSolver>
-  inline Eigen::VectorXd SolveLinearSystemQR(QRSolver const& solver, Eigen::VectorXd const& rhs) const {
-    const Eigen::Index rank = solver.rank();
-
-    Eigen::VectorXd soln(solver.cols());
-    soln.tail(soln.size()-rank).setZero();
-    soln.head(rank) = solver.matrixR().topLeftCorner(rank, rank).template triangularView<Eigen::Upper>().solve((solver.matrixQ().adjoint()*rhs).head(rank));
-    soln = solver.colsPermutation()*soln;
-
-    return soln;
-  }
-
   /// The cost function that we need to minimize
   std::shared_ptr<CostFunction<MatrixType> > cost;
 
   /// The linear solver used for this optimizer
-  const Optimization::LinearSolver linSolver;
+  const LinearSolverType linSolver;
 
 private:
+
+  /// Determine the type of linear solver
+  /**
+  @param[in] type The solver choosen by the user 
+  \return The solver (see clf::LinearSolver)
+  */
+  static LinearSolverType SolverType(std::string const& type) {
+    if( type=="CholeskyPivot" ) { return LinearSolverType::CholeskyPivot; }
+    if( type=="QR" ) { return LinearSolverType::QR; }
+    if( type=="LU" ) { return LinearSolverType::LU; }
+    return LinearSolverType::Cholesky;
+  }
+
 };
 
 } // namespace clf

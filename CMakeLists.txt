@@ -85,7 +85,6 @@ set(CLF_SOURCE
     src/ColocationCost.cpp
     src/GlobalCost.cpp
 
-    src/Optimizer.cpp
     src/LevenbergMarquardt.cpp
     src/NLoptOptimizer.cpp
 
