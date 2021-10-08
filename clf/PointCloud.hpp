@@ -9,6 +9,13 @@ namespace clf {
 class PointCloud {
 public:
 
+  /// Create an empty point cloud
+  PointCloud();
+
+  /// Create a point cloud given a set of points
+  /**
+  @param[in] points The points in the point cloud
+  */
   PointCloud(std::vector<std::shared_ptr<Point> > const& points);
 
   virtual ~PointCloud() = default;
@@ -28,7 +35,7 @@ public:
 protected:
 
   /// Each entry is a point in the cloud
-  const std::vector<std::shared_ptr<Point> > points;
+  std::vector<std::shared_ptr<Point> > points;
 
 private:
 };

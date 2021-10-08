@@ -82,7 +82,7 @@ set(CLF_SOURCE
     src/SparseQuadraticCostFunction.cpp
     src/UncoupledCost.cpp
     src/CoupledCost.cpp
-    src/ColocationCost.cpp
+    src/CollocationCost.cpp
     src/GlobalCost.cpp
 
     src/LevenbergMarquardt.cpp
@@ -90,18 +90,18 @@ set(CLF_SOURCE
 
     src/PointSampler.cpp
     src/SupportPointSampler.cpp
-    src/ColocationPointSampler.cpp
+    src/CollocationPointSampler.cpp
 
     src/Point.cpp
     src/SupportPointExceptions.cpp
     src/SupportPoint.cpp
     src/CoupledSupportPoint.cpp
-    src/ColocationPoint.cpp
+    src/CollocationPoint.cpp
 
     src/PointCloud.cpp
     src/SupportPointCloud.cpp
     src/SupportPointCloudExceptions.cpp
-    src/ColocationPointCloud.cpp
+    src/CollocationPointCloud.cpp
 
     src/LocalFunctions.cpp
 )
@@ -167,18 +167,18 @@ if( NOT CLF_BUILD_FROM_PIP )
         tests/QuadraticCostFunctionTests.cpp
         tests/UncoupledCostTests.cpp
         tests/CoupledCostTests.cpp
-        tests/ColocationCostTests.cpp
+        tests/CollocationCostTests.cpp
         tests/GlobalCostTests.cpp
 
         tests/SupportPointSamplerTests.cpp
-        tests/ColocationPointSamplerTests.cpp
+        tests/CollocationPointSamplerTests.cpp
 
         tests/SupportPointTests.cpp
         tests/CoupledSupportPointTests.cpp
-        tests/ColocationPointTests.cpp
+        tests/CollocationPointTests.cpp
 
         tests/SupportPointCloudTests.cpp
-        tests/ColocationPointCloudTests.cpp
+        tests/CollocationPointCloudTests.cpp
 
         tests/LocalFunctionsTests.cpp
     )

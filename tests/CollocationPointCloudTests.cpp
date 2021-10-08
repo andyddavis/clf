@@ -4,13 +4,16 @@
 #include <MUQ/Modeling/Distributions/Gaussian.h>
 
 #include "clf/LinearModel.hpp"
-#include "clf/ColocationPointCloud.hpp"
+#include "clf/CollocationPointCloud.hpp"
 
 namespace pt = boost::property_tree;
 using namespace muq::Modeling;
-using namespace clf;
 
-class ColocationPointCloudTests : public::testing::Test {
+namespace clf {
+namespace tests {
+
+  /// A class to run the tests for clf::CollocationPointCloud
+class CollocationPointCloudTests : public::testing::Test {
 protected:
 
   virtual void SetUp() override {
@@ -55,33 +58,37 @@ protected:
   std::shared_ptr<SupportPointCloud> supportCloud;
 };
 
-TEST_F(ColocationPointCloudTests, GenerateColocationPoints) {
-  // the number of colocation points
-  const std::size_t nColocPoints = 75;
+TEST_F(CollocationPointCloudTests, GenerateCollocationPoints) {
+  // the number of collocation points
+  const std::size_t nCollocPoints = 75;
 
-  // options for the colocation point cloud
+  // options for the collocation point cloud
   pt::ptree options;
-  options.put("NumColocationPoints", nColocPoints);
+  options.put("NumCollocationPoints", nCollocPoints);
 
   // the distribution we sample the colocation points from
   auto dist = std::make_shared<Gaussian>(indim)->AsVariable();
-  auto sampler = std::make_shared<ColocationPointSampler>(dist, model);
+  auto sampler = std::make_shared<CollocationPointSampler>(dist, model);
 
   // the cloud of collocation points
-  auto colocationCloud = std::make_shared<ColocationPointCloud>(sampler, supportCloud, options);
-  EXPECT_EQ(colocationCloud->numColocationPoints, nColocPoints);
-  EXPECT_EQ(colocationCloud->InputDimension(), model->inputDimension);
-  EXPECT_EQ(colocationCloud->OutputDimension(), model->outputDimension);
+  auto collocationCloud = std::make_shared<CollocationPointCloud>(sampler, supportCloud, options);
+  EXPECT_EQ(collocationCloud->numCollocationPoints, nCollocPoints);
 
-  // sample the colocation points
-  colocationCloud->Resample();
+  // sample the collocation points
+  collocationCloud->Resample();
 
   // loop through the colocation ponts
-  for( auto it=colocationCloud->Begin(); it!=colocationCloud->End(); ++it ) {
+  for( auto it=collocationCloud->Begin(); it!=collocationCloud->End(); ++it ) {
     EXPECT_TRUE(*it);
     EXPECT_EQ((*it)->model, model);
 
-    auto nearest = (*it)->supportPoint.lock();
+    auto point = std::dynamic_pointer_cast<CollocationPoint>(*it);
+    EXPECT_TRUE(point);
+
+    auto nearest = point->supportPoint.lock();
     EXPECT_TRUE(nearest);
   }
 }
+
+} // namespace tests 
+} // namespace clf

@@ -1,23 +1,34 @@
-#ifndef COLOCATIONCOST_HPP_
-#define COLOCATIONCOST_HPP_
+#ifndef COLLOCATIONCOST_HPP_
+#define COLLOCATIONCOST_HPP_
 
-#include "clf/ColocationPointCloud.hpp"
+#include "clf/CollocationPointCloud.hpp"
 #include "clf/SparseCostFunction.hpp"
 
 namespace clf {
 
 /// The cost function to minimize the expected least squares error with respect to a given measure
 /**
+Let \f$\Phi_{\hat{x}}(x)\f$ be the \f$m \times \tilde{q}\f$ matrix that defines the local function \f$\ell_{\hat{x}}(x) = \Phi_{\hat{x}}(x) p_{\hat{x}}\f$ for \f$p_{\hat{x}} \in \mathbb{R}^{\tilde{q}(\hat{x})}\f$ (see clf::SupportPoint). Here, \f$\hat{x}\f$ is the nearest support point (see clf::SupportPoint). Define the approximation \f$\hat{u}(x) = \Phi_{\hat{x}(x)}(x) \hat{p}_{\hat{x}(x)}\f$, where \f$\hat{x}(x)\f$ is the nearest support point to \f$x\f$. 
+
+Suppose we have \f$n\f$ support points \f$\{x_i\}_{i=1}^{n}\f$, we want to find \f$\hat{w} \in \mathbb{R}^{n \times d}\f$ such that
+\f{equation*}{
+\hat{w} = \mbox{arg min}_{w \in \mathbb{R}^{n \times d}} \int_{\Omega} \frac{1}{2} \| \mathcal{L}(\Phi_{x_{I(x)}}(x) \hat{p}_{I(x)}) - f \|^2 \pi \, dx,
+\f}
+where \f$I(x)\f$ is the index of the closest support point to \f$x\f$ and
+\f{equation*}{
+\hat{p} = \mbox{arg min}_{[n_1, ..., p_n] \in \mathbb{R}^{\tilde{q}_1} \times ... \times \mathbb{R}^{\tilde{q}_n}} \sum_{i=1}^{n} \underbrace{\sum_{j=1}^{k_i} \frac{1}{2} \|\Phi_{x_{i}}(x_j) \hat{p}_{i} - w_{j,:} \|^2 K_{x_i}(x_i, x_j) + \frac{a_i}{2} \| p_i \|}_{\text{uncoupled cost}} + \underbrace{\sum_{j=1}^{k_i} \frac{c_i}{2} \|\Phi_{x_{i}}(x_j) \hat{p}_{i}  - \Phi_{x_{j}}(x_j) \hat{p}_{j} \|^2 K_{x_i}(x_i, x_j)}_{\text{Coupled cost}}.
+\f}
+The uncoupled cost and coupled cost are computed in clf::UncoupledCost and clf::CoupledCost, respectively.
 */
-class ColocationCost : public SparseCostFunction {
+class CollocationCost : public SparseCostFunction {
 public:
 
   /**
-  @param[in] colocationCloud The collocation cloud that we will use to comptue this cost
+  @param[in] collocationCloud The collocation cloud that we will use to compute this cost
   */
-  ColocationCost(std::shared_ptr<ColocationPointCloud> const& colocationCloud);
+  CollocationCost(std::shared_ptr<CollocationPointCloud> const& colocationCloud);
 
-  virtual ~ColocationCost() = default;
+  virtual ~CollocationCost() = default;
 
   /// Compute the optimal coefficients for the local polynomials associated with each support point
   /**
@@ -60,7 +71,7 @@ private:
   void JacobianImpl(Eigen::VectorXd const& data, Eigen::SparseMatrix<double>& jac) const;
 
   /// The collocation cloud that we will use to comptue this cost
-  std::shared_ptr<ColocationPointCloud> colocationCloud;
+  std::shared_ptr<CollocationPointCloud> collocationCloud;
 };
 
 } // namespace clf

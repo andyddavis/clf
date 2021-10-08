@@ -1,12 +1,12 @@
-#include "clf/ColocationPoint.hpp"
+#include "clf/CollocationPoint.hpp"
 
 using namespace clf;
 
-ColocationPoint::ColocationPoint(Eigen::VectorXd const& x, std::shared_ptr<const Model> const& model) :
+CollocationPoint::CollocationPoint(Eigen::VectorXd const& x, std::shared_ptr<const Model> const& model) :
 Point(x, model)
 {}
 
-Eigen::VectorXd ColocationPoint::Operator() const {
+Eigen::VectorXd CollocationPoint::Operator() const {
   assert(model);
 
   // get the support point
@@ -16,7 +16,7 @@ Eigen::VectorXd ColocationPoint::Operator() const {
   return model->Operator(x, pnt->Coefficients(), pnt->GetBasisFunctions());
 }
 
-Eigen::VectorXd ColocationPoint::Operator(Eigen::VectorXd const& loc) const {
+Eigen::VectorXd CollocationPoint::Operator(Eigen::VectorXd const& loc) const {
   assert(model);
   assert(loc.size()==model->inputDimension);
 
@@ -27,7 +27,7 @@ Eigen::VectorXd ColocationPoint::Operator(Eigen::VectorXd const& loc) const {
   return model->Operator(loc, pnt->Coefficients(), pnt->GetBasisFunctions());
 }
 
-Eigen::VectorXd ColocationPoint::Operator(Eigen::VectorXd const& loc, Eigen::VectorXd const& coeffs) const {
+Eigen::VectorXd CollocationPoint::Operator(Eigen::VectorXd const& loc, Eigen::VectorXd const& coeffs) const {
   assert(model);
   assert(loc.size()==model->inputDimension);
 
@@ -39,7 +39,7 @@ Eigen::VectorXd ColocationPoint::Operator(Eigen::VectorXd const& loc, Eigen::Vec
   return model->Operator(loc, coeffs, pnt->GetBasisFunctions());
 }
 
-Eigen::MatrixXd ColocationPoint::OperatorJacobian() const {
+Eigen::MatrixXd CollocationPoint::OperatorJacobian() const {
   assert(model);
 
   // get the support point
@@ -48,7 +48,7 @@ Eigen::MatrixXd ColocationPoint::OperatorJacobian() const {
   return model->OperatorJacobian(x, pnt->Coefficients(), pnt->GetBasisFunctions());
 }
 
-Eigen::MatrixXd ColocationPoint::OperatorJacobian(Eigen::VectorXd const& loc) const {
+Eigen::MatrixXd CollocationPoint::OperatorJacobian(Eigen::VectorXd const& loc) const {
   assert(model);
   assert(loc.size()==model->inputDimension);
 
@@ -59,7 +59,7 @@ Eigen::MatrixXd ColocationPoint::OperatorJacobian(Eigen::VectorXd const& loc) co
   return model->OperatorJacobian(loc, pnt->Coefficients(), pnt->GetBasisFunctions());
 }
 
-Eigen::MatrixXd ColocationPoint::OperatorJacobian(Eigen::VectorXd const& loc, Eigen::VectorXd const& coeffs) const {
+Eigen::MatrixXd CollocationPoint::OperatorJacobian(Eigen::VectorXd const& loc, Eigen::VectorXd const& coeffs) const {
   assert(model);
   assert(loc.size()==model->inputDimension);
 

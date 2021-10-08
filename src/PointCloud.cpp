@@ -2,6 +2,8 @@
 
 using namespace clf;
 
+PointCloud::PointCloud() {}
+
 PointCloud::PointCloud(std::vector<std::shared_ptr<Point> > const& points) :
 points(points)
 {}

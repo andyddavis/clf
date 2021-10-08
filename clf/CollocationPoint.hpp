@@ -1,20 +1,21 @@
-#ifndef COLOCATIONPOINT_HPP_
-#define COLOCATIONPOINT_HPP_
+#ifndef COLLOCATIONPOINT_HPP_
+#define COLLOCATIONPOINT_HPP_
 
 #include "clf/SupportPoint.hpp"
 
 namespace clf {
 
-class ColocationPoint : public Point {
+  /// A collcation point \f$x_i\f$ evaluates the forward model at the nearest clf::SupportPoint
+class CollocationPoint : public Point {
 public:
 
   /**
   @param[in] x The location of the support point \f$x\f$
   @param[in] model The model that defines the "data" at this support point
   */
-  ColocationPoint(Eigen::VectorXd const& x, std::shared_ptr<const Model> const& model);
+  CollocationPoint(Eigen::VectorXd const& x, std::shared_ptr<const Model> const& model);
 
-  virtual ~ColocationPoint() = default;
+  virtual ~CollocationPoint() = default;
 
   /// Evaluate the operator applied to the local function at the colocation point location
   /**

@@ -3,18 +3,18 @@
 #include <MUQ/Modeling/Distributions/RandomVariable.h>
 #include <MUQ/Modeling/Distributions/Gaussian.h>
 
-#include "clf/ColocationCost.hpp"
+#include "clf/CollocationCost.hpp"
 #include "clf/LevenbergMarquardt.hpp"
 
 namespace pt = boost::property_tree;
 using namespace muq::Modeling;
 using namespace clf;
 
-class ExampleModelForColocationCostTests : public Model {
+class ExampleModelForCollocationCostTests : public Model {
 public:
-  inline ExampleModelForColocationCostTests(pt::ptree const& pt) : Model(pt) {}
+  inline ExampleModelForCollocationCostTests(pt::ptree const& pt) : Model(pt) {}
 
-  virtual ~ExampleModelForColocationCostTests() = default;
+  virtual ~ExampleModelForCollocationCostTests() = default;
 private:
 
   /**
@@ -47,13 +47,13 @@ private:
   }
 };
 
-class ColocationCostTests : public::testing::Test {
+class CollocationCostTests : public::testing::Test {
 protected:
   virtual void SetUp() override {
     pt::ptree modelOptions;
     modelOptions.put("InputDimension", indim);
     modelOptions.put("OutputDimension", outdim);
-    model = std::make_shared<ExampleModelForColocationCostTests>(modelOptions);
+    model = std::make_shared<ExampleModelForCollocationCostTests>(modelOptions);
 
     pt::ptree ptSupportPoints;
     ptSupportPoints.put("BasisFunctions", "Basis1, Basis2");
@@ -73,7 +73,7 @@ protected:
     supportCloud = SupportPointCloud::Construct(supportPoints, ptSupportPointCloud);
 
     // the distribution we sample the colocation points from
-    sampler = std::make_shared<ColocationPointSampler>(dist, model);
+    sampler = std::make_shared<CollocationPointSampler>(dist, model);
   }
 
   virtual void TearDown() override {
@@ -96,30 +96,30 @@ protected:
   std::shared_ptr<SupportPointCloud> supportCloud;
 
   /// The colocation cost
-  std::shared_ptr<ColocationCost> cost;
+  std::shared_ptr<CollocationCost> cost;
 
   /// The distribution we sample the colocation points from
-  std::shared_ptr<ColocationPointSampler> sampler;
+  std::shared_ptr<CollocationPointSampler> sampler;
 };
 
-TEST_F(ColocationCostTests, Construction) {
-  // the number of colocation points
-  const std::size_t nColocPoints = 125;
+TEST_F(CollocationCostTests, Construction) {
+  // the number of collocation points
+  const std::size_t nCollocPoints = 125;
 
   // options for the cost function
-  cloudOptions.put("NumColocationPoints", nColocPoints);
-  auto colocationCloud = std::make_shared<ColocationPointCloud>(sampler, supportCloud, cloudOptions);
+  cloudOptions.put("NumCollocationPoints", nCollocPoints);
+  auto colocationCloud = std::make_shared<CollocationPointCloud>(sampler, supportCloud, cloudOptions);
 
-  // create the colocation cost
-  cost = std::make_shared<ColocationCost>(colocationCloud);
-  EXPECT_EQ(cost->numPenaltyFunctions, model->outputDimension*nColocPoints);
+  // create the collocation cost
+  cost = std::make_shared<CollocationCost>(colocationCloud);
+  EXPECT_EQ(cost->numPenaltyFunctions, model->outputDimension*nCollocPoints);
 }
 
-TEST_F(ColocationCostTests, ComputeOptimalCoefficients) {
-  auto colocationCloud = std::make_shared<ColocationPointCloud>(sampler, supportCloud, cloudOptions);
+TEST_F(CollocationCostTests, ComputeOptimalCoefficients) {
+  auto collocationCloud = std::make_shared<CollocationPointCloud>(sampler, supportCloud, cloudOptions);
 
-  // create the colocation cost
-  cost = std::make_shared<ColocationCost>(colocationCloud);
+  // create the collocation cost
+  cost = std::make_shared<CollocationCost>(collocationCloud);
   EXPECT_EQ(cost->numPenaltyFunctions, model->outputDimension*supportCloud->NumPoints());
 
   Eigen::MatrixXd data(outdim, supportCloud->NumPoints());
@@ -136,21 +136,21 @@ TEST_F(ColocationCostTests, ComputeOptimalCoefficients) {
   }
 }
 
-TEST_F(ColocationCostTests, CostFunctionEvaluation) {
-  // the number of colocation points
-  const std::size_t nColocPoints = 25;
+TEST_F(CollocationCostTests, CostFunctionEvaluation) {
+  // the number of collocation points
+  const std::size_t nCollocPoints = 25;
 
   // options for the cost function
-  cloudOptions.put("NumColocationPoints", nColocPoints);
+  cloudOptions.put("NumCollocationPoints", nCollocPoints);
 
-  auto colocationCloud = std::make_shared<ColocationPointCloud>(sampler, supportCloud, cloudOptions);
+  auto collocationCloud = std::make_shared<CollocationPointCloud>(sampler, supportCloud, cloudOptions);
 
   // sample the colocation points
-  colocationCloud->Resample();
+  collocationCloud->Resample();
 
   // create the colocation cost
-  cost = std::make_shared<ColocationCost>(colocationCloud);
-  EXPECT_EQ(cost->numPenaltyFunctions, model->outputDimension*nColocPoints);
+  cost = std::make_shared<CollocationCost>(collocationCloud);
+  EXPECT_EQ(cost->numPenaltyFunctions, model->outputDimension*nCollocPoints);
 
   Eigen::MatrixXd data(outdim, supportCloud->NumPoints());
   for( std::size_t i=0; i<data.cols(); ++i ) { data.col(i) = supportCloud->GetSupportPoint(i)->x.head(outdim); }
@@ -158,8 +158,8 @@ TEST_F(ColocationCostTests, CostFunctionEvaluation) {
   const Eigen::VectorXd costEval = cost->CostVector(Eigen::Map<const Eigen::VectorXd>(data.data(), data.size()));
 
   EXPECT_EQ(costEval.size(), cost->numPenaltyFunctions);
-  for( std::size_t i=0; i<colocationCloud->numColocationPoints; ++i ) {
-    auto it = colocationCloud->GetColocationPoint(i);
+  for( std::size_t i=0; i<collocationCloud->numCollocationPoints; ++i ) {
+    auto it = collocationCloud->GetCollocationPoint(i);
     EXPECT_TRUE(it);
     EXPECT_NEAR((it->Operator() - it->RightHandSide() - costEval.segment(i*model->outputDimension, model->outputDimension)).norm(), 0.0, 1.0e-10);
   }
@@ -196,21 +196,21 @@ TEST_F(ColocationCostTests, CostFunctionEvaluation) {
   }
 }
 
-TEST_F(ColocationCostTests, CostFunctionMinimization) {
-  // the number of colocation points
-  const std::size_t nColocPoints = 100000;
+TEST_F(CollocationCostTests, CostFunctionMinimization) {
+  // the number of collocation points
+  const std::size_t nCollocPoints = 100000;
 
   // options for the cost function
-  cloudOptions.put("NumColocationPoints", nColocPoints);
+  cloudOptions.put("NumCollocationPoints", nCollocPoints);
 
-  auto colocationCloud = std::make_shared<ColocationPointCloud>(sampler, supportCloud, cloudOptions);
+  auto collocationCloud = std::make_shared<CollocationPointCloud>(sampler, supportCloud, cloudOptions);
 
   // sample the colocation points
-  colocationCloud->Resample();
+  collocationCloud->Resample();
 
   // create the colocation cost
-  cost = std::make_shared<ColocationCost>(colocationCloud);
-  EXPECT_EQ(cost->numPenaltyFunctions, model->outputDimension*nColocPoints);
+  cost = std::make_shared<CollocationCost>(collocationCloud);
+  EXPECT_EQ(cost->numPenaltyFunctions, model->outputDimension*nCollocPoints);
 
   pt::ptree pt;
   auto lm = std::make_shared<SparseLevenbergMarquardt>(cost, pt);
@@ -224,11 +224,11 @@ TEST_F(ColocationCostTests, CostFunctionMinimization) {
   lm->Minimize(data, costVec);
   auto dist = std::make_shared<Gaussian>(indim)->AsVariable();
   //for( std::size_t i=0; i<supportCloud->NumPoints(); ++i ) {
-  for( std::size_t i=0; i<std::min((std::size_t)10, colocationCloud->numColocationPoints); ++i ) {
+  for( std::size_t i=0; i<std::min((std::size_t)10, collocationCloud->numCollocationPoints); ++i ) {
     //const Eigen::VectorXd pnt = dist->Sample();
     //const Eigen::VectorXd pnt = supportCloud->GetSupportPoint(i)->x;
-    const Eigen::VectorXd pnt = colocationCloud->GetColocationPoint(i)->x;
-    auto support = colocationCloud->GetColocationPoint(i)->supportPoint.lock();
+    const Eigen::VectorXd pnt = collocationCloud->GetCollocationPoint(i)->x;
+    auto support = collocationCloud->GetCollocationPoint(i)->supportPoint.lock();
     std::cout << "x: " << pnt.transpose() << std::endl;
     std::cout << "||x||: " << pnt.norm() << std::endl;
     std::cout << "x.x: " << pnt.dot(pnt) << std::endl;

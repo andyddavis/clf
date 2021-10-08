@@ -3,13 +3,13 @@
 #include <MUQ/Modeling/Distributions/Gaussian.h>
 
 #include "clf/LinearModel.hpp"
-#include "clf/ColocationPointSampler.hpp"
+#include "clf/CollocationPointSampler.hpp"
 
 namespace pt = boost::property_tree;
 using namespace muq::Modeling;
 using namespace clf;
 
-TEST(ColocationPointSamplerTests, Construction) {
+TEST(CollocationPointSamplerTests, Construction) {
   // the input and ouptut dimesnions
   const std::size_t indim = 6, outdim = 5;
 
@@ -22,9 +22,7 @@ TEST(ColocationPointSamplerTests, Construction) {
   modelOptions.put("OutputDimension", outdim);
   auto model = std::make_shared<LinearModel>(modelOptions);
 
-  auto sampler = std::make_shared<ColocationPointSampler>(dist, model);
-  EXPECT_EQ(sampler->InputDimension(), model->inputDimension);
-  EXPECT_EQ(sampler->OutputDimension(), model->outputDimension);
+  auto sampler = std::make_shared<CollocationPointSampler>(dist, model);
 
   Eigen::VectorXd mean = Eigen::VectorXd::Zero(indim);
   const std::size_t n = 2.0e5;

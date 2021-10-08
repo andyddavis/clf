@@ -1,12 +1,12 @@
 #include <gtest/gtest.h>
 
 #include "clf/LinearModel.hpp"
-#include "clf/ColocationPoint.hpp"
+#include "clf/CollocationPoint.hpp"
 
 namespace pt = boost::property_tree;
 using namespace clf;
 
-TEST(ColocationPointTests, Construction) {
+TEST(CollocationPointTests, Construction) {
   // input/output dimension
   const std::size_t indim = 3, outdim = 3;
 
@@ -18,7 +18,7 @@ TEST(ColocationPointTests, Construction) {
 
   const Eigen::VectorXd loc = Eigen::VectorXd::Random(indim);
 
-  auto pnt = std::make_shared<ColocationPoint>(loc, model);
+  auto pnt = std::make_shared<CollocationPoint>(loc, model);
   EXPECT_NEAR((pnt->x-loc).norm(), 0.0, 1.0e-14);
 
   // the order of the total order polynomial basis
