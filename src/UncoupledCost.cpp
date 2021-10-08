@@ -61,16 +61,16 @@ Eigen::MatrixXd UncoupledCost::PenaltyFunctionJacobianImpl(std::size_t const ind
   return kernel*neigh->model->OperatorJacobian(neigh->x, coefficients, pnt->GetBasisFunctions());
 }
 
-void UncoupledCost::SetForcingEvaluations(Eigen::MatrixXd const& force) { forcing = force; }
+void UncoupledCost::SetForcingEvaluations(Eigen::MatrixXd const& force) { forcing.emplace(force.data(), force.rows(), force.cols()); }
 
-void UncoupledCost::UnsetForcingEvaluations() { forcing = boost::none; }
+void UncoupledCost::UnsetForcingEvaluations() { forcing.reset(); }
 
 Eigen::VectorXd UncoupledCost::EvaluateForcingFunction(std::shared_ptr<SupportPoint> const& pnt) const {
-  // if we have not set the precomputed forcing
-  if( forcing==boost::none ) { return pnt->model->RightHandSide(pnt->x); }
+  // use the precomputed value
+  if( forcing ) { return forcing->col(pnt->GlobalIndex()); }
 
-  // otherwise use the precomputed value
-  return (*forcing).col(pnt->GlobalIndex());
+  // if we have not set the precomputed forcing
+  return pnt->model->RightHandSide(pnt->x);
 }
 
 bool UncoupledCost::IsQuadratic() const {

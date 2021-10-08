@@ -171,8 +171,8 @@ TEST(LocalFunctionTests, UncoupledLinearModel) {
   // the forcing function evaluated at each support point 
   Eigen::MatrixXd forcing(2, supportPoints.size());
   for( std::size_t i=0; i<supportPoints.size(); ++i ) {
-    forcing(0, i) = 0;
-    forcing(1, i) = 1;
+    forcing(0, i) = supportPoints[i]->x(0)*supportPoints[i]->x(1) + supportPoints[i]->x(1);
+    forcing(1, i) = supportPoints[i]->x(1)*supportPoints[i]->x(1) + supportPoints[i]->x(0) + 2.0;
   }
 
   // create the local function
@@ -185,9 +185,16 @@ TEST(LocalFunctionTests, UncoupledLinearModel) {
   optimizationOptions.put("NumThreads", 1);
   const double cost = func->ComputeOptimalCoefficients(forcing, optimizationOptions);
   
-  std::cout << "(need to set this to be a linear optimizer) COST: " << cost << std::endl;
-
-  EXPECT_TRUE(false);
+  for( std::size_t i=0; i<10; ++i ) {
+    // pick a random point
+    const Eigen::VectorXd x = 0.01*Eigen::VectorXd::Random(2);
+    
+    // evaluate the support point
+    const Eigen::VectorXd eval = func->Evaluate(x);
+    const Eigen::VectorXd expected = Eigen::Vector2d(x(0)*x(1)+x(1), x(1)*x(1)+x(0)+2.0);
+    EXPECT_EQ(eval.size(), expected.size());
+    EXPECT_NEAR((eval-expected).norm(), 0.0, 1.0e-14);
+  }
 }
 
 TEST(LocalFunctionTests, CoupledLinearModel) {

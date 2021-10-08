@@ -2,7 +2,6 @@
 #define UNCOUPLEDCOST_HPP_
 
 #include <boost/property_tree/ptree.hpp>
-#include <boost/optional.hpp>
 
 #include "clf/DenseCostFunction.hpp"
 
@@ -134,7 +133,7 @@ private:
   /**
   If this optional parameter is set, use these values for the forcing function \f$f(x_i)\f$ evaluated at each support point. Otherwise, use the implementation in clf::Model::RightHandSide.
   */
-  boost::optional<Eigen::MatrixXd const&> forcing;
+  std::optional<Eigen::Map<const Eigen::MatrixXd>> forcing;
 };
 
 } // namespace clf

@@ -265,23 +265,25 @@ double SupportPoint::MinimizeUncoupledCost(Eigen::MatrixXd const& forcing, pt::p
   // set the forcing in the uncoupled cost 
   uncoupledCost->SetForcingEvaluations(forcing);
 
-  if( uncoupledCost->IsQuadratic() ) {
-    std::cout << "IS QUADRATIC!" << std::endl;
-  }
-
-  // compute the optimal parameters 
-  auto opt = Optimizer<Eigen::MatrixXd>::Construct(uncoupledCost, options);
-  const std::pair<Optimization::Convergence, double> info = opt->Minimize(coefficients);
-  assert(info.first>0);
+  // compute the optimial parameters 
+  double cst = MinimizeUncoupledCost(options);
 
   // unset the forcing 
   uncoupledCost->UnsetForcingEvaluations();
 
-  return info.second;
+  return cst;
 }
 
 double SupportPoint::MinimizeUncoupledCost(pt::ptree const& options) {
   assert(uncoupledCost);
+
+  // if linear, use the quadratic cost
+  if( quadOptimizer || uncoupledCost->IsQuadratic() ) {
+    // have we already computed the matrix decomposition?
+    if( !quadOptimizer ) { quadOptimizer = std::make_shared<DenseQuadraticCostOptimizer>(uncoupledCost, options); }
+    quadOptimizer->Minimize(coefficients);
+    return 0.0;
+  }
 
   auto opt = Optimizer<Eigen::MatrixXd>::Construct(uncoupledCost, options);
   const std::pair<Optimization::Convergence, double> info = opt->Minimize(coefficients);
@@ -334,6 +336,7 @@ Eigen::VectorXd SupportPoint::Coefficients() const { return coefficients; }
 Eigen::VectorXd& SupportPoint::Coefficients() { return coefficients; }
 
 double SupportPoint::ComputeUncoupledCost() const {
+  assert(false);
   assert(uncoupledCost);
   //assert(coefficients.size()==uncoupledCost->inputSizes(0));
   //return uncoupledCost->Cost(coefficients);
@@ -341,6 +344,7 @@ double SupportPoint::ComputeUncoupledCost() const {
 }
 
 double SupportPoint::ComputeCoupledCost() const {
+  assert(false);
   double cost = 0.0;
   /*for( const auto& coupled : coupledCost ) {
     assert(coupled);

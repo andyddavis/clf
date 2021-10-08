@@ -3,11 +3,12 @@
 
 #include <Eigen/Dense>
 
+#include "clf/SupportPointExceptions.hpp"
 #include "clf/SupportPointBasis.hpp"
 #include "clf/Point.hpp"
 #include "clf/UncoupledCost.hpp"
 #include "clf/CoupledCost.hpp"
-#include "clf/SupportPointExceptions.hpp"
+#include "clf/QuadraticCostOptimizer.hpp"
 
 namespace clf {
 
@@ -466,6 +467,12 @@ private:
 
   /// The uncoupled cost function
   std::shared_ptr<UncoupledCost> uncoupledCost;
+
+  /// Use this optimizer to minimize the uncoupled cost 
+  /**
+  When clf::MinimizeUncoupledCost is called, check if the uncoupled cost is quadratic. If so, then use this solver to do the minimzation. Also, store this optimizer so the next time the uncoupled cost is minimized we do not need to recompute the matrix decomposition.
+  */
+  std::shared_ptr<DenseQuadraticCostOptimizer> quadOptimizer = nullptr;
 
   /// The coupling cost function, if this point is coupled with its nearest neighbors
   std::vector<std::shared_ptr<CoupledCost> > coupledCost;
