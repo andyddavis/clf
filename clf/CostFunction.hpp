@@ -135,7 +135,7 @@ public:
 
   /// Compute the Jacobian matrix
   /**
-  The Jacobian matrix is \f$\boldsymbol{J} \in \mathbb{R}^{m \times n}\f$. Each row is the gradient of the penalty function \f$f_i\f$ with respect to the input parameters \f$\boldsymbol{\beta} \in \mathbb{R}^{n}\f$.
+  The Jacobian matrix is \f$\boldsymbol{J}\f$ such that each row is the gradient of a penalty term. The Jacobian of the \f$i^{th}\f$ cost function makes up \f$d_i\f$ rows of the matrix \f$J\f$ ordered according to the ordering of \f$f_i\f$.
 
   This function resets the Jacobian to zero and then calls clf::CostFunction::PenaltyFunctionJacobianImpl to compute the Jacobian matrix.
   @param[in] beta The current parameter value

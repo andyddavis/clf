@@ -15,7 +15,7 @@ protected:
   /// Make sure everything is what we expect
   template<typename COSTTYPE, typename OPTTYPE>
   void Check(std::shared_ptr<COSTTYPE> const& cost, std::shared_ptr<OPTTYPE> const& opt) {
-    Eigen::VectorXd beta;
+    Eigen::VectorXd beta = Eigen::VectorXd::Random(cost->inputDimension);
     opt->Minimize(beta);
     EXPECT_EQ(beta.size(), cost->inputDimension);
     EXPECT_NEAR(beta(0), 0.0, 1.0e-14);

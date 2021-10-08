@@ -149,6 +149,8 @@ if( NOT CLF_BUILD_FROM_PIP )
     set(TEST_SOURCE
         tests/_run-tests.cpp
 
+	tests/LinearSolverTests.cpp
+
         tests/BasisFunctionsTests.cpp
         tests/SinCosBasisTests.cpp
         tests/PolynomialBasisTests.cpp

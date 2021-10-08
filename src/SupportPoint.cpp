@@ -260,11 +260,14 @@ std::vector<Eigen::MatrixXd> SupportPoint::OperatorHessian(Eigen::VectorXd const
 }
 
 double SupportPoint::MinimizeUncoupledCost(Eigen::MatrixXd const& forcing, pt::ptree const& options) {
-  //std::cout << "SupportPoint::MinimizeUncoupledCost" << std::endl;
   assert(uncoupledCost);
 
   // set the forcing in the uncoupled cost 
   uncoupledCost->SetForcingEvaluations(forcing);
+
+  if( uncoupledCost->IsQuadratic() ) {
+    std::cout << "IS QUADRATIC!" << std::endl;
+  }
 
   // compute the optimal parameters 
   auto opt = Optimizer<Eigen::MatrixXd>::Construct(uncoupledCost, options);
