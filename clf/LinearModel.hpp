@@ -8,7 +8,17 @@ namespace clf {
 /// Implement a linear model with the form \f$\mathcal{L}(u(x)) \approx \mathcal{L}(\Phi_{\hat{x}}(x) p) = L_{\hat{x}}(x) p\f$, where \f$L_{\hat{x}} \in \mathbb{R}^{n \times \tilde{q}}\f$ and \f$p \in \mathbb{R}^{\tilde{q}}\f$ are the coefficents associated with the clf::SupportPoint at \f$\hat{x}\f$.
 class LinearModel : public Model {
 public:
+  /// Construct a linear model given the in/output dimension 
+  /**
+  @param[in] indim The input dimension
+  @param[in] outdim The output dimension
+  */
+  LinearModel(std::size_t const indim, std::size_t const outdim);
+
   /// Construct a linear model, by default use the identity model \f$\mathcal{L}(u) = u\f$
+  /**
+  @param[in] pt Options for the model
+  */
   LinearModel(boost::property_tree::ptree const& pt);
 
   virtual ~LinearModel() = default;

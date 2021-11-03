@@ -194,6 +194,18 @@ if( NOT CLF_BUILD_FROM_PIP )
 endif()
 
 ###############################################
+# Build examples
+###############################################
+
+set(POISSON_1D_EXAMPLE_SOURCE 
+    examples/Poisson-equation/cpp/_run-1d.cpp
+)
+
+add_executable(run-poisson-1d ${POISSON_1D_EXAMPLE_SOURCE})
+target_link_libraries(run-poisson-1d ${CLF_LIBNAME} ${CLF_EXTERNAL_LIBRARIES} ${GTEST_LIBRARIES})
+add_dependencies(run-poisson-1d ${CLF_LIBNAME})
+
+###############################################
 # Install step (if not a python install)
 ###############################################
 

@@ -3,6 +3,10 @@
 namespace pt = boost::property_tree;
 using namespace clf;
 
+LinearModel::LinearModel(std::size_t const indim, std::size_t const outdim) :
+Model(indim, outdim)
+{}
+
 LinearModel::LinearModel(pt::ptree const& pt) : 
 Model(pt)
 {}

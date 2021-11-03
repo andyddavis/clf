@@ -102,7 +102,7 @@ public:
   @param[out] neighInd The indices of the nearest neighbors
   @param[out] neighDist The squared distances from the input point to its nearest neighbors
   */
-  void FindNearestNeighbors(Eigen::VectorXd const& point, std::size_t const k, std::vector<std::size_t>& neighInd, std::vector<double>& neighDist) const;
+  void FindNearestNeighbors(Eigen::VectorXd const& point, std::size_t const k, std::vector<unsigned int>& neighInd, std::vector<double>& neighDist) const;
 
   /// Find the \f$k\f$ nearest neighbors
   /**
@@ -110,7 +110,7 @@ public:
   @param[in] k We want to find this many nearest neighbors
   \return First: The indices of the nearest neighbors, Second: The squared distances from the input point to its nearest neighbors
   */
-  std::pair<std::vector<std::size_t>, std::vector<double> > FindNearestNeighbors(Eigen::VectorXd const& point, std::size_t const k) const;
+  std::pair<std::vector<unsigned int>, std::vector<double> > FindNearestNeighbors(Eigen::VectorXd const& point, std::size_t const k) const;
 
   /// Get the global vector of coefficients
   Eigen::VectorXd GetCoefficients() const;

@@ -15,7 +15,7 @@ namespace tests {
 /// A class that runs the tests for clf::UncoupledCost
 class UncoupledCostTests : public::testing::Test {
 public:
-  /// Set up information to test the support point
+  /// Set up information to test the uncoupled cost
   virtual void SetUp() override {
     pt::ptree modelOptions;
     modelOptions.put("InputDimension", indim);

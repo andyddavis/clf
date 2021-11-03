@@ -164,7 +164,7 @@ public:
   @param[in] neighInd The global indices (in a clf::SupportPointCloud) of the nearest neighbors
   @param[in] neighDist The squared distances (Euclidean inner product) between the support point and its \f$j^{th}\f$ nearest neighbor
   */
-  void SetNearestNeighbors(std::shared_ptr<const SupportPointCloud> const& newcloud, std::vector<std::size_t> const& neighInd, std::vector<double> const& neighDist);
+  void SetNearestNeighbors(std::shared_ptr<const SupportPointCloud> const& newcloud, std::vector<unsigned int> const& neighInd, std::vector<double> const& neighDist);
 
   /// Create the coupled cost functions
   /**

@@ -32,6 +32,13 @@ Parameter Key | Type | Default Value | Description |
 class Model {
 public:
 
+  /// Construct a linear model given the in/output dimension 
+  /**
+  @param[in] indim The input dimension
+  @param[in] outdim The output dimension
+  */
+  Model(std::size_t const indim, std::size_t const outdim);
+
   /**
   @param[in] pt Options for the model
   */

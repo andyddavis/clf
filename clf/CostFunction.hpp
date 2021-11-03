@@ -26,7 +26,7 @@ public:
   @param[in] outputDimension The output dimension \f$d\f$
   */
   inline CostFunction(std::size_t const inputDimension, std::size_t const numPenaltyFunctions, std::size_t const outputDimension) :
-  muq::Optimization::CostFunction(Eigen::VectorXi::Constant(1, inputDimension)),
+  muq::Optimization::CostFunction(inputDimension),
   inputDimension(inputDimension),
   numPenaltyFunctions(numPenaltyFunctions),
   numPenaltyTerms(numPenaltyFunctions*outputDimension),
@@ -40,7 +40,7 @@ public:
   @param[in] outputDimensions Each component indicates there is <tt>outputDimension[i].first</tt> penalty functions with dimension <tt>outputDimension[i].second</tt>
   */
   inline CostFunction(std::size_t const inputDimension, std::size_t const numPenaltyFunctions, std::vector<std::pair<std::size_t, std::size_t> > const& outputDimension) :
-  muq::Optimization::CostFunction(Eigen::VectorXi::Constant(1, inputDimension)),
+  muq::Optimization::CostFunction(inputDimension),
   inputDimension(inputDimension),
   numPenaltyFunctions(numPenaltyFunctions),
   numPenaltyTerms(NumPenaltyTerms(outputDimension)),
@@ -182,10 +182,11 @@ protected:
   @param[in] input There is only one input: the input parameters \f$\beta\f$
   \return The total cost
   */
-  inline virtual double CostImpl(muq::Modeling::ref_vector<Eigen::VectorXd> const& input) override {
+  //inline virtual double CostImpl(muq::Modeling::ref_vector<Eigen::VectorXd> const& input) override {
+  inline virtual double Cost() override {
     double cost = 0.0;
     for( std::size_t i=0; i<numPenaltyFunctions; ++i ) {
-      const Eigen::VectorXd fi = PenaltyFunction(i, input[0]) ;
+      const Eigen::VectorXd fi = PenaltyFunction(i, x) ;
       cost += fi.dot(fi);
     }
     return cost;
@@ -196,9 +197,11 @@ protected:
   @param[in] input There is only one input: the input parameters \f$\beta\f$
   \return The gradient of the total cost
   */
-  inline virtual void GradientImpl(unsigned int const inputDimWrt, muq::Modeling::ref_vector<Eigen::VectorXd> const& input, Eigen::VectorXd const& sensitivity) override {
-    gradient = Eigen::VectorXd::Zero(inputDimension);
-    for( std::size_t i=0; i<numPenaltyFunctions; ++i ) { gradient += 2.0*PenaltyFunctionJacobian(i, input[0]).transpose()*PenaltyFunction(i, input[0]); }
+  //inline virtual void GradientImpl(unsigned int const inputDimWrt, muq::Modeling::ref_vector<Eigen::VectorXd> const& input, Eigen::VectorXd const& sensitivity) override {
+  inline virtual Eigen::VectorXd Gradient() override {
+    Eigen::VectorXd gradient = Eigen::VectorXd::Zero(inputDimension);
+    for( std::size_t i=0; i<numPenaltyFunctions; ++i ) { gradient += 2.0*PenaltyFunctionJacobian(i, x).transpose()*PenaltyFunction(i, x); }
+    return gradient;
   }
 
   /// Each component indicates there is <tt>outputDimension[i].first</tt> penalty functions with dimension <tt>outputDimension[i].second</tt>

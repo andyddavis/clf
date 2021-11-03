@@ -49,7 +49,7 @@ void SupportPointCloud::FindNearestNeighbors() const {
     if( numNeigh>points.size() ) { throw exceptions::SupportPointCloudNotEnoughPointsException(points.size(), numNeigh); }
 
     // find the nearest nieghbors
-    std::vector<std::size_t> neighInd; std::vector<double> neighDist;
+    std::vector<unsigned int> neighInd; std::vector<double> neighDist;
     FindNearestNeighbors(point->x, numNeigh, neighInd, neighDist);
     assert(neighInd.size()==numNeigh); assert(neighDist.size()==numNeigh);
 
@@ -127,7 +127,7 @@ std::size_t SupportPointCloud::OutputDimension() const {
 }
 
 std::shared_ptr<SupportPoint> SupportPointCloud::NearestSupportPoint(Eigen::VectorXd const& point) const {
-  std::vector<std::size_t> neighInd;
+  std::vector<unsigned int> neighInd;
   std::vector<double> neighDist;
   FindNearestNeighbors(point, 1, neighInd, neighDist);
   assert(neighInd.size()==1); assert(neighDist.size()==1);
@@ -135,7 +135,7 @@ std::shared_ptr<SupportPoint> SupportPointCloud::NearestSupportPoint(Eigen::Vect
   return GetSupportPoint(neighInd[0]);
 }
 
-void SupportPointCloud::FindNearestNeighbors(Eigen::VectorXd const& point, std::size_t const k, std::vector<std::size_t>& neighInd, std::vector<double>& neighDist) const {
+void SupportPointCloud::FindNearestNeighbors(Eigen::VectorXd const& point, std::size_t const k, std::vector<unsigned int>& neighInd, std::vector<double>& neighDist) const {
   assert(k<=points.size());
 
   // resize the input vecotrs
@@ -148,8 +148,8 @@ void SupportPointCloud::FindNearestNeighbors(Eigen::VectorXd const& point, std::
   assert(nfound==k);
 }
 
-std::pair<std::vector<std::size_t>, std::vector<double> > SupportPointCloud::FindNearestNeighbors(Eigen::VectorXd const& point, std::size_t const k) const {
-  std::pair<std::vector<std::size_t>, std::vector<double> > result;
+std::pair<std::vector<unsigned int>, std::vector<double> > SupportPointCloud::FindNearestNeighbors(Eigen::VectorXd const& point, std::size_t const k) const {
+  std::pair<std::vector<unsigned int>, std::vector<double> > result;
   SupportPointCloud::FindNearestNeighbors(point, k, result.first, result.second);
   return result;
 }

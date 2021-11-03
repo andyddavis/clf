@@ -104,7 +104,7 @@ double SupportPoint::SquaredDistanceToNeighbor(std::size_t const i) const {
   return squaredNeighborDistances[i];
 }
 
-void SupportPoint::SetNearestNeighbors(std::shared_ptr<const SupportPointCloud> const& newcloud, std::vector<std::size_t> const& neighInd, std::vector<double> const& neighDist) {
+void SupportPoint::SetNearestNeighbors(std::shared_ptr<const SupportPointCloud> const& newcloud, std::vector<unsigned int> const& neighInd, std::vector<double> const& neighDist) {
   assert(neighInd.size()==neighDist.size());
   assert(neighInd.size()==numNeighbors);
 

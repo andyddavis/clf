@@ -1,5 +1,9 @@
 #include <gtest/gtest.h>
 
+#include <stdio.h>
+
+#include <MUQ/Utilities/HDF5/HDF5File.h>
+
 #include <MUQ/Modeling/Distributions/RandomVariable.h>
 #include <MUQ/Modeling/Distributions/Gaussian.h>
 
@@ -7,6 +11,7 @@
 #include "clf/SupportPointCloud.hpp"
 
 namespace pt = boost::property_tree;
+using namespace muq::Utilities;
 using namespace muq::Modeling;
 using namespace clf;
 
@@ -113,7 +118,7 @@ TEST_F(SupportPointCloudTests, NearestNeighborSearch) {
   cloud = SupportPointCloud::Construct(supportPoints, ptSupportPointCloud);
 
   // find 5 nearest neighbors
-  std::vector<std::size_t> neighInd;
+  std::vector<unsigned int> neighInd;
   std::vector<double> neighDist;
   const Eigen::VectorXd newpoint = dist->Sample();
   cloud->FindNearestNeighbors(newpoint, 5, neighInd, neighDist);
@@ -148,6 +153,32 @@ TEST_F(SupportPointCloudTests, NearestNeighborSearch) {
 
   // the number of nearest neighbors should be 5
   EXPECT_EQ(count, 5);
+}
+
+TEST_F(SupportPointCloudTests, WriteToFile) {
+  // create a bunch of random support points
+  std::vector<std::shared_ptr<SupportPoint> > supportPoints(n);
+  auto dist = std::make_shared<Gaussian>(indim)->AsVariable();
+  for( std::size_t i=0; i<n; ++i ) { supportPoints[i] = SupportPoint::Construct(dist->Sample(), model, ptSupportPoints); }
+
+  // create the support point cloud
+  cloud = SupportPointCloud::Construct(supportPoints, ptSupportPointCloud);
+
+  std::string file = std::tmpnam(nullptr);
+  file += ".h5";
+
+  cloud->WriteToFile(file);
+
+  HDF5File hdf5(file);
+  const Eigen::MatrixXd pnts = hdf5.ReadMatrix("/support points");
+  hdf5.Close();
+
+  EXPECT_EQ(pnts.rows(), n);
+  EXPECT_EQ(pnts.cols(), indim);
+  for( std::size_t i=0; i<n; ++i ) { EXPECT_NEAR((pnts.row(i).transpose()-cloud->GetPoint(i)->x).norm(), 0.0, 1.0e-12); }
+
+  // remove the file after the test is done
+  std::remove(file.c_str());
 }
 
 } // namespace tests

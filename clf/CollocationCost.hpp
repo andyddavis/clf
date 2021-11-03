@@ -26,7 +26,7 @@ public:
   /**
   @param[in] collocationCloud The collocation cloud that we will use to compute this cost
   */
-  CollocationCost(std::shared_ptr<CollocationPointCloud> const& colocationCloud);
+  CollocationCost(std::shared_ptr<CollocationPointCloud> const& collocationCloud);
 
   virtual ~CollocationCost() = default;
 

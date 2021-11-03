@@ -10,6 +10,7 @@ namespace pt = boost::property_tree;
 using namespace muq::Modeling;
 using namespace clf;
 
+/*
 class ExampleModelForCollocationCostTests : public Model {
 public:
   inline ExampleModelForCollocationCostTests(pt::ptree const& pt) : Model(pt) {}
@@ -17,10 +18,9 @@ public:
   virtual ~ExampleModelForCollocationCostTests() = default;
 private:
 
-  /**
-  @param[in] x The point \f$x \in \Omega \f$
+//@param[in] x The point \f$x \in \Omega \f$
   \return The evaluation of \f$f(x)\f$
-  */
+//
   inline virtual Eigen::VectorXd RightHandSideVectorImpl(Eigen::VectorXd const& x) const override { return Eigen::VectorXd::Constant(outputDimension, 1.0); }
 
   inline virtual Eigen::VectorXd OperatorImpl(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases) const override {
@@ -238,3 +238,4 @@ TEST_F(CollocationCostTests, CostFunctionMinimization) {
     std::cout << std::endl;
   }
 }
+*/

@@ -84,7 +84,7 @@ double LocalFunctions::NearestNeighborDistance(Eigen::VectorXd const& x) const {
 
 std::pair<std::size_t, double> LocalFunctions::NearestNeighbor(Eigen::VectorXd const& x) const {
   // find the closest point to the input point
-  std::vector<std::size_t> ind;
+  std::vector<unsigned int> ind;
   std::vector<double> dist;
   cloud->FindNearestNeighbors(x, 1, ind, dist);
   return std::pair<std::size_t, double>(ind[0], dist[0]);
