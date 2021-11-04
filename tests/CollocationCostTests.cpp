@@ -6,59 +6,23 @@
 #include "clf/CollocationCost.hpp"
 #include "clf/LevenbergMarquardt.hpp"
 
+#include "TestModels.hpp"
+
 namespace pt = boost::property_tree;
 using namespace muq::Modeling;
-using namespace clf;
 
-/*
-class ExampleModelForCollocationCostTests : public Model {
-public:
-  inline ExampleModelForCollocationCostTests(pt::ptree const& pt) : Model(pt) {}
+namespace clf {
+namespace tests {
 
-  virtual ~ExampleModelForCollocationCostTests() = default;
-private:
-
-//@param[in] x The point \f$x \in \Omega \f$
-  \return The evaluation of \f$f(x)\f$
-//
-  inline virtual Eigen::VectorXd RightHandSideVectorImpl(Eigen::VectorXd const& x) const override { return Eigen::VectorXd::Constant(outputDimension, 1.0); }
-
-  inline virtual Eigen::VectorXd OperatorImpl(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases) const override {
-    assert(bases.size()==outputDimension);
-    Eigen::VectorXd output = IdentityOperator(x, coefficients, bases);
-    output = output.array()*output.array();
-
-    return output;
-  }
-
-  inline virtual Eigen::MatrixXd OperatorJacobianImpl(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases) const override {
-    Eigen::MatrixXd jac = Eigen::MatrixXd::Zero(outputDimension, coefficients.size());
-
-    std::size_t ind = 0;
-    for( std::size_t i=0; i<outputDimension; ++i ) {
-      std::size_t basisSize = bases[i]->NumBasisFunctions();
-      const Eigen::VectorXd phi = bases[i]->EvaluateBasisFunctions(x);
-      assert(phi.size()==basisSize);
-      jac.row(i).segment(ind, basisSize) = phi.dot(coefficients.segment(ind, basisSize))*phi;
-      ind += basisSize;
-    }
-
-    return 2.0*jac;
-  }
-};
-
+/// A class that runs the tests for clf::CollocationCost
 class CollocationCostTests : public::testing::Test {
 protected:
   virtual void SetUp() override {
-    pt::ptree modelOptions;
-    modelOptions.put("InputDimension", indim);
-    modelOptions.put("OutputDimension", outdim);
-    model = std::make_shared<ExampleModelForCollocationCostTests>(modelOptions);
-
     pt::ptree ptSupportPoints;
     ptSupportPoints.put("BasisFunctions", "Basis1, Basis2");
     ptSupportPoints.put("Basis1.Type", "TotalOrderPolynomials");
     ptSupportPoints.put("Basis2.Type", "TotalOrderPolynomials");
+    ptSupportPoints.put("OutputDimension", outdim);
 
     // the number of support points
     const std::size_t n = 100;
@@ -66,25 +30,30 @@ protected:
     // create a bunch of random support points
     std::vector<std::shared_ptr<SupportPoint> > supportPoints(n);
     auto dist = std::make_shared<Gaussian>(indim)->AsVariable();
-    for( std::size_t i=0; i<n; ++i ) { supportPoints[i] = SupportPoint::Construct(dist->Sample(), model, ptSupportPoints); }
+    for( std::size_t i=0; i<n; ++i ) { supportPoints[i] = SupportPoint::Construct(dist->Sample(), ptSupportPoints); }
 
     // create the support point cloud
     pt::ptree ptSupportPointCloud;
     supportCloud = SupportPointCloud::Construct(supportPoints, ptSupportPointCloud);
+
+    pt::ptree modelOptions;
+    modelOptions.put("InputDimension", indim);
+    modelOptions.put("OutputDimension", outdim);
+    model = std::make_shared<tests::TwoDimensionalAlgebraicModel>(modelOptions);
 
     // the distribution we sample the colocation points from
     sampler = std::make_shared<CollocationPointSampler>(dist, model);
   }
 
   virtual void TearDown() override {
-    EXPECT_EQ(cost->inputDimension, model->outputDimension*supportCloud->NumPoints());
+    //EXPECT_EQ(cost->inputDimension, model->outputDimension*supportCloud->NumPoints());
   }
 
   /// Options for the colocation point cloud function
   pt::ptree cloudOptions;
 
   /// The domain dimension
-  const std::size_t indim = 3;
+  const std::size_t indim = 2;
 
   /// The output dimension
   const std::size_t outdim = 2;
@@ -94,9 +63,6 @@ protected:
 
   /// The support point cloud
   std::shared_ptr<SupportPointCloud> supportCloud;
-
-  /// The colocation cost
-  std::shared_ptr<CollocationCost> cost;
 
   /// The distribution we sample the colocation points from
   std::shared_ptr<CollocationPointSampler> sampler;
@@ -110,11 +76,22 @@ TEST_F(CollocationCostTests, Construction) {
   cloudOptions.put("NumCollocationPoints", nCollocPoints);
   auto colocationCloud = std::make_shared<CollocationPointCloud>(sampler, supportCloud, cloudOptions);
 
-  // create the collocation cost
-  cost = std::make_shared<CollocationCost>(colocationCloud);
-  EXPECT_EQ(cost->numPenaltyFunctions, model->outputDimension*nCollocPoints);
+  // create the collocation costs
+  for( std::size_t i=0; i<supportCloud->NumPoints(); ++i ) {
+    auto support = supportCloud->GetSupportPoint(i);
+
+    auto cost = std::make_shared<CollocationCost>(support, colocationCloud->CollocationPerSupport(i));
+    EXPECT_EQ(cost->inputDimension, support->NumCoefficients());
+    EXPECT_EQ(cost->numPenaltyFunctions, colocationCloud->NumCollocationPerSupport(i));
+    EXPECT_EQ(cost->numPenaltyTerms, cost->numPenaltyFunctions*model->outputDimension);
+  }
+  //cost = std::make_shared<CollocationCost>(colocationCloud);
+  //EXPECT_EQ(cost->numPenaltyFunctions, model->outputDimension*nCollocPoints);*/
+
+  EXPECT_TRUE(false);
 }
 
+/*
 TEST_F(CollocationCostTests, ComputeOptimalCoefficients) {
   auto collocationCloud = std::make_shared<CollocationPointCloud>(sampler, supportCloud, cloudOptions);
 
@@ -239,3 +216,6 @@ TEST_F(CollocationCostTests, CostFunctionMinimization) {
   }
 }
 */
+
+} // namespace tests
+} // namespace clf

@@ -51,6 +51,13 @@ public:
   */
   std::size_t NumCollocationPerSupport(std::size_t const ind) const;
 
+  /// The collocation points associated with the \f$i^{th}\f$ support points
+  /**
+  @param[in] ind The global index of the support point
+  \return The collocation points associated with that support point
+  */
+  std::vector<std::shared_ptr<CollocationPoint> > CollocationPerSupport(std::size_t const ind) const;
+
   /// The global index of the collocation point given the local index and global index of the associated support point
   /**
   @param[in] local The local index of the collocation point

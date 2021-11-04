@@ -63,8 +63,20 @@ protected:
     // loop through the support ponts
     std::size_t totalCollocPoints = 0;
     for( std::size_t i=0; i<supportCloud->NumPoints(); ++i ) {
+      auto suppi = supportCloud->GetSupportPoint(i);
+
       EXPECT_TRUE(collocationCloud->NumCollocationPerSupport(i)<=collocationCloud->NumPoints());
       totalCollocPoints += collocationCloud->NumCollocationPerSupport(i);
+
+      std::vector<std::shared_ptr<CollocationPoint> > collocPoints = collocationCloud->CollocationPerSupport(i);
+      EXPECT_EQ(collocPoints.size(), collocationCloud->NumCollocationPerSupport(i));
+      for( const auto& pnt : collocPoints ) {
+        EXPECT_TRUE(pnt);
+        for( std::size_t j=0; j<supportCloud->NumPoints(); ++j ) {
+          auto suppj = supportCloud->GetSupportPoint(j);
+          EXPECT_TRUE((pnt->x-suppi->x).norm()<=(pnt->x-suppj->x).norm()+1.0e-14);
+        }
+      }
     }
     EXPECT_EQ(totalCollocPoints, collocationCloud->NumPoints());
 

@@ -11,7 +11,7 @@ namespace pt = boost::property_tree;
 
 namespace clf {
 namespace tests {
-
+  
 /// A class that runs the tests for clf::UncoupledCost
 class UncoupledCostTests : public::testing::Test {
 public:

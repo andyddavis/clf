@@ -8,7 +8,7 @@ namespace clf {
 
 /// The cost function to minimize the expected least squares error with respect to a given measure
 /**
-Let \f$\Phi_{\hat{x}}(x)\f$ be the \f$m \times \tilde{q}\f$ matrix that defines the local function \f$\ell_{\hat{x}}(x) = \Phi_{\hat{x}}(x) p_{\hat{x}}\f$ for \f$p_{\hat{x}} \in \mathbb{R}^{\tilde{q}(\hat{x})}\f$ (see clf::SupportPoint). Here, \f$\hat{x}\f$ is the nearest support point (see clf::SupportPoint). Define the approximation \f$\hat{u}(x) = \Phi_{\hat{x}(x)}(x) \hat{p}_{\hat{x}(x)}\f$, where \f$\hat{x}(x)\f$ is the nearest support point to \f$x\f$. 
+Let \f$\Phi_{\hat{x}}(x)\f$ be the \f$m \times \tilde{q}\f$ matrix that defines the local function \f$\ell_{\hat{x}}(x) = \Phi_{\hat{x}}(x) p_{\hat{x}}\f$ for \f$p_{\hat{x}} \in \mathbb{R}^{\tilde{q}(\hat{x})}\f$ (see clf::SupportPoint). Here, \f$\hat{x}\f$ is the nearest support point (see clf::SupportPoint). Define the approximation \f$\hat{u}(x) = \Phi_{\hat{x}(x)}(x) \hat{p}_{\hat{x}(x)}\f$, where \f$\hat{x}(x)\f$ is the nearest support point to \f$x\f$.
 
 Suppose we have \f$n\f$ support points \f$\{x_i\}_{i=1}^{n}\f$, we want to find \f$\hat{w} \in \mathbb{R}^{n \times d}\f$ such that
 \f{equation*}{
@@ -24,9 +24,10 @@ class CollocationCost : public SparseCostFunction {
 public:
 
   /**
-  @param[in] collocationCloud The collocation cloud that we will use to compute this cost
+  @param[in] supportPoint The support point associated with this collocation cost
+  @param[in] collocationPoints The collocation points associated with this cost
   */
-  CollocationCost(std::shared_ptr<CollocationPointCloud> const& collocationCloud);
+  CollocationCost(std::shared_ptr<SupportPoint> const& supportPoint, std::vector<std::shared_ptr<CollocationPoint> > const& collocationPoints);
 
   virtual ~CollocationCost() = default;
 
@@ -71,7 +72,7 @@ private:
   void JacobianImpl(Eigen::VectorXd const& data, Eigen::SparseMatrix<double>& jac) const;
 
   /// The collocation cloud that we will use to comptue this cost
-  std::shared_ptr<CollocationPointCloud> collocationCloud;
+  //std::shared_ptr<CollocationPointCloud> collocationCloud;
 };
 
 } // namespace clf

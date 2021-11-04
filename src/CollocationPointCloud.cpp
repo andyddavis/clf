@@ -49,6 +49,14 @@ std::size_t CollocationPointCloud::NumCollocationPerSupport(std::size_t const in
   return collocationPerSupport[ind].size();
 }
 
+std::vector<std::shared_ptr<CollocationPoint> > CollocationPointCloud::CollocationPerSupport(std::size_t const ind) const {
+  assert(ind<supportCloud->NumPoints());
+  const std::size_t num = NumCollocationPerSupport(ind);
+  std::vector<std::shared_ptr<CollocationPoint> > pnts(num);
+  for( std::size_t i=0; i<num; ++i ) { pnts[i] = GetCollocationPoint(collocationPerSupport[ind][i]); }
+  return pnts;
+}
+
 void CollocationPointCloud::WriteToFile(std::string const& filename, std::string const& dataset) const {
   if( points.size()==0 ) { return; }
 

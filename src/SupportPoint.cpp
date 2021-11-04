@@ -14,10 +14,6 @@ using namespace muq::Modeling;
 using namespace muq::Optimization;
 using namespace clf;
 
-SupportPoint::SupportPoint(Eigen::VectorXd const& x, pt::ptree const& pt) :
-Point(x)
-{}
-
 SupportPoint::SupportPoint(Eigen::VectorXd const& x, std::shared_ptr<const Model> const& model, pt::ptree const& pt) :
 Point(x, model)
 {}
@@ -262,13 +258,13 @@ std::vector<Eigen::MatrixXd> SupportPoint::OperatorHessian(Eigen::VectorXd const
 double SupportPoint::MinimizeUncoupledCost(Eigen::MatrixXd const& forcing, pt::ptree const& options) {
   assert(uncoupledCost);
 
-  // set the forcing in the uncoupled cost 
+  // set the forcing in the uncoupled cost
   uncoupledCost->SetForcingEvaluations(forcing);
 
-  // compute the optimial parameters 
+  // compute the optimial parameters
   double cst = MinimizeUncoupledCost(options);
 
-  // unset the forcing 
+  // unset the forcing
   uncoupledCost->UnsetForcingEvaluations();
 
   return cst;

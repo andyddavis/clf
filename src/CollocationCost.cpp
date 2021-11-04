@@ -2,10 +2,9 @@
 
 using namespace clf;
 
-CollocationCost::CollocationCost(std::shared_ptr<CollocationPointCloud> const& collocationCloud) :
-  //SparseCostFunction(collocationCloud->OutputDimension()*collocationCloud->supportCloud->NumPoints(), collocationCloud->OutputDimension()*collocationCloud->numCollocationPoints, 1),
-SparseCostFunction(1, 1, 1),
-collocationCloud(collocationCloud)
+CollocationCost::CollocationCost(std::shared_ptr<SupportPoint> const& supportPoint, std::vector<std::shared_ptr<CollocationPoint> > const& collocationPoints) :
+SparseCostFunction(supportPoint->NumCoefficients(), collocationPoints.size(), (collocationPoints.size()==0? 0 : collocationPoints[0]->model->outputDimension))
+//collocationCloud(collocationCloud)
 {}
 
 void CollocationCost::ComputeOptimalCoefficients(Eigen::MatrixXd const& data) const {

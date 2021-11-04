@@ -5,6 +5,7 @@
 
 #include "clf/SupportPointExceptions.hpp"
 #include "clf/SupportPointBasis.hpp"
+#include "clf/LinearModel.hpp"
 #include "clf/Point.hpp"
 #include "clf/UncoupledCost.hpp"
 #include "clf/CoupledCost.hpp"
@@ -50,12 +51,6 @@ class SupportPoint : public Point, public std::enable_shared_from_this<SupportPo
 protected:
   /**
   @param[in] x The location of the support point \f$x\f$
-  @param[in] pt The options for the support point
-  */
-  SupportPoint(Eigen::VectorXd const& x, boost::property_tree::ptree const& pt);
-
-  /**
-  @param[in] x The location of the support point \f$x\f$
   @param[in] model The model that defines the "data" at this support point
   @param[in] pt The options for the support point
   */
@@ -99,7 +94,7 @@ public:
     return point;
   }
 
-  /// A static construct method with no model
+  /// A static construct method using the identity model
   /**
   Additionally requires the following parameters:
   <B>Configuration Parameters:</B>
@@ -114,12 +109,13 @@ public:
   */
   template<typename PointType = SupportPoint>
   inline static std::shared_ptr<PointType> Construct(Eigen::VectorXd const& x, boost::property_tree::ptree const& pt) {
+    const std::size_t indim = x.size();
+    const std::size_t outdim = pt.get<std::size_t>("OutputDimension");
+
     // create the support point (the bases are unset)
-    auto point = std::shared_ptr<PointType>(new PointType(x, pt));
+    auto point = std::shared_ptr<PointType>(new PointType(x, std::make_shared<LinearModel>(indim, outdim), pt));
 
     // create the SupportPointBasis
-    const std::size_t indim = pt.get<std::size_t>("InputDimension");
-    const std::size_t outdim = pt.get<std::size_t>("OutputDimension");
     std::vector<std::shared_ptr<const BasisFunctions> > bases = CreateBasisFunctions(point, indim, outdim, pt);
     assert(bases.size()==outdim);
 

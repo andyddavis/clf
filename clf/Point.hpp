@@ -10,12 +10,7 @@ namespace clf {
 /// A generic point in the domain
 class Point {
 public:
-
-  /**
-  @param[in] x The location of the support point \f$x\f$
-  */
-  Point(Eigen::VectorXd const& x);
-
+  
   /**
   @param[in] x The location of the support point \f$x\f$
   @param[in] model The model that defines the "data" at this support point
