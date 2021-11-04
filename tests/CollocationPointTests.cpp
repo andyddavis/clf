@@ -17,9 +17,11 @@ TEST(CollocationPointTests, Construction) {
   auto model = std::make_shared<LinearModel>(pt);
 
   const Eigen::VectorXd loc = Eigen::VectorXd::Random(indim);
-
-  auto pnt = std::make_shared<CollocationPoint>(loc, model);
+  const double weight = (double)rand()/RAND_MAX;
+ 
+  auto pnt = std::make_shared<CollocationPoint>(weight, loc, model);
   EXPECT_NEAR((pnt->x-loc).norm(), 0.0, 1.0e-14);
+  EXPECT_NEAR(pnt->weight, weight, 1.0e-14);
 
   // the order of the total order polynomial basis
   const std::size_t order = 3;

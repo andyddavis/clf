@@ -128,6 +128,14 @@ public:
   */
   std::shared_ptr<SupportPoint> NearestSupportPoint(Eigen::VectorXd const& point) const;
 
+  /// Write the points to file
+  /**
+  Write all of the points into a data set called <tt>"support points"</tt> such that each row is a support point location.
+  @param filename The output file name (must end in <tt>".h5"</tt>)
+  @param dataset The dataset in the hdf5 file where we store the points (defaults to root "/")
+  */
+  virtual void WriteToFile(std::string const& filename, std::string const& dataset = "/") const override;
+
   /// The total number of coefficients
   /**
   The sum of all of the number coefficients required by each support point.

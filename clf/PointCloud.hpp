@@ -26,9 +26,9 @@ public:
   */
   std::size_t NumPoints() const;
 
-  /// Get the \f$i^{th}\f$ point 
+  /// Get the \f$i^{th}\f$ point
   /**
-  @param[in] ind The index \f$i\f$ of the point we want 
+  @param[in] ind The index \f$i\f$ of the point we want
   \return The \f$i^{th}\f$ point
   */
   std::shared_ptr<Point> GetPoint(std::size_t const ind) const;
@@ -39,13 +39,12 @@ public:
   /// An iterator to the last point
   std::vector<std::shared_ptr<Point> >::const_iterator End() const;
 
-  /// Write the points to file 
+  /// Write the points to file
   /**
   @param filename The output file name (must end in <tt>".h5"</tt>)
   @param dataset The dataset in the hdf5 file where we store the points (defaults to root "/")
-  @param dataname The name of the data in the file (defaults to "support points")
   */
-  void WriteToFile(std::string const& filename, std::string const& dataset = "/", std::string const& dataname = "support points") const;
+  virtual void WriteToFile(std::string const& filename, std::string const& dataset = "/") const = 0;
 
 protected:
 

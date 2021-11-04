@@ -5,15 +5,22 @@
 
 namespace clf {
 
-  /// A collcation point \f$x_i\f$ evaluates the forward model at the nearest clf::SupportPoint
+/// Forward declaration of the collocation point cloud
+class CollocationPointCloud;
+
+/// A collocation point \f$x_i\f$ evaluates the forward model at the nearest clf::SupportPoint
 class CollocationPoint : public Point {
 public:
 
+  /// The collocation point cloud is a friend
+  friend CollocationPointCloud;
+
   /**
+  @param[in] weight The weight of this collocation point
   @param[in] x The location of the support point \f$x\f$
   @param[in] model The model that defines the "data" at this support point
   */
-  CollocationPoint(Eigen::VectorXd const& x, std::shared_ptr<const Model> const& model);
+  CollocationPoint(double const weight, Eigen::VectorXd const& x, std::shared_ptr<const Model> const& model);
 
   virtual ~CollocationPoint() = default;
 
@@ -57,10 +64,27 @@ public:
   */
   Eigen::MatrixXd OperatorJacobian(Eigen::VectorXd const& loc, Eigen::VectorXd const& coeffs) const;
 
+  /// The local index of this collocation point
+  /**
+  \return The local index
+  */
+  std::size_t LocalIndex() const;
+
   /// The nearest support point to this collocation point
   std::weak_ptr<SupportPoint> supportPoint;
 
+  /// The weight of this collocation point
+  const double weight;
+
 private:
+
+  /// The local index of this collocation point
+  /**
+  Each collocation point is associated with a support point; this support point is the nearest support point. The local index \f$k\f$ indicates that this is the \f$k^{th}\f$ collocation point associated with that particular support point.
+
+  The local indices are not ordered in any way.
+  */
+  std::size_t localIndex;
 };
 
 } // namespace clf

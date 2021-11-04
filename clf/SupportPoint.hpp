@@ -18,9 +18,6 @@ class SupportPointCloud;
 /// Forward declaration of the clf::GlobalCost
 class GlobalCost;
 
-/// Forward declaration of the clf::ColocationCost
-class ColocationCost;
-
 /// The local function \f$\ell_{\hat{x}}\f$ associated with a support point \f$\hat{x}\f$.
 /**
 Let \f$\hat{x} \in \Omega\f$ be a support point with an associated local function \f$\ell: \Omega \mapsto \mathbb{R}^{m}\f$. Suppose that we are building an approximation of the function \f$u:\Omega \mapsto \mathbb{R}^{m}\f$.
@@ -68,9 +65,6 @@ public:
 
   /// The global cost function is a friend
   friend GlobalCost;
-
-  /// The colocation cost function is a friend
-  friend ColocationCost;
 
   /// A static construct method
   /**
@@ -210,7 +204,7 @@ public:
   /// Minimize the uncoupled cost function (see clf::UncoupledCost) for this support point
   /**
   This minimization requires the clf::Point::model to have implemented the forcing function clf::Model::RightHandSide
-  @param[in] options Options for the optimization algorithm 
+  @param[in] options Options for the optimization algorithm
   \return The uncoupled cost at the optimal coefficients value
   */
   double MinimizeUncoupledCost(boost::property_tree::ptree const& options);
@@ -218,7 +212,7 @@ public:
   /// Minimize the uncoupled cost function (see clf::UncoupledCost) for this support point
   /**
   @param[in] forcing The \f$i^{th}\f$ column is the forcing function evaluated at the \f$i^{th}\f$ support point \f$f(x_i)\f$
-  @param[in] options Options for the optimization algorithm 
+  @param[in] options Options for the optimization algorithm
   \return The uncoupled cost at the optimal coefficients value
   */
   double MinimizeUncoupledCost(Eigen::MatrixXd const& forcing, boost::property_tree::ptree const& options);
@@ -468,7 +462,7 @@ private:
   /// The uncoupled cost function
   std::shared_ptr<UncoupledCost> uncoupledCost;
 
-  /// Use this optimizer to minimize the uncoupled cost 
+  /// Use this optimizer to minimize the uncoupled cost
   /**
   When clf::MinimizeUncoupledCost is called, check if the uncoupled cost is quadratic. If so, then use this solver to do the minimzation. Also, store this optimizer so the next time the uncoupled cost is minimized we do not need to recompute the matrix decomposition.
   */

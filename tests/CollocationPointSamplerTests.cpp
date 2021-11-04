@@ -27,7 +27,7 @@ TEST(CollocationPointSamplerTests, Construction) {
   Eigen::VectorXd mean = Eigen::VectorXd::Zero(indim);
   const std::size_t n = 2.0e5;
   for( std::size_t i=0; i<n; ++i ) {
-    auto pnt = sampler->Sample();
+    auto pnt = sampler->Sample(i, n);
     mean += pnt->x/n;
     EXPECT_EQ(pnt->model, model);
   }

@@ -2,8 +2,9 @@
 
 using namespace clf;
 
-CollocationPoint::CollocationPoint(Eigen::VectorXd const& x, std::shared_ptr<const Model> const& model) :
-Point(x, model)
+CollocationPoint::CollocationPoint(double const weight, Eigen::VectorXd const& x, std::shared_ptr<const Model> const& model) :
+Point(x, model),
+weight(weight)
 {}
 
 Eigen::VectorXd CollocationPoint::Operator() const {
@@ -70,3 +71,5 @@ Eigen::MatrixXd CollocationPoint::OperatorJacobian(Eigen::VectorXd const& loc, E
 
   return model->OperatorJacobian(loc, coeffs, pnt->GetBasisFunctions());
 }
+
+std::size_t CollocationPoint::LocalIndex() const { return localIndex; }

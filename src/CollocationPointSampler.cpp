@@ -7,4 +7,4 @@ CollocationPointSampler::CollocationPointSampler(std::shared_ptr<RandomVariable>
 PointSampler(randVar, model)
 {}
 
-std::shared_ptr<CollocationPoint> CollocationPointSampler::Sample() const { return std::make_shared<CollocationPoint>(SampleLocation(), model); }
+std::shared_ptr<CollocationPoint> CollocationPointSampler::Sample(std::size_t const ind, std::size_t const num) const { return std::make_shared<CollocationPoint>(1.0/num, SampleLocation(), model); }

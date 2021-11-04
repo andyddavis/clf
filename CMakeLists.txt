@@ -73,6 +73,7 @@ set(CLF_SOURCE
     src/ModelExceptions.cpp
     src/Model.cpp
     src/LinearModel.cpp
+    src/LaplaceOperator.cpp
 
     src/DOFIndices.cpp
 
@@ -156,7 +157,8 @@ if( NOT CLF_BUILD_FROM_PIP )
         tests/SupportPointBasisTests.cpp
 
         tests/ModelTests.cpp
-	tests/LinearModelTests.cpp
+        tests/LinearModelTests.cpp
+        tests/LaplaceOperatorTests.cpp
 
 	tests/OptimizerTests.cpp
         tests/LevenbergMarquardtTests.cpp
@@ -197,7 +199,7 @@ endif()
 # Build examples
 ###############################################
 
-set(POISSON_1D_EXAMPLE_SOURCE 
+set(POISSON_1D_EXAMPLE_SOURCE
     examples/Poisson-equation/cpp/_run-1d.cpp
 )
 

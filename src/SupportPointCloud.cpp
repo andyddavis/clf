@@ -1,11 +1,13 @@
 #include "clf/SupportPointCloud.hpp"
 
+#include <MUQ/Utilities/HDF5/HDF5File.h>
+
 namespace pt = boost::property_tree;
+using namespace muq::Utilities;
 using namespace clf;
 
 SupportPointCloud::SupportPointCloud(std::vector<std::shared_ptr<SupportPoint> > const& supportPoints, pt::ptree const& pt) :
 PointCloud(std::vector<std::shared_ptr<Point> >(supportPoints.begin(), supportPoints.end())),
-//supportPoints(supportPoints),
 numCoefficients(NumCoefficients(supportPoints)),
 requireConnectedGraphs(pt.get<bool>("RequireConnectedGraphs", false))
 {
@@ -176,4 +178,20 @@ void SupportPointCloud::SetCoefficients(Eigen::VectorXd const& coeffs) {
     point->Coefficients() = coeffs.segment(ind, point->NumCoefficients());
     ind += point->NumCoefficients();
   }
+}
+
+void SupportPointCloud::WriteToFile(std::string const& filename, std::string const& dataset) const {
+  if( points.size()==0 ) { return; }
+
+  assert(filename.size()>3);
+  assert(filename.substr(filename.size()-3)==".h5");
+  assert(dataset.size()>=1);
+  assert(dataset.substr(0)=="/");
+
+  Eigen::MatrixXd pnts(points.size(), points[0]->x.size());
+  for( std::size_t i=0; i<points.size(); ++i ) { pnts.row(i) = points[i]->x; }
+
+  HDF5File file(filename);
+  file.WriteMatrix(dataset+"/support points", pnts);
+  file.Close();
 }

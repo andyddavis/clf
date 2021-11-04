@@ -35,10 +35,10 @@ protected:
     for( std::size_t i=0; i<npoints; ++i ) {
       auto point = sampler->Sample();
       EXPECT_TRUE(point);
-      
+
       const std::vector<std::shared_ptr<const BasisFunctions> >& bases = point->GetBasisFunctions();
       EXPECT_EQ(point->NumNeighbors(), 11);
-      
+
       EXPECT_EQ(bases.size(), outdim);
       for( const auto& it : bases ) {
 	EXPECT_TRUE(it);
@@ -55,7 +55,7 @@ protected:
   /// The output dimension
   const std::size_t outdim = 2;
 
-  /// The support points are sampled from this distribution 
+  /// The support points are sampled from this distribution
   std::shared_ptr<RandomVariable> randVar;
 
   /// The options for the support point sampler

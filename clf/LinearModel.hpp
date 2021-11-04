@@ -5,10 +5,10 @@
 
 namespace clf {
 
-/// Implement a linear model with the form \f$\mathcal{L}(u(x)) \approx \mathcal{L}(\Phi_{\hat{x}}(x) p) = L_{\hat{x}}(x) p\f$, where \f$L_{\hat{x}} \in \mathbb{R}^{n \times \tilde{q}}\f$ and \f$p \in \mathbb{R}^{\tilde{q}}\f$ are the coefficents associated with the clf::SupportPoint at \f$\hat{x}\f$.
+/// Implement a linear model with the form \f$\mathcal{L}(u(x)) \approx \mathcal{L}(\Phi_{\hat{x}}(x) p) = L_{\hat{x}}(x) p\f$, where \f$L_{\hat{x}} \in \mathbb{R}^{m \times \tilde{q}}\f$ and \f$p \in \mathbb{R}^{\tilde{q}}\f$ are the coefficents associated with the clf::SupportPoint at \f$\hat{x}\f$.
 class LinearModel : public Model {
 public:
-  /// Construct a linear model given the in/output dimension 
+  /// Construct a linear model given the in/output dimension
   /**
   @param[in] indim The input dimension
   @param[in] outdim The output dimension
@@ -23,11 +23,11 @@ public:
 
   virtual ~LinearModel() = default;
 
-  /// The matrix \f$L_{\hat{x}}\f$ that defines the linear model 
+  /// The matrix \f$L_{\hat{x}}\f$ that defines the linear model
   /**
-     @param[in] x The point \f$x \in \Omega \f$
-     @param[in] bases The basis functions for each output
-     \return The matrix \f$L_{\hat{x}}(x)\f$ that defines the linear model 
+  @param[in] x The point \f$x \in \Omega \f$
+  @param[in] bases The basis functions for each output
+  \return The matrix \f$L_{\hat{x}}(x)\f$ that defines the linear model
    */
   virtual Eigen::MatrixXd ModelMatrix(Eigen::VectorXd const& x, std::vector<std::shared_ptr<const BasisFunctions> > const& bases) const;
 
@@ -40,7 +40,7 @@ public:
 
 protected:
 
-  /// Implement the linear model 
+  /// Implement the linear model
   /**
   @param[in] x The point \f$x \in \Omega \f$
   @param[in] coefficients The coefficients for each basis---this vector is divided into segments that correspond to coefficients of the bases. The length is the sum of the dimension of each basis.
@@ -54,7 +54,7 @@ protected:
   @param[in] x The point \f$x \in \Omega \f$
   @param[in] coefficients The coefficients for each basis---this vector is divided into segments that correspond to coefficients of the bases. The length is the sum of the dimension of each basis.
   @param[in] bases The basis functions for each output
-  \return The evaluation of the gradient with respect to the coefficeints 
+  \return The evaluation of the gradient with respect to the coefficeints
   */
   virtual Eigen::MatrixXd OperatorJacobianImpl(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases) const final override;
 

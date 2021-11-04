@@ -22,9 +22,12 @@ public:
 
   /// Sample a collocation point
   /**
+  By default, simply sample the location using clf::PointSampler::SampleLocation and create a collocation point with weight \f$n_c^{-1}\f$
+  @param[in] ind The global index of the collocation point
+  @param[in] num The total number of collocation points in the collocation point cloud (the number \f$n_c\f$)
   \return A sampled collocation point
   */
-  std::shared_ptr<CollocationPoint> Sample() const;
+  virtual std::shared_ptr<CollocationPoint> Sample(std::size_t const ind, std::size_t const num) const;
 
 private:
 };

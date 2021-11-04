@@ -26,12 +26,18 @@ filename = 'Poisson-1d.h5'
 file = h5.File(filename, 'r')
 
 supportPoints = file['/support points'] [()]
+sortedIndices = sorted(range(len(supportPoints)), key=lambda k: supportPoints[k][0])
+collocationPoints = list()
+for i in range(len(supportPoints)):
+    collocationPoints.append(file['/collocation points/support point '+str(i)] [()])
 
 fig = plt.figure()
 ax = fig.add_subplot(111)
 colors = ['#e41a1c', '#377eb8', '#4daf4a', '#984ea3', '#ff7f00', '#a65628', '#f781bf', '#999999']
-for x, c in zip(supportPoints, itertools.cycle(colors)):
-    ax.plot(x, [0.0], 'o', color=c)
+for ind, c in zip(sortedIndices, itertools.cycle(colors)):
+    for y in collocationPoints[ind]:
+        ax.plot(y, [0.0], 'x', color=c)
+    ax.plot(supportPoints[ind], [0.0], 'o', color=c)
 ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
 ax.yaxis.set_ticks_position('left')
@@ -40,4 +46,3 @@ ax.set_xlabel(r'$x$')
 ax.set_ylabel(r'')
 plt.savefig('figures/fig_points.png', format='png')
 plt.close(fig)
-    
