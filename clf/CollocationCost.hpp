@@ -2,7 +2,7 @@
 #define COLLOCATIONCOST_HPP_
 
 #include "clf/CollocationPointCloud.hpp"
-#include "clf/SparseCostFunction.hpp"
+#include "clf/DenseCostFunction.hpp"
 
 namespace clf {
 
@@ -20,7 +20,7 @@ where \f$I(x)\f$ is the index of the closest support point to \f$x\f$ and
 \f}
 The uncoupled cost and coupled cost are computed in clf::UncoupledCost and clf::CoupledCost, respectively.
 */
-class CollocationCost : public SparseCostFunction {
+class CollocationCost : public DenseCostFunction {
 public:
 
   /**
@@ -50,7 +50,7 @@ public:
   */
   virtual bool IsQuadratic() const override;
 
-private:
+protected:
 
   /// Evaluate the \f$i^{th}\f$ penalty function \f$f_i(\beta)\f$
   /**
@@ -60,19 +60,18 @@ private:
   */
   virtual Eigen::VectorXd PenaltyFunctionImpl(std::size_t const ind, Eigen::VectorXd const& beta) const override;
 
-  /// Implement the sub-cost functions
+  /// Evaluate the gradient of the \f$i^{th}\f$ penalty function
   /**
-  @param[in] data When mapped into a matrix, each column is the function we are tryng to approximate evaluated at the support point
+  @param[in] ind The index of the penalty function
+  @param[in] beta The input parameter
+  \return The gradient of the \f$i^{th}\f$ penalty function
   */
-  Eigen::VectorXd CostImpl(Eigen::VectorXd const& data) const;
+  virtual Eigen::MatrixXd PenaltyFunctionJacobianImpl(std::size_t const ind, Eigen::VectorXd const& beta) const override;
 
-  /**
-  @param[in] data When mapped into a matrix, each column is the function we are tryng to approximate evaluated at the support point
-  */
-  void JacobianImpl(Eigen::VectorXd const& data, Eigen::SparseMatrix<double>& jac) const;
+private:
 
-  /// The collocation cloud that we will use to comptue this cost
-  //std::shared_ptr<CollocationPointCloud> collocationCloud;
+  /// The collocation points associated with this cost
+  std::vector<std::shared_ptr<CollocationPoint> > collocationPoints;
 };
 
 } // namespace clf

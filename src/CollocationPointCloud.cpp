@@ -77,6 +77,8 @@ void CollocationPointCloud::WriteToFile(std::string const& filename, std::string
   }
 
   HDF5File file(filename);
-  for( std::size_t i=0; i<supportCloud->NumPoints(); ++i ) { file.WriteMatrix(dataset+"/collocation points/support point "+std::to_string(i), pnts[i]); }
+  for( std::size_t i=0; i<supportCloud->NumPoints(); ++i ) { 
+    if( pnts[i].size()>0 ) { file.WriteMatrix(dataset+"/collocation points/support point "+std::to_string(i), pnts[i]); }
+  }
   file.Close();
 }

@@ -38,7 +38,7 @@ public:
 
   /// Write the points to file
   /**
-  Write all of the points into a location called <tt>"collocation points"</tt>. Inside this location there are data sets called <tt>"collocation points/support point i"</tt> such that each row is a collocation point associated with the \f$i^{th}\f$ support point. Empty matrices indicate that there are no collocation points associated with that support point.
+  Write all of the points into a location called <tt>"collocation points"</tt>. Inside this location there are data sets called <tt>"collocation points/support point i"</tt> such that each row is a collocation point associated with the \f$i^{th}\f$ support point. If there are no collocation points assocaited with a given support point, then there is not corresponding dataset in the HDF5 file.
   @param filename The output file name (must end in <tt>".h5"</tt>)
   @param dataset The dataset in the hdf5 file where we store the points (defaults to root "/")
   */

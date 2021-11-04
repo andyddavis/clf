@@ -3,8 +3,8 @@
 using namespace clf;
 
 CollocationCost::CollocationCost(std::shared_ptr<SupportPoint> const& supportPoint, std::vector<std::shared_ptr<CollocationPoint> > const& collocationPoints) :
-SparseCostFunction(supportPoint->NumCoefficients(), collocationPoints.size(), (collocationPoints.size()==0? 0 : collocationPoints[0]->model->outputDimension))
-//collocationCloud(collocationCloud)
+DenseCostFunction(supportPoint->NumCoefficients(), collocationPoints.size(), (collocationPoints.size()==0? 0 : collocationPoints[0]->model->outputDimension)),
+collocationPoints(collocationPoints)
 {}
 
 void CollocationCost::ComputeOptimalCoefficients(Eigen::MatrixXd const& data) const {
@@ -40,58 +40,21 @@ Eigen::VectorXd CollocationCost::ComputeCost(Eigen::MatrixXd const& data) const 
 }
 
 Eigen::VectorXd CollocationCost::PenaltyFunctionImpl(std::size_t const ind, Eigen::VectorXd const& beta) const {
-  assert(false);
-  return Eigen::VectorXd();
+  assert(ind<collocationPoints.size());
+  assert(collocationPoints[ind]);
+
+  return std::sqrt(collocationPoints[ind]->weight)*(collocationPoints[ind]->Operator(collocationPoints[ind]->x, beta) - collocationPoints[ind]->model->RightHandSide(collocationPoints[ind]->x));
 }
 
-Eigen::VectorXd CollocationCost::CostImpl(Eigen::VectorXd const& data) const {
-  // compute the optimal coefficients for each support point
-  //return ComputeCost(Eigen::Map<const Eigen::MatrixXd>(data.data(), collocationCloud->OutputDimension(), collocationCloud->supportCloud->NumPoints()));
-  return Eigen::VectorXd();
-}
-
-void CollocationCost::JacobianImpl(Eigen::VectorXd const& data, Eigen::SparseMatrix<double>& jac) const {
-  /*Eigen::Map<const Eigen::MatrixXd> dataMat(data.data(), collocationCloud->OutputDimension(), collocationCloud->supportCloud->NumPoints());
-
-  // compute the optimal coefficients for each support point
-  ComputeOptimalCoefficients(dataMat);
-
-  const std::size_t outdim = collocationCloud->OutputDimension();
-
-  std::vector<Eigen::Triplet<double> > triplets;
-  for( std::size_t i=0; i<collocationCloud->numCollocationPoints; ++i ) {
-    // the colocation and the corresponding support point
-    auto pnt = collocationCloud->GetCollocationPoint(i);
-    assert(pnt);
-    auto support = pnt->supportPoint.lock();
-    assert(support);
-
-    const Eigen::MatrixXd localJac = pnt->OperatorJacobian();*support->lsJacobian;
-    assert(localJac.rows()==outdim);
-    assert(localJac.cols()==outdim*support->NumNeighbors());
-
-    const std::vector<std::size_t>& globalIndices = support->GlobalNeighborIndices();
-    for( std::size_t locali=0; locali<localJac.rows(); ++locali ) {
-      const std::size_t globali = outdim*i + locali;
-      assert(globali<jac.rows());
-      for( std::size_t j=0; j<support->NumNeighbors(); ++j ) {
-        for( std::size_t d=0; d<outdim; ++d ) {
-          const std::size_t localj = j*outdim+d;
-          assert(localj<localJac.cols());
-          const std::size_t globalj = outdim*globalIndices[j]+d;
-          assert(globalj<jac.cols());
-          if( std::abs(localJac(locali, localj))>1.0e-14 ) {
-            triplets.emplace_back(globali, globalj, localJac(locali, localj));
-          }
-        }
-      }
-    }
-  }
-
-  jac.setFromTriplets(triplets.begin(), triplets.end());*/
+Eigen::MatrixXd CollocationCost::PenaltyFunctionJacobianImpl(std::size_t const ind, Eigen::VectorXd const& beta) const {
+  assert(ind<collocationPoints.size());
+  assert(collocationPoints[ind]);
+  
+  return std::sqrt(collocationPoints[ind]->weight)*collocationPoints[ind]->OperatorJacobian(collocationPoints[ind]->x, beta);
 }
 
 bool CollocationCost::IsQuadratic() const {
-  assert(false);
-  return false;
+  // the cost function is quadratic as long as all of the models are linear
+  for( const auto& it : collocationPoints ) { if( !it->model->IsLinear() ) { return false ; } }
+  return true;
 }

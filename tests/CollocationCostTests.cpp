@@ -20,8 +20,10 @@ protected:
   virtual void SetUp() override {
     pt::ptree ptSupportPoints;
     ptSupportPoints.put("BasisFunctions", "Basis1, Basis2");
-    ptSupportPoints.put("Basis1.Type", "TotalOrderPolynomials");
+    ptSupportPoints.put("Basis1.Type", "TotalOrderSinCos");
+    ptSupportPoints.put("Basis1.Order", 6);
     ptSupportPoints.put("Basis2.Type", "TotalOrderPolynomials");
+    ptSupportPoints.put("Basis2.Order", 4);
     ptSupportPoints.put("OutputDimension", outdim);
 
     // the number of support points
@@ -42,7 +44,15 @@ protected:
     model = std::make_shared<tests::TwoDimensionalAlgebraicModel>(modelOptions);
 
     // the distribution we sample the colocation points from
-    sampler = std::make_shared<CollocationPointSampler>(dist, model);
+    auto sampler = std::make_shared<CollocationPointSampler>(dist, model);
+
+    // the number of collocation points
+    const std::size_t nCollocPoints = 1250;
+    
+    // options for the cost function
+    cloudOptions.put("NumCollocationPoints", nCollocPoints);
+    collocationCloud = std::make_shared<CollocationPointCloud>(sampler, supportCloud, cloudOptions);
+
   }
 
   virtual void TearDown() override {
@@ -64,36 +74,87 @@ protected:
   /// The support point cloud
   std::shared_ptr<SupportPointCloud> supportCloud;
 
-  /// The distribution we sample the colocation points from
-  std::shared_ptr<CollocationPointSampler> sampler;
+  /// The collocation point cloud
+  std::shared_ptr<CollocationPointCloud> collocationCloud;
 };
 
-TEST_F(CollocationCostTests, Construction) {
-  // the number of collocation points
-  const std::size_t nCollocPoints = 125;
-
-  // options for the cost function
-  cloudOptions.put("NumCollocationPoints", nCollocPoints);
-  auto colocationCloud = std::make_shared<CollocationPointCloud>(sampler, supportCloud, cloudOptions);
-
+TEST_F(CollocationCostTests, ConstructAndEvaluate) {
   // create the collocation costs
   for( std::size_t i=0; i<supportCloud->NumPoints(); ++i ) {
     auto support = supportCloud->GetSupportPoint(i);
 
-    auto cost = std::make_shared<CollocationCost>(support, colocationCloud->CollocationPerSupport(i));
+    auto cost = std::make_shared<CollocationCost>(support, collocationCloud->CollocationPerSupport(i));
     EXPECT_EQ(cost->inputDimension, support->NumCoefficients());
-    EXPECT_EQ(cost->numPenaltyFunctions, colocationCloud->NumCollocationPerSupport(i));
+    EXPECT_EQ(cost->numPenaltyFunctions, collocationCloud->NumCollocationPerSupport(i));
     EXPECT_EQ(cost->numPenaltyTerms, cost->numPenaltyFunctions*model->outputDimension);
-  }
-  //cost = std::make_shared<CollocationCost>(colocationCloud);
-  //EXPECT_EQ(cost->numPenaltyFunctions, model->outputDimension*nCollocPoints);*/
+    if( cost->numPenaltyFunctions>0 ) { EXPECT_FALSE(cost->IsQuadratic()); } else { EXPECT_TRUE(cost->IsQuadratic()); }
 
-  EXPECT_TRUE(false);
+    // choose the vector of coefficients
+    const Eigen::VectorXd coefficients = Eigen::VectorXd::Random(support->NumCoefficients());
+
+    const Eigen::VectorXd computedCost = cost->CostVector(coefficients);
+
+    // compute the true cost
+    Eigen::VectorXd trueCost(cost->numPenaltyTerms);
+    {
+      std::size_t cnt = 0;
+      for( std::size_t j=0; j<collocationCloud->NumCollocationPerSupport(i); ++j ) {
+	auto colloc = collocationCloud->GetCollocationPoint(collocationCloud->GlobalIndex(j, support->GlobalIndex()));
+
+	trueCost.segment(cnt, model->outputDimension) = std::sqrt(colloc->weight)*(model->Operator(colloc->x, coefficients, support->GetBasisFunctions()) - model->RightHandSide(colloc->x));
+	cnt += model->outputDimension;
+      }
+    }
+    EXPECT_EQ(computedCost.size(), trueCost.size());
+    EXPECT_NEAR((trueCost-computedCost).norm(), 0.0, 1.0e-12);
+
+    for( std::size_t j=0; j<cost->numPenaltyFunctions; ++j ) {
+      const Eigen::MatrixXd jacFD = cost->PenaltyFunctionJacobianByFD(j, coefficients);
+      const Eigen::MatrixXd jac = cost->PenaltyFunctionJacobian(j, coefficients);
+      EXPECT_NEAR((jac-jacFD).norm(), 0.0, 1.0e-6);
+    }
+  }
 }
 
-/*
-TEST_F(CollocationCostTests, ComputeOptimalCoefficients) {
-  auto collocationCloud = std::make_shared<CollocationPointCloud>(sampler, supportCloud, cloudOptions);
+TEST_F(CollocationCostTests, MinimizeCost_LevenbergMarquardt) {
+  // create the collocation costs
+  for( std::size_t i=0; i<supportCloud->NumPoints(); ++i ) {
+    std::cout << "SUPPORT POINT: " << i << std::endl;
+    
+    auto support = supportCloud->GetSupportPoint(i);
+
+    auto cost = std::make_shared<CollocationCost>(support, collocationCloud->CollocationPerSupport(i));
+
+    pt::ptree pt;
+    pt.put("FunctionTolerance", 1.0e-9);
+    pt.put("GradientTolerance", 1.0e-7);
+    pt.put("InitialDamping", 1.0);
+    pt.put("LinearSolver", "QR");
+    pt.put("MaximumFunctionEvaluations", 100000);
+    pt.put("MaximumJacobianEvaluations", 100000);
+    pt.put("MaxLineSearchSteps", 10);
+    auto lm = std::make_shared<DenseLevenbergMarquardt>(cost, pt);
+
+    // choose the vector of coefficients
+    Eigen::VectorXd coefficients = Eigen::VectorXd::Ones(support->NumCoefficients());
+
+    const std::pair<Optimization::Convergence, double> info = lm->Minimize(coefficients);
+
+    if( info.first<=0 ) { 
+      std::cout << "num colloc per support i: " << collocationCloud->NumCollocationPerSupport(i) << std::endl;
+      std::cout << "num unknowns: " << support->NumCoefficients() << std::endl;
+      std::cout << info.first << std::endl;
+      std::cout << info.second << std::endl;
+
+      std::cout << std::endl;
+
+      assert(false);
+    }
+
+  }
+
+  EXPECT_TRUE(false);
+    /*auto collocationCloud = std::make_shared<CollocationPointCloud>(sampler, supportCloud, cloudOptions);
 
   // create the collocation cost
   cost = std::make_shared<CollocationCost>(collocationCloud);
@@ -110,9 +171,9 @@ TEST_F(CollocationCostTests, ComputeOptimalCoefficients) {
 
     const Eigen::VectorXd x = Eigen::VectorXd::Random(indim);
     EXPECT_NEAR((x.head(outdim)-point->EvaluateLocalFunction(x)).norm(), 0.0, 1.0e-8);
-  }
+    }*/
 }
-
+  /*
 TEST_F(CollocationCostTests, CostFunctionEvaluation) {
   // the number of collocation points
   const std::size_t nCollocPoints = 25;

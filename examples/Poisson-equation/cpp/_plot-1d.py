@@ -31,13 +31,17 @@ collocationPoints = list()
 for i in range(len(supportPoints)):
     collocationPoints.append(file['/collocation points/support point '+str(i)] [()])
 
+evalPoints = file['/evaluation points'] [()].T [0]
+evalFunc = file['/local function evaluation'] [()].T [0]
+
 fig = plt.figure()
 ax = fig.add_subplot(111)
 colors = ['#e41a1c', '#377eb8', '#4daf4a', '#984ea3', '#ff7f00', '#a65628', '#f781bf', '#999999']
 for ind, c in zip(sortedIndices, itertools.cycle(colors)):
     for y in collocationPoints[ind]:
         ax.plot(y, [0.0], 'x', color=c)
-    ax.plot(supportPoints[ind], [0.0], 'o', color=c)
+    ax.plot(supportPoints[ind], [0.0], 'o', color=c, markersize=10)
+ax.plot(evalPoints, evalFunc)
 ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
 ax.yaxis.set_ticks_position('left')

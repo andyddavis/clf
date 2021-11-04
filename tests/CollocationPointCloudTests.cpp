@@ -124,6 +124,7 @@ TEST_F(CollocationPointCloudTests, WriteToFile) {
 
   HDF5File hdf5(file);
   for( std::size_t i=0; i<supportCloud->NumPoints(); ++i ) {
+    if( !hdf5.IsDataSet("/collocation points/support point "+std::to_string(i)) ) { continue; }
     const Eigen::MatrixXd pnts = hdf5.ReadMatrix("/collocation points/support point "+std::to_string(i));
 
     for( std::size_t j=0; j<pnts.rows(); ++j ) { EXPECT_NEAR((collocationCloud->GetCollocationPoint(collocationCloud->GlobalIndex(j, i))->x - pnts.row(j).transpose()).norm(), 0.0, 1.0e-12); }

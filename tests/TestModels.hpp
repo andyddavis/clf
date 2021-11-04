@@ -82,7 +82,14 @@ protected:
       ind += basisSize;
     }
 
-    return jac;
+    const Eigen::MatrixXd jacFD = OperatorJacobianByFD(x, coefficients, bases);
+    //std::cout << "FD jac: " << OperatorJacobianByFD(x, coefficients, bases) << std::endl;
+    //std::cout << "jac: " << jac << std::endl;
+    std::cout << "model jac FD check: " << (jacFD-jac).norm() << std::endl;
+    std::cout << std::endl;
+
+    return jacFD;
+    //return jac;
   }
 
 private:

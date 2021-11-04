@@ -9,7 +9,11 @@ CLF_REGISTER_OPTIMIZER(LevenbergMarquardt, DenseLevenbergMarquardt, Eigen::Matri
  LevenbergMarquardt<Eigen::MatrixXd>(cost, pt)
  {}
 
-void  DenseLevenbergMarquardt::AddScaledIdentity(double const scale, Eigen::MatrixXd& mat) const { mat += scale*Eigen::MatrixXd::Identity(mat.rows(), mat.cols()); }
+void  DenseLevenbergMarquardt::AddScaledIdentity(double const scale, Eigen::MatrixXd& mat) const { 
+  std::cout << "DIAG: " << mat.diagonal().transpose() << std::endl << std::endl;
+  mat += scale*Eigen::MatrixXd::Identity(mat.rows(), mat.cols()); 
+  //mat += scale*mat.diagonal().asDiagonal();
+}
 
 CLF_REGISTER_OPTIMIZER(LevenbergMarquardt, SparseLevenbergMarquardt, Eigen::SparseMatrix<double>)
 

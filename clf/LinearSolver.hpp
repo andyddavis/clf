@@ -102,6 +102,7 @@ public:
   */
   inline Eigen::VectorXd SolveQR(Eigen::VectorXd const& rhs) const {
     const Eigen::Index rank = solverQR->rank();
+    std::cout << "RANK: " << rank << std::endl;
 
     Eigen::VectorXd soln(solverQR->cols());
     soln.tail(soln.size()-rank).setZero();

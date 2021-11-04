@@ -80,20 +80,27 @@ public:
     std::size_t iter = 0;
     double damping = initialDamping;
     while( iter<maxIters ) {
-      const std::pair<Optimization::Convergence, double> convergenceInfo = Iteration(prevCost, damping, beta, costVec);
+      std::cout << "damping: " << damping << std::endl;
+      Optimization::Convergence info;
+      double newCost;
+      bool lineSearchSuccess;
+      std::tie(info, newCost, lineSearchSuccess) = Iteration(prevCost, damping, beta, costVec);
 
       // check for convergence
-      if( convergenceInfo.first>0 ) { return convergenceInfo; }
+      if( info>0 ) { return std::pair<Optimization::Convergence, double>(info, newCost); }
 
       // check max function evals
-      if( numCostEvals>this->maxEvals ) { return std::pair<Optimization::Convergence, double>(Optimization::Convergence::FAILED_MAX_NUM_COST_EVALS, convergenceInfo.second); }
+      if( numCostEvals>this->maxEvals ) { return std::pair<Optimization::Convergence, double>(Optimization::Convergence::FAILED_MAX_NUM_COST_EVALS, newCost); }
 
       // check max jacobian evals
-      if( numJacEvals>maxJacEvals ) { return std::pair<Optimization::Convergence, double>(Optimization::Convergence::FAILED_MAX_NUM_JACOBIAN_EVALS, convergenceInfo.second); }
+      if( numJacEvals>maxJacEvals ) { return std::pair<Optimization::Convergence, double>(Optimization::Convergence::FAILED_MAX_NUM_JACOBIAN_EVALS, newCost); }
 
       // update damping parameter and previous cost
-      damping *= (convergenceInfo.second<prevCost? dampingShrinkFactor : dampingGrowFactor);
-      prevCost = convergenceInfo.second;
+      //damping *= ((lineSearchSuccess & newCost<prevCost)? dampingShrinkFactor : dampingGrowFactor);
+      damping *= (newCost<prevCost? dampingShrinkFactor : dampingGrowFactor);
+      prevCost = newCost;
+
+      std::cout << "end iter: " << iter << std::endl << "------------" << std::endl << "------------" << std::endl << std::endl;
 
       // increment the iteration
       ++iter;
@@ -135,22 +142,32 @@ private:
   @param[in] costVal The current value of the cost function
   @param[in,out] beta In: The current parameter value, Out: The updated parameter value
   @param[in,out] costVec In: The cost given the current parameter value, Out: The cost at the next iteration
-  \return First: Information about convergence or failure, Second: The current cost
+  \return First: Information about convergence or failure, Second: The current cost, Third: <tt>true</tt>---the line search was successful or <tt>false</tt>---the line search failed
   */
-  inline std::pair<Optimization::Convergence, double> Iteration(double const costVal, double const damping, Eigen::VectorXd& beta, Eigen::VectorXd& costVec) {
+  inline std::tuple<Optimization::Convergence, double, bool> Iteration(double const costVal, double const damping, Eigen::VectorXd& beta, Eigen::VectorXd& costVec) {
     // evaluate the cost at the initial guess
-    if( costVal<this->funcTol ) { return std::pair<Optimization::Convergence, double>(Optimization::Convergence::CONVERGED_FUNCTION_SMALL, costVal); }
+    if( costVal<this->funcTol ) { return std::tuple<Optimization::Convergence, double, bool>(Optimization::Convergence::CONVERGED_FUNCTION_SMALL, costVal, true); }
 
     // compute the Jacobian matrix
     MatrixType jac;
     Jacobian(beta, jac);
-    if( (jac.adjoint()*costVec).norm()<this->gradTol ) { return std::pair<Optimization::Convergence, double>(Optimization::Convergence::CONVERGED_GRADIENT_SMALL, costVal); }
+
+    //std::cout << "jac: " << std::endl << jac << std::endl;
+    std::cout << "cost vec: " << costVec.transpose() << std::endl;
+
+    std::cout << "grad norm: " << (jac.adjoint()*costVec).norm() << std::endl;
+
+    if( (jac.adjoint()*costVec).norm()<this->gradTol ) { return std::tuple<Optimization::Convergence, double, bool>(Optimization::Convergence::CONVERGED_GRADIENT_SMALL, costVal, true); }
 
     // compute the step direction
     const Eigen::VectorXd stepDir = StepDirection(damping, jac, costVec);
 
+    double newcost;
+    bool lineSearchSuccess;
+    std::tie(newcost, lineSearchSuccess) = LineSearch(costVal, stepDir, beta, costVec);
+
     // do a line search to make a step and return the result
-    return std::pair<Optimization::Convergence, double>(Optimization::Convergence::CONTINUE_RUNNING, LineSearch(costVal, stepDir, beta, costVec));
+    return std::tuple<Optimization::Convergence, double, bool>(Optimization::Convergence::CONTINUE_RUNNING, newcost, lineSearchSuccess);
   }
 
   /// Evaluate the cost function
@@ -199,9 +216,9 @@ private:
   @param[in] stepDir The step direction
   @param[in, out] beta In: The current parameter value, Out: the updated parameter value
   @param[out] costVec The penalty functions evaluated at the updated parameter value
-  \return The new value of the cost function
+  \return First: The new value of the cost function, Second: <tt>true</tt>---the line search was successful or <tt>false</tt>---the line search failed
   */
-  inline double LineSearch(double const costVal, Eigen::VectorXd const& stepDir, Eigen::VectorXd& beta, Eigen::VectorXd& costVec) {
+  inline std::pair<double, bool> LineSearch(double const costVal, Eigen::VectorXd const& stepDir, Eigen::VectorXd& beta, Eigen::VectorXd& costVec) {
     double alpha = 1.0;
 
     // evaluate the cost at the initial guess
@@ -217,7 +234,10 @@ private:
     // take a step
     beta -= alpha*stepDir;
 
-    return newCost;
+    std::cout << "alpha: " << alpha << std::endl;
+    std::cout << "new cost: " << newCost << std::endl;
+   
+    return std::pair<double, bool>(newCost, iter<maxLineSearchSteps);
   }
 
   /// The number of cost function evaluations
