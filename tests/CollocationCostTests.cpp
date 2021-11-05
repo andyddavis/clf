@@ -129,7 +129,7 @@ TEST_F(CollocationCostTests, MinimizeCost_LevenbergMarquardt) {
     pt.put("FunctionTolerance", 1.0e-9);
     pt.put("GradientTolerance", 1.0e-7);
     pt.put("InitialDamping", 1.0);
-    pt.put("LinearSolver", "QR");
+    //pt.put("LinearSolver", "QR");
     pt.put("MaximumFunctionEvaluations", 100000);
     pt.put("MaximumJacobianEvaluations", 100000);
     pt.put("MaxLineSearchSteps", 10);
