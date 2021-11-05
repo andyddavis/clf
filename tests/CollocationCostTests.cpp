@@ -21,9 +21,9 @@ protected:
     pt::ptree ptSupportPoints;
     ptSupportPoints.put("BasisFunctions", "Basis1, Basis2");
     ptSupportPoints.put("Basis1.Type", "TotalOrderSinCos");
-    ptSupportPoints.put("Basis1.Order", 6);
+    ptSupportPoints.put("Basis1.Order", 4);
     ptSupportPoints.put("Basis2.Type", "TotalOrderPolynomials");
-    ptSupportPoints.put("Basis2.Order", 4);
+    ptSupportPoints.put("Basis2.Order", 6);
     ptSupportPoints.put("OutputDimension", outdim);
 
     // the number of support points
@@ -109,9 +109,9 @@ TEST_F(CollocationCostTests, ConstructAndEvaluate) {
     EXPECT_NEAR((trueCost-computedCost).norm(), 0.0, 1.0e-12);
 
     for( std::size_t j=0; j<cost->numPenaltyFunctions; ++j ) {
-      const Eigen::MatrixXd jacFD = cost->PenaltyFunctionJacobianByFD(j, coefficients);
+      const Eigen::MatrixXd jacFD = cost->PenaltyFunctionJacobianByFD(j, coefficients, DenseCostFunction::FDOrder::SIXTH);
       const Eigen::MatrixXd jac = cost->PenaltyFunctionJacobian(j, coefficients);
-      EXPECT_NEAR((jac-jacFD).norm(), 0.0, 1.0e-6);
+      EXPECT_NEAR((jac-jacFD).norm(), 0.0, 5.0e-7);
     }
   }
 }
@@ -128,10 +128,10 @@ TEST_F(CollocationCostTests, MinimizeCost_LevenbergMarquardt) {
     pt::ptree pt;
     pt.put("FunctionTolerance", 1.0e-9);
     pt.put("GradientTolerance", 1.0e-7);
-    pt.put("InitialDamping", 1.0);
-    //pt.put("LinearSolver", "QR");
-    pt.put("MaximumFunctionEvaluations", 100000);
-    pt.put("MaximumJacobianEvaluations", 100000);
+    pt.put("InitialDamping", 0.0);
+    pt.put("LinearSolver", "QR");
+    pt.put("MaximumFunctionEvaluations", 1000);
+    pt.put("MaximumJacobianEvaluations", 1000);
     pt.put("MaxLineSearchSteps", 10);
     auto lm = std::make_shared<DenseLevenbergMarquardt>(cost, pt);
 

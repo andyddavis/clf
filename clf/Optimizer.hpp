@@ -46,7 +46,7 @@ Parameter Key | Type | Default Value | Description |
 "GradientTolerance"   | <tt>double</tt> | <tt>1.0e-10</tt> | The tolerance for the gradient norm. |
 "FunctionTolerance"   | <tt>double</tt> | <tt>1.0e-10</tt> | The tolerance for the cost function. |
 "MaximumFunctionEvaluations"   | <tt>std::size_t</tt> | <tt>1000</tt> | The maximum number of function evaluations. |
-"LinearSolver"   | <tt>std::string</tt> | <tt>"Cholesky"</tt> | The linear solver used by clf::SolveLinearSystem; Choose between: <tt>"Cholesky"</tt>, <tt>"CholeskyPivot"</tt>, <tt>"LU"</tt>, or <tt>"QR"</tt>. The solver will default to Cholesky for any invalid input string. See clf::LinearSolver. |
+"LinearSolver"   | <tt>std::string</tt> | <tt>"Cholesky"</tt> | The linear solver used by clf::SolveLinearSystem; Choose between: <tt>"Cholesky"</tt>, <tt>"CholeskyPivot"</tt>, <tt>"LU"</tt>, or <tt>"QR"</tt>. The solver will default to LU for any invalid input string. See clf::LinearSolver. |
 */
 template<typename MatrixType>
 class Optimizer {

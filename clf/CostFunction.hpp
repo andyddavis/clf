@@ -90,26 +90,99 @@ public:
     return jac;
   }
 
+  /// The order for the finite difference approximation
+  enum FDOrder {
+    /// First order upward approximation 
+    FIRST_UPWARD,
+
+    /// First order backward approximation
+    FIRST_DOWNWARD,
+
+    /// Second order centered approximation
+    SECOND,
+
+    /// Fourth order centered approximation
+    FOURTH,
+
+    /// Sixth order centered approximation
+    SIXTH
+  };
+
   /// Evaluate the Jacobain \f$\nabla_{\beta} f_i(\beta)\f$ (which is an \f$n \times d_i\f$ matrix) using finite difference
   /**
   @param[in] ind The index of the penalty function
   @param[in] beta The input parameter
+  @param[in] order The order of the finite difference approximation
   @param[in] dbeta The \f$\Delta \beta\f$ used to compute finite difference approximations (defaults to \f$1e-8\f$)
   \return The gradient of the \f$i^{th}\f$ penalty function \f$\nabla_{\beta} f_i(\beta)\f$
   */
-  inline Eigen::MatrixXd PenaltyFunctionJacobianByFD(std::size_t const ind, Eigen::VectorXd const& beta, double const dbeta = 1.0e-8) const {
+  inline Eigen::MatrixXd PenaltyFunctionJacobianByFD(std::size_t const ind, Eigen::VectorXd const& beta, FDOrder const order = FIRST_UPWARD, double const dbeta = 1.0e-8) const {
     assert(beta.size()==inputDimension);
     assert(ind<numPenaltyFunctions);
     const std::size_t outputDimension = PenaltyFunctionOutputDimension(ind);
     Eigen::MatrixXd jac(outputDimension, inputDimension);
-    const Eigen::VectorXd cost = PenaltyFunction(ind, beta);
+    
+    // precompute if we need this
+    Eigen::VectorXd cost;
+    if( order==FDOrder::FIRST_UPWARD | order==FDOrder::FIRST_DOWNWARD ) { cost = PenaltyFunction(ind, beta); }
 
-    Eigen::VectorXd betaPlus = beta;
+    Eigen::VectorXd betaFD = beta;
     for( std::size_t i=0; i<inputDimension; ++i ) {
-      betaPlus(i) += dbeta;
-      const Eigen::VectorXd costp = PenaltyFunction(ind, betaPlus);
-      betaPlus(i) -= dbeta;
-      for( std::size_t d=0; d<outputDimension; ++d ) { jac(d, i) = (costp(d)-cost(d))/dbeta; }
+      switch( order ) {
+      case FDOrder::FIRST_UPWARD: {
+	betaFD(i) += dbeta;
+	const Eigen::VectorXd costp = PenaltyFunction(ind, betaFD);
+	betaFD(i) -= dbeta;
+	jac.col(i) = (costp-cost)/dbeta;
+	break;
+      }
+      case FDOrder::FIRST_DOWNWARD: {
+	betaFD(i) -= dbeta;
+	const Eigen::VectorXd costm = PenaltyFunction(ind, betaFD);
+	betaFD(i) += dbeta;
+	jac.col(i) = (cost-costm)/dbeta;
+	break;
+      }
+      case FDOrder::SECOND: {
+	betaFD(i) -= dbeta;
+	const Eigen::VectorXd costm = PenaltyFunction(ind, betaFD);
+	betaFD(i) += 2.0*dbeta;
+	const Eigen::VectorXd costp = PenaltyFunction(ind, betaFD);
+	betaFD(i) -= dbeta;
+	jac.col(i) = (costp-costm)/(2.0*dbeta);
+	break;
+      }
+      case FDOrder::FOURTH: {
+	betaFD(i) -= dbeta;
+	const Eigen::VectorXd costm1 = PenaltyFunction(ind, betaFD);
+	betaFD(i) -= dbeta;
+	const Eigen::VectorXd costm2 = PenaltyFunction(ind, betaFD);
+	betaFD(i) += 3.0*dbeta;
+	const Eigen::VectorXd costp1 = PenaltyFunction(ind, betaFD);
+	betaFD(i) += dbeta;
+	const Eigen::VectorXd costp2 = PenaltyFunction(ind, betaFD);
+	betaFD(i) -= 2.0*dbeta;
+	jac.col(i) = (costm2/12.0-(2.0/3.0)*costm1+(2.0/3.0)*costp1-costp2/12.0)/dbeta;
+	break;
+      }
+      case FDOrder::SIXTH: {
+	betaFD(i) -= dbeta;
+	const Eigen::VectorXd costm1 = PenaltyFunction(ind, betaFD);
+	betaFD(i) -= dbeta;
+	const Eigen::VectorXd costm2 = PenaltyFunction(ind, betaFD);
+	betaFD(i) -= dbeta;
+	const Eigen::VectorXd costm3 = PenaltyFunction(ind, betaFD);
+	betaFD(i) += 4.0*dbeta;
+	const Eigen::VectorXd costp1 = PenaltyFunction(ind, betaFD);
+	betaFD(i) += dbeta;
+	const Eigen::VectorXd costp2 = PenaltyFunction(ind, betaFD);
+	betaFD(i) += dbeta;
+	const Eigen::VectorXd costp3 = PenaltyFunction(ind, betaFD);
+	betaFD(i) -= 3.0*dbeta;
+	jac.col(i) = (-costm3/60.0+(3.0/20.0)*costm2-(3.0/4.0)*costm1+(3.0/4.0)*costp1-(3.0/20.0)*costp2+costp3/60.0)/dbeta;
+	break;
+      }
+      }
     }
 
     return jac;

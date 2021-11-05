@@ -46,14 +46,19 @@ public:
   /// Compute the matrix decomposition at construction
   /**
   @param[in] A The matrix that defines the linear system
-  @param[in] solver The type of solver we want to use (default to Cholesky)
+  @param[in] solver The type of solver we want to use (default to LU)
   @param[in] leastSq <tt>true</tt> (default): Solve the least squares problem \f$A^{\top} A x = A^{\top} b\f$; <tt>false</tt>: Solve the linear system \f$A x = b\f$ directly (in the QR case \f$A\f$ may not be square and this becomes a least squares problem still).
   */
-  inline LinearSolver(MatrixType const& A, LinearSolverType const solver = Cholesky, bool const leastSq = true) :
+  inline LinearSolver(MatrixType const& A, LinearSolverType const solver = LU, bool const leastSq = true) :
     solver(solver),
     leastSq(leastSq)
   {
     switch( solver ) {
+    case LinearSolverType::Cholesky:
+      if( !leastSq ) { assert(A.rows()==A.cols()); }
+      solverCholesky.emplace((leastSq? A.transpose()*A : A));
+      if( leastSq ) { matrix = A; }
+      break;
     case LinearSolverType::CholeskyPivot:
       if( !leastSq ) { assert(A.rows()==A.cols()); }
       solverCholeskyPivot.emplace((leastSq? A.transpose()*A : A));
@@ -62,14 +67,9 @@ public:
     case LinearSolverType::QR:
       solverQR.emplace(A);
       break;      
-    case LinearSolverType::LU:
-      if( !leastSq ) { assert(A.rows()==A.cols()); }
-      solverLU.emplace((leastSq? A.transpose()*A : A));
-      if( leastSq ) { matrix = A; }
-      break;
     default:
       if( !leastSq ) { assert(A.rows()==A.cols()); }
-      solverCholesky.emplace((leastSq? A.transpose()*A : A));
+      solverLU.emplace((leastSq? A.transpose()*A : A));
       if( leastSq ) { matrix = A; }
     }
   }
@@ -83,14 +83,14 @@ public:
   */
   inline Eigen::VectorXd Solve(Eigen::VectorXd const& b) {
     switch( solver ) {
+    case LinearSolverType::Cholesky:
+      return solverCholesky->solve((leastSq? matrix->transpose()*b : b));
     case LinearSolverType::CholeskyPivot:
       return solverCholeskyPivot->solve((leastSq? matrix->transpose()*b : b));
     case LinearSolverType::QR:
       return SolveQR(b);
-    case LinearSolverType::LU:
-      return solverLU->solve((leastSq? matrix->transpose()*b : b));
     default:
-      return solverCholesky->solve((leastSq? matrix->transpose()*b : b));
+      return solverLU->solve((leastSq? matrix->transpose()*b : b));
     }
   }
 

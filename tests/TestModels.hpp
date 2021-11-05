@@ -82,14 +82,25 @@ protected:
       ind += basisSize;
     }
 
-    const Eigen::MatrixXd jacFD = OperatorJacobianByFD(x, coefficients, bases);
+    /*const Eigen::MatrixXd jacFD = OperatorJacobianByFD(x, coefficients, bases);
     //std::cout << "FD jac: " << OperatorJacobianByFD(x, coefficients, bases) << std::endl;
     //std::cout << "jac: " << jac << std::endl;
     std::cout << "model jac FD check: " << (jacFD-jac).norm() << std::endl;
     std::cout << std::endl;
+    return jacFD;*/
 
-    return jacFD;
-    //return jac;
+    return jac;
+  }
+
+  inline virtual std::vector<Eigen::MatrixXd> OperatorHessianImpl(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases) const override {
+    std::vector<Eigen::MatrixXd> hess(2);
+    hess[0] = Eigen::MatrixXd::Zero(coefficients.size(), coefficients.size());
+
+    const Eigen::VectorXd phi = bases[1]->EvaluateBasisFunctions(x);
+    hess[1] = Eigen::MatrixXd::Zero(coefficients.size(), coefficients.size());
+    hess[1].block(bases[0]->NumBasisFunctions(), bases[0]->NumBasisFunctions(), bases[1]->NumBasisFunctions(), bases[1]->NumBasisFunctions()) = 2.0*phi*phi.transpose();
+
+    return hess;
   }
 
 private:

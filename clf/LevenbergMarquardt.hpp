@@ -96,8 +96,8 @@ public:
       if( numJacEvals>maxJacEvals ) { return std::pair<Optimization::Convergence, double>(Optimization::Convergence::FAILED_MAX_NUM_JACOBIAN_EVALS, newCost); }
 
       // update damping parameter and previous cost
-      //damping *= ((lineSearchSuccess & newCost<prevCost)? dampingShrinkFactor : dampingGrowFactor);
-      damping *= (newCost<prevCost? dampingShrinkFactor : dampingGrowFactor);
+      damping *= ((lineSearchSuccess & newCost<prevCost)? dampingShrinkFactor : dampingGrowFactor);
+      //damping *= (newCost<prevCost? dampingShrinkFactor : dampingGrowFactor);
       prevCost = newCost;
 
       std::cout << "end iter: " << iter << std::endl << "------------" << std::endl << "------------" << std::endl << std::endl;
@@ -154,7 +154,7 @@ private:
 
     //std::cout << "jac: " << std::endl << jac << std::endl;
     std::cout << "cost vec: " << costVec.transpose() << std::endl;
-
+    std::cout << "grad: " << (jac.adjoint()*costVec).transpose() << std::endl;
     std::cout << "grad norm: " << (jac.adjoint()*costVec).norm() << std::endl;
 
     if( (jac.adjoint()*costVec).norm()<this->gradTol ) { return std::tuple<Optimization::Convergence, double, bool>(Optimization::Convergence::CONVERGED_GRADIENT_SMALL, costVal, true); }
@@ -207,6 +207,8 @@ private:
     }
 
     auto linSolve = std::make_shared<LinearSolver<MatrixType> >(jac, this->linSolver, damping<=1.0e-14);
+    //auto linSolve = std::make_shared<LinearSolver<MatrixType> >(jac, this->linSolver, true);
+
     return linSolve->Solve(costVec);
   }
 

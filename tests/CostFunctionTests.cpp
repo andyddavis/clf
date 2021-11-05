@@ -56,8 +56,16 @@ protected:
 
     // compute the gradient with finite difference
     const Eigen::MatrixXd grad0 = cost->PenaltyFunctionJacobian(0, beta);
-    const Eigen::MatrixXd grad0FD = cost->PenaltyFunctionJacobianByFD(0, beta);
-    EXPECT_NEAR((grad0-grad0FD).norm(), 0.0, 1.0e-7);
+    const Eigen::MatrixXd grad0FD_firstd = cost->PenaltyFunctionJacobianByFD(0, beta, CostFunction<MATTYPE>::FDOrder::FIRST_DOWNWARD);
+    EXPECT_NEAR((grad0-grad0FD_firstd).norm(), 0.0, 1.0e-7);
+    const Eigen::MatrixXd grad0FD_firstu = cost->PenaltyFunctionJacobianByFD(0, beta, CostFunction<MATTYPE>::FDOrder::FIRST_UPWARD);
+    EXPECT_NEAR((grad0-grad0FD_firstu).norm(), 0.0, 1.0e-7);
+    const Eigen::MatrixXd grad0FD_second = cost->PenaltyFunctionJacobianByFD(0, beta, CostFunction<MATTYPE>::FDOrder::SECOND);
+    EXPECT_NEAR((grad0-grad0FD_second).norm(), 0.0, 1.0e-7);
+    const Eigen::MatrixXd grad0FD_fourth = cost->PenaltyFunctionJacobianByFD(0, beta, CostFunction<MATTYPE>::FDOrder::FOURTH);
+    EXPECT_NEAR((grad0-grad0FD_fourth).norm(), 0.0, 1.0e-7);
+    const Eigen::MatrixXd grad0FD_sixth = cost->PenaltyFunctionJacobianByFD(0, beta, CostFunction<MATTYPE>::FDOrder::SIXTH);
+    EXPECT_NEAR((grad0-grad0FD_sixth).norm(), 0.0, 1.0e-7);
 
     const Eigen::MatrixXd grad1 = cost->PenaltyFunctionJacobian(1, beta);
     const Eigen::MatrixXd grad1FD = cost->PenaltyFunctionJacobianByFD(1, beta);
