@@ -49,7 +49,7 @@ Eigen::VectorXd CollocationCost::PenaltyFunctionImpl(std::size_t const ind, Eige
 Eigen::MatrixXd CollocationCost::PenaltyFunctionJacobianImpl(std::size_t const ind, Eigen::VectorXd const& beta) const {
   assert(ind<collocationPoints.size());
   assert(collocationPoints[ind]);
-  
+
   return std::sqrt(collocationPoints[ind]->weight)*collocationPoints[ind]->OperatorJacobian(collocationPoints[ind]->x, beta);
 }
 

@@ -100,6 +100,14 @@ protected:
     expectedJac(7, 1) = beta(0)*beta(0);
 
     EXPECT_NEAR(((Eigen::MatrixXd)jac-expectedJac).norm(), 0.0, 1.0e-14);
+
+    // check the Gauss-Newton Hessian 
+    MATTYPE gnHess;
+    cost->GaussNewtonHessian(beta, gnHess);
+    EXPECT_NEAR(((Eigen::MatrixXd)gnHess-2.0*expectedJac.transpose()*expectedJac).norm(), 0.0, 1.0e-14);
+
+    // check the full Hessian 
+    std::cout << cost->Hessian(beta) << std::endl;
   }
 };
 

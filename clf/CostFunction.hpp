@@ -12,7 +12,7 @@ namespace clf {
 /**
 The cost function is the sum of \f$m\f$ squared penalty functions \f$f_i: \mathbb{R}^{n} \mapsto \mathbb{R}^{d_i}\f$,
 \f{equation*}{
-C = \min_{\boldsymbol{\beta} \in \mathbb{R}^{n}} \sum_{i=1}^{m} \| f_i(\boldsymbol{\beta}) \|^{2}.
+C = \min_{\beta \in \mathbb{R}^{n}} \sum_{i=1}^{m} \| f_i(\beta) \|^{2}.
 \f}
 */
 template<typename MatrixType>
@@ -76,11 +76,11 @@ public:
     return PenaltyFunctionImpl(ind, beta);
   }
 
-  /// Evaluate the Jacobian \f$\nabla_{\beta} f_i(\beta)\f$
+  /// Evaluate the Jacobian \f$\nabla_{\beta} f_i(\beta) \in \mathbb{R}^{d_i \times n}\f$
   /**
   @param[in] ind The index of the penalty function
   @param[in] beta The input parameter
-  \return The gradient of the \f$i^{th}\f$ penalty function \f$\nabla_{\beta} f_i(\beta)\f$
+  \return The gradient of the \f$i^{th}\f$ penalty function \f$\nabla_{\beta} f_i(\beta) \in \mathbb{R}^{d_i \times n}\f$
   */
   inline Eigen::MatrixXd PenaltyFunctionJacobian(std::size_t const ind, Eigen::VectorXd const& beta) const {
     assert(beta.size()==inputDimension);
@@ -108,13 +108,13 @@ public:
     SIXTH
   };
 
-  /// Evaluate the Jacobain \f$\nabla_{\beta} f_i(\beta)\f$ (which is an \f$n \times d_i\f$ matrix) using finite difference
+  /// Evaluate the Jacobain \f$\nabla_{\beta} f_i(\beta) \in \mathbb{R}^{d_i \times n}\f$ using finite difference
   /**
   @param[in] ind The index of the penalty function
   @param[in] beta The input parameter
   @param[in] order The order of the finite difference approximation
   @param[in] dbeta The \f$\Delta \beta\f$ used to compute finite difference approximations (defaults to \f$1e-8\f$)
-  \return The gradient of the \f$i^{th}\f$ penalty function \f$\nabla_{\beta} f_i(\beta)\f$
+  \return The gradient of the \f$i^{th}\f$ penalty function \f$\nabla_{\beta} f_i(\beta) \in \mathbb{R}^{d_i \times n}\f$
   */
   inline Eigen::MatrixXd PenaltyFunctionJacobianByFD(std::size_t const ind, Eigen::VectorXd const& beta, FDOrder const order = FIRST_UPWARD, double const dbeta = 1.0e-8) const {
     assert(beta.size()==inputDimension);
@@ -162,7 +162,7 @@ public:
 	betaFD(i) += dbeta;
 	const Eigen::VectorXd costp2 = PenaltyFunction(ind, betaFD);
 	betaFD(i) -= 2.0*dbeta;
-	jac.col(i) = (costm2/12.0-(2.0/3.0)*costm1+(2.0/3.0)*costp1-costp2/12.0)/dbeta;
+	jac.col(i) = ((costm2-costp2)/12.0+(2.0/3.0)*(costp1-costm1))/dbeta;
 	break;
       }
       case FDOrder::SIXTH: {
@@ -179,13 +179,27 @@ public:
 	betaFD(i) += dbeta;
 	const Eigen::VectorXd costp3 = PenaltyFunction(ind, betaFD);
 	betaFD(i) -= 3.0*dbeta;
-	jac.col(i) = (-costm3/60.0+(3.0/20.0)*costm2-(3.0/4.0)*costm1+(3.0/4.0)*costp1-(3.0/20.0)*costp2+costp3/60.0)/dbeta;
+	jac.col(i) = ((costp3-costm3)/60.0+(3.0/20.0)*(costm2-costp2)+(3.0/4.0)*(costp1-costm1))/dbeta;
 	break;
       }
       }
     }
 
     return jac;
+  }
+
+  /// Evaluate the Hessian \f$\nabla_{\beta}^2 f_i^{(j)}(\beta) \in \mathbb{R}^{n \times n}\f$ of the penalty function
+  /**
+  @param[in] ind The index of the penalty function
+  @param[in] beta The input parameter \f$\beta \in \mathbb{R}^{n}\f$
+  \return Each component is the Hessian of the \f$j^{th}\f$ couput of the \f$i^{th}\f$ penalty function \f$\nabla_{\beta}^2 f_i^{(j)}(\beta) \in \mathbb{R}^{n \times n}\f$
+  */
+  inline std::vector<MatrixType> PenaltyFunctionHessian(std::size_t const ind, Eigen::VectorXd const& beta) const {
+    assert(beta.size()==inputDimension);
+    assert(ind<numPenaltyFunctions);
+
+    assert(false);
+    return std::vector<MatrixType>();
   }
 
   /// Evaluate each penalty function \f$f_i(\boldsymbol{\beta})\f$
@@ -208,13 +222,60 @@ public:
 
   /// Compute the Jacobian matrix
   /**
-  The Jacobian matrix is \f$\boldsymbol{J}\f$ such that each row is the gradient of a penalty term. The Jacobian of the \f$i^{th}\f$ cost function makes up \f$d_i\f$ rows of the matrix \f$J\f$ ordered according to the ordering of \f$f_i\f$.
+  The Jacobian matrix is \f$J\f$ such that each row is the gradient of a penalty term. The Jacobian of the \f$i^{th}\f$ cost function makes up \f$d_i\f$ rows of the matrix \f$J\f$ ordered according to the ordering of \f$f_i\f$.
 
-  This function resets the Jacobian to zero and then calls clf::CostFunction::PenaltyFunctionJacobianImpl to compute the Jacobian matrix.
+  This function resets the Jacobian to zero and then calls clf::CostFunction::PenaltyFunctionJacobian to compute the Jacobian matrix.
+  \f{equation*}{
+     J(\beta) = \left[ \begin{array}{ccc}
+        --- & \nabla_{\beta} f_1(\beta) & --- \\
+	--- & \vdots & --- \\
+        --- & \nabla_{\beta} f_m(\beta) & --- \\
+     \end{array} \right] \in \mathbb{R}^{\sum_{i=1}^{n} d_i \times n}
+\f}
   @param[in] beta The current parameter value
   @param[out] jac The Jacobian matrix
   */
   virtual void Jacobian(Eigen::VectorXd const& beta, MatrixType& jac) const = 0;
+
+  /// Compute the Hessian of the cost function
+  /**
+  This is a little silly because it just calls the function it overrides. However, this saves the user from having to call <tt>cost->muq::Optimization::CostFunction::Hessian(beta)</tt> instead of <tt>cost->Hessian(beta)</tt>.
+  @param[in] beta The current parameter value
+  \return The Hessian of the cost function
+  */
+  inline virtual Eigen::MatrixXd Hessian(Eigen::VectorXd const& beta) override { return muq::Optimization::CostFunction::Hessian(beta); }
+
+  /// Compute the Hessian of the cost function
+  /**
+  The Hessian of the cost function is
+  \f{equation*}{
+  H = 2 \sum_{i=1}^{m} \left( \sum_{j=1}^{d_i} f_i^{(j)}(\beta) \nabla_{\beta}^2 f_i^{(j)}(\beta) + (\nabla_{\beta} f_i(\beta))^{\top} \nabla_{\beta} f_i(\beta) \right), 
+  \f}
+  where \f$\nabla_{\beta}^2 f_i^{(j)}(\beta)\f$ is the Hessian of the \f$j^{th}\f$ output of \f$f_i\f$. Alternatively, we could compute the Gauss-Newton approximation
+  \f{equation*}{
+  H = 2 \sum_{i=1}^{m} (\nabla_{\beta} f_i(\beta))^{\top} \nabla_{\beta} f_i(\beta).
+  \f}
+  @param[in] beta The current parameter value
+  @param[in] gn <tt>true</tt>: Compute the Gauss-Newton Hessian, <tt>false</tt> (default): Compute the full Hessian 
+  \return The Hessian matrix (or Gauss-Newton Hessian)
+  */
+  inline virtual MatrixType Hessian(Eigen::VectorXd const& beta, bool const gn) { 
+    assert(false);
+  }
+
+  /// Compute the Gauss-Newton Hessian of the cost function
+  /**
+  We compute the Gauss-Newton approximation to the Hessian
+  \f{equation*}{
+  H = 2 \sum_{i=1}^{m} (\nabla_{\beta} f_i(\beta))^{\top} \nabla_{\beta} f_i(\beta).
+  \f}
+  @param[in] beta The current parameter value
+  @param[out] gnHess The Gauss-Newton Hessian matrix
+  */
+  inline void GaussNewtonHessian(Eigen::VectorXd const& beta, MatrixType& gnHess) const {
+    Jacobian(beta, gnHess);
+    gnHess = 2.0*gnHess.transpose()*gnHess;
+  }
 
   /// Is this a quadratic cost function?
   /**
@@ -242,11 +303,11 @@ protected:
   */
   virtual Eigen::VectorXd PenaltyFunctionImpl(std::size_t const ind, Eigen::VectorXd const& beta) const = 0;
 
-  /// Evaluate the gradient \f$\nabla_{\beta} f_i(\beta)\f$
+  /// Evaluate the gradient \f$\nabla_{\beta} f_i(\beta) \in \mathbb{R}^{d_i \times n}\f$
   /**
   @param[in] ind The index of the penalty function
   @param[in] beta The input parameter
-  \return The gradient of the \f$i^{th}\f$ penalty function \f$\nabla_{\beta} f_i(\beta)\f$
+  \return The gradient of the \f$i^{th}\f$ penalty function \f$\nabla_{\beta} f_i(\beta) \in \mathbb{R}^{d_i \times n}\f$
   */
   inline virtual Eigen::MatrixXd PenaltyFunctionJacobianImpl(std::size_t const ind, Eigen::VectorXd const& beta) const { return PenaltyFunctionJacobianByFD(ind, beta); }
 
@@ -291,6 +352,12 @@ private:
     for( const auto& it : outputDimension ) { numTerms += it.first*it.second; }
     return numTerms;
   }
+
+  /// Compute the Hessian of the cost function
+  /**
+  \return The Hessian of the cost function (not the Guass-Newton Hessian).
+  */
+  inline virtual Eigen::MatrixXd Hessian() override { return Hessian(x, false); }
 
 };
 

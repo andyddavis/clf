@@ -72,25 +72,79 @@ Eigen::MatrixXd Model::OperatorJacobian(Eigen::VectorXd const& x, Eigen::VectorX
    return Eigen::MatrixXd();
  }
 
-Eigen::MatrixXd Model::OperatorJacobianByFD(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases, Eigen::VectorXd const& eval, double const fdEps) const {
+Eigen::MatrixXd Model::OperatorJacobianByFD(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases, FDOrder const order, Eigen::VectorXd const& eval, double const fdEps) const {
     // compute the reference action of the operator
     Eigen::VectorXd u;
-    if( eval.size()==0 ) { u = Operator(x, coefficients, bases); }
-    assert(eval.size()==0 || u.size()==0);
-    assert(eval.size()==outputDimension || u.size()==outputDimension);
+    if( order==FDOrder::FIRST_UPWARD | order==FDOrder::FIRST_DOWNWARD ) { 
+      if( eval.size()==0 ) { u = Operator(x, coefficients, bases); }
+      assert(eval.size()==0 || u.size()==0);
+      assert(eval.size()==outputDimension || u.size()==outputDimension);
+    }
 
     // the operator jacobian with respect to the coefficients
     Eigen::MatrixXd jac(outputDimension, coefficients.size());
 
     // the coefficients plus epsilon
-    Eigen::VectorXd coeffPlus = coefficients;
+    Eigen::VectorXd coeffFD = coefficients;
     for( std::size_t i=0; i<coefficients.size(); ++i ) {
-      // add to the ith coefficient
-      if( i>0 ) { coeffPlus(i-1) -= fdEps; }
-      coeffPlus(i) += fdEps;
-
-      // compute the derivative using finite difference
-      jac.col(i) = (Operator(x, coeffPlus, bases)-(eval.size()==0? u : eval))/fdEps;
+      switch( order ) {
+      case FDOrder::FIRST_UPWARD: {
+	// compute the derivative using finite difference
+	coeffFD(i) += fdEps;
+	jac.col(i) = (Operator(x, coeffFD, bases)-(eval.size()==0? u : eval))/fdEps;
+	coeffFD(i) -= fdEps;
+	break;
+      }
+      case FDOrder::FIRST_DOWNWARD: {
+	// compute the derivative using finite difference
+	coeffFD(i) -= fdEps;
+	jac.col(i) = ((eval.size()==0? u : eval)-Operator(x, coeffFD, bases))/fdEps;
+	coeffFD(i) += fdEps;
+	break;
+      }
+      case FDOrder::SECOND: {
+	// compute the derivative using finite difference
+	coeffFD(i) -= fdEps;
+	const Eigen::VectorXd m = Operator(x, coeffFD, bases);
+	coeffFD(i) += 2.0*fdEps;
+	const Eigen::VectorXd p = Operator(x, coeffFD, bases);
+	coeffFD(i) -= fdEps;
+	jac.col(i) = (p-m)/(2.0*fdEps);
+	break;
+      }
+      case FDOrder::FOURTH: {
+	// compute the derivative using finite difference
+	coeffFD(i) -= fdEps;
+	const Eigen::VectorXd m1 = Operator(x, coeffFD, bases);
+	coeffFD(i) -= fdEps;
+	const Eigen::VectorXd m2 = Operator(x, coeffFD, bases);
+	coeffFD(i) += 3.0*fdEps;
+	const Eigen::VectorXd p1 = Operator(x, coeffFD, bases);
+	coeffFD(i) += fdEps;
+	const Eigen::VectorXd p2 = Operator(x, coeffFD, bases);
+	coeffFD(i) -= 2.0*fdEps;
+	jac.col(i) = ((m2-p2)/12.0+(2.0/3.0)*(p1-m1))/fdEps;
+	break;
+      }
+      case FDOrder::SIXTH: {
+	// compute the derivative using finite difference
+	coeffFD(i) -= fdEps;
+	const Eigen::VectorXd m1 = Operator(x, coeffFD, bases);
+	coeffFD(i) -= fdEps;
+	const Eigen::VectorXd m2 = Operator(x, coeffFD, bases);
+	coeffFD(i) -= fdEps;
+	const Eigen::VectorXd m3 = Operator(x, coeffFD, bases);
+	coeffFD(i) += 4.0*fdEps;
+	const Eigen::VectorXd p1 = Operator(x, coeffFD, bases);
+	coeffFD(i) += fdEps;
+	const Eigen::VectorXd p2 = Operator(x, coeffFD, bases);
+	coeffFD(i) += fdEps;
+	const Eigen::VectorXd p3 = Operator(x, coeffFD, bases);
+	coeffFD(i) -= 3.0*fdEps;
+	jac.col(i) = ((p3-m3)/60.0+(3.0/20.0)*(m2-p2)+(3.0/4.0)*(p1-m1))/fdEps;
+	break;
+      }
+      }
     }
 
    return jac;
@@ -113,25 +167,80 @@ Eigen::MatrixXd Model::OperatorJacobianByFD(Eigen::VectorXd const& x, Eigen::Vec
    return jac;
  }
 
-std::vector<Eigen::MatrixXd> Model::OperatorHessianByFD(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases, Eigen::MatrixXd const& jacEval, double const fdEps) const {
+std::vector<Eigen::MatrixXd> Model::OperatorHessianByFD(Eigen::VectorXd const& x, Eigen::VectorXd const& coefficients, std::vector<std::shared_ptr<const BasisFunctions> > const& bases, FDOrder const order, Eigen::MatrixXd const& jacEval, double const fdEps) const {
    // compute the reference jacobian
    Eigen::MatrixXd jac;
-   if( jacEval.size()==0 ) { jac = OperatorJacobian(x, coefficients, bases); }
-   assert(jacEval.size()==0 || jac.size()==0);
-   assert(jacEval.rows()==outputDimension || jac.rows()==outputDimension);
-   assert(jacEval.cols()==coefficients.size() || jac.cols()==coefficients.size());
+   if( order==FDOrder::FIRST_UPWARD | order==FDOrder::FIRST_DOWNWARD ) { 
+     if( jacEval.size()==0 ) { jac = OperatorJacobian(x, coefficients, bases); }
+     assert(jacEval.size()==0 || jac.size()==0);
+     assert(jacEval.rows()==outputDimension || jac.rows()==outputDimension);
+     assert(jacEval.cols()==coefficients.size() || jac.cols()==coefficients.size());
+   }
 
    std::vector<Eigen::MatrixXd> hess(outputDimension, Eigen::MatrixXd(coefficients.size(), coefficients.size()));
 
    // the coefficients plus epsilon
-    Eigen::VectorXd coeffPlus = coefficients;
+    Eigen::VectorXd coeffFD = coefficients;
     for( std::size_t i=0; i<coefficients.size(); ++i ) {
-      // add to the ith coefficient
-      if( i>0 ) { coeffPlus(i-1) -= fdEps; }
-      coeffPlus(i) += fdEps;
-
-      // compute the second derivative using finite difference
-      const Eigen::MatrixXd secondDeriv = (OperatorJacobian(x, coeffPlus, bases)-(jac.size()==0? jacEval : jac))/fdEps;
+      Eigen::MatrixXd secondDeriv;
+      switch( order ) {
+      case FDOrder::FIRST_UPWARD: {
+	coeffFD(i) += fdEps;
+	// compute the second derivative using finite difference
+	secondDeriv = (OperatorJacobian(x, coeffFD, bases)-(jac.size()==0? jacEval : jac))/fdEps;
+	coeffFD(i) -= fdEps;
+	break;
+      }
+      case FDOrder::FIRST_DOWNWARD: {
+	coeffFD(i) -= fdEps;
+	// compute the second derivative using finite difference
+	secondDeriv = ((jac.size()==0? jacEval : jac)-OperatorJacobian(x, coeffFD, bases))/fdEps;
+	coeffFD(i) += fdEps;
+	break;
+      }
+      case FDOrder::SECOND: {
+	// compute the derivative using finite difference
+	coeffFD(i) -= fdEps;
+	const Eigen::MatrixXd m = OperatorJacobian(x, coeffFD, bases);
+	coeffFD(i) += 2.0*fdEps;
+	const Eigen::MatrixXd p = OperatorJacobian(x, coeffFD, bases);
+	coeffFD(i) -= fdEps;
+	secondDeriv = (p-m)/(2.0*fdEps);
+	break;
+      }
+      case FDOrder::FOURTH: {
+	// compute the derivative using finite difference
+	coeffFD(i) -= fdEps;
+	const Eigen::MatrixXd m1 = OperatorJacobian(x, coeffFD, bases);
+	coeffFD(i) -= fdEps;
+	const Eigen::MatrixXd m2 = OperatorJacobian(x, coeffFD, bases);
+	coeffFD(i) += 3.0*fdEps;
+	const Eigen::MatrixXd p1 = OperatorJacobian(x, coeffFD, bases);
+	coeffFD(i) += fdEps;
+	const Eigen::MatrixXd p2 = OperatorJacobian(x, coeffFD, bases);
+	coeffFD(i) -= 2.0*fdEps;
+	secondDeriv = ((m2-p2)/12.0+(2.0/3.0)*(p1-m1))/fdEps;
+	break;
+      }
+      case FDOrder::SIXTH: {
+	// compute the derivative using finite difference
+	coeffFD(i) -= fdEps;
+	const Eigen::MatrixXd m1 = OperatorJacobian(x, coeffFD, bases);
+	coeffFD(i) -= fdEps;
+	const Eigen::MatrixXd m2 = OperatorJacobian(x, coeffFD, bases);
+	coeffFD(i) -= fdEps;
+	const Eigen::MatrixXd m3 = OperatorJacobian(x, coeffFD, bases);
+	coeffFD(i) += 4.0*fdEps;
+	const Eigen::MatrixXd p1 = OperatorJacobian(x, coeffFD, bases);
+	coeffFD(i) += fdEps;
+	const Eigen::MatrixXd p2 = OperatorJacobian(x, coeffFD, bases);
+	coeffFD(i) += fdEps;
+	const Eigen::MatrixXd p3 = OperatorJacobian(x, coeffFD, bases);
+	coeffFD(i) -= 3.0*fdEps;
+	secondDeriv = ((p3-m3)/60.0+(3.0/20.0)*(m2-p2)+(3.0/4.0)*(p1-m1))/fdEps;
+	break;
+      }
+      }
       for( std::size_t j=0; j<outputDimension; ++j ) { hess[j].row(i) = secondDeriv.row(j); }
     }
 

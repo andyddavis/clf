@@ -109,9 +109,9 @@ TEST_F(CollocationCostTests, ConstructAndEvaluate) {
     EXPECT_NEAR((trueCost-computedCost).norm(), 0.0, 1.0e-12);
 
     for( std::size_t j=0; j<cost->numPenaltyFunctions; ++j ) {
-      const Eigen::MatrixXd jacFD = cost->PenaltyFunctionJacobianByFD(j, coefficients, DenseCostFunction::FDOrder::SIXTH);
+      const Eigen::MatrixXd jacFD = cost->PenaltyFunctionJacobianByFD(j, coefficients, DenseCostFunction::FDOrder::SIXTH, 1.0e-5);
       const Eigen::MatrixXd jac = cost->PenaltyFunctionJacobian(j, coefficients);
-      EXPECT_NEAR((jac-jacFD).norm(), 0.0, 5.0e-7);
+      EXPECT_NEAR((jac-jacFD).norm(), 0.0, 1.0e-8);
     }
   }
 }

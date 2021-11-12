@@ -46,3 +46,7 @@ std::vector<Eigen::Triplet<double> > SparseCostFunction::PenaltyFunctionJacobian
   }
   return sparseJac;
 }
+
+Eigen::SparseMatrix<double> SparseCostFunction::Hessian(Eigen::VectorXd const& beta, bool const gn) {
+  assert(false);
+}

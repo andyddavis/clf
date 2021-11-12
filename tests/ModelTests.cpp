@@ -74,41 +74,50 @@ TEST(ModelTests, OperatorEvaluationDefaultImplementation) {
   EXPECT_NEAR(modelEval(0), coefficients.head(bases[0]->NumBasisFunctions()).dot(bases[0]->EvaluateBasisFunctions(x)), 1.0e-12);
   EXPECT_NEAR(modelEval(1), coefficients.tail(bases[1]->NumBasisFunctions()).dot(bases[1]->EvaluateBasisFunctions(x)) + std::pow(coefficients.tail(bases[1]->NumBasisFunctions()).dot(bases[1]->EvaluateBasisFunctions(x)), 2.0), 1.0e-12);
 
-  // evaluate the identity operator jacobian by finite difference
-  const Eigen::MatrixXd modelJacFD = model->OperatorJacobianByFD(x, coefficients, bases);
-  EXPECT_EQ(modelJacFD.rows(), outdim);
-  EXPECT_EQ(modelJacFD.cols(), coefficients.size());
-  EXPECT_NEAR((modelJacFD.row(0).head(bases[0]->NumBasisFunctions())-bases[0]->EvaluateBasisFunctions(x).transpose()).norm(), 0.0, 1.0e-6);
-  EXPECT_NEAR(modelJacFD.row(0).tail(bases[1]->NumBasisFunctions()).norm(), 0.0, 1.0e-12);
+  const std::vector<Model::FDOrder> orders({
+      Model::FDOrder::FIRST_UPWARD, Model::FDOrder::FIRST_DOWNWARD, Model::FDOrder::SECOND, Model::FDOrder::FOURTH, Model::FDOrder::SIXTH
+    });
 
-  EXPECT_NEAR((modelJacFD.row(1).tail(bases[1]->NumBasisFunctions())-bases[1]->EvaluateBasisFunctions(x).transpose()-(2.0*coefficients.tail(bases[1]->NumBasisFunctions()).dot(bases[1]->EvaluateBasisFunctions(x)))*bases[1]->EvaluateBasisFunctions(x).transpose()).norm(), 0.0, 1.0e-5);
-  EXPECT_NEAR(modelJacFD.row(1).head(bases[0]->NumBasisFunctions()).norm(), 0.0, 1.0e-12);
-
-  // evaluate the true jacobian using the default implementation
   const Eigen::MatrixXd modelJac = model->OperatorJacobian(x, coefficients, bases);
-  EXPECT_EQ(modelJac.rows(), modelJacFD.rows());
-  EXPECT_EQ(modelJac.cols(), modelJacFD.cols());
-  EXPECT_NEAR((modelJac-modelJacFD).norm(), 0.0, 1.0e-5);
+  
+  for( const auto& order : orders ) {
+    // evaluate the identity operator jacobian by finite difference
+    const Eigen::MatrixXd modelJacFD = model->OperatorJacobianByFD(x, coefficients, bases, order);
+    EXPECT_EQ(modelJacFD.rows(), outdim);
+    EXPECT_EQ(modelJacFD.cols(), coefficients.size());
+    EXPECT_NEAR((modelJacFD.row(0).head(bases[0]->NumBasisFunctions())-bases[0]->EvaluateBasisFunctions(x).transpose()).norm(), 0.0, 1.0e-6);
+    EXPECT_NEAR(modelJacFD.row(0).tail(bases[1]->NumBasisFunctions()).norm(), 0.0, 1.0e-12);
+    
+    EXPECT_NEAR((modelJacFD.row(1).tail(bases[1]->NumBasisFunctions())-bases[1]->EvaluateBasisFunctions(x).transpose()-(2.0*coefficients.tail(bases[1]->NumBasisFunctions()).dot(bases[1]->EvaluateBasisFunctions(x)))*bases[1]->EvaluateBasisFunctions(x).transpose()).norm(), 0.0, 1.0e-5);
+    EXPECT_NEAR(modelJacFD.row(1).head(bases[0]->NumBasisFunctions()).norm(), 0.0, 1.0e-12);
+    
+    // compare the true jacobian
+    EXPECT_EQ(modelJac.rows(), modelJacFD.rows());
+    EXPECT_EQ(modelJac.cols(), modelJacFD.cols());
+    EXPECT_NEAR((modelJac-modelJacFD).norm(), 0.0, 1.0e-5);
+  }
 
   // evaluate the true hessian using the default implementation
-  const std::vector<Eigen::MatrixXd> modelHessFD = model->OperatorHessianByFD(x, coefficients, bases);
   const std::vector<Eigen::MatrixXd> modelHess = model->OperatorHessian(x, coefficients, bases);
-  EXPECT_EQ(modelHessFD.size(), outdim);
-  EXPECT_EQ(modelHess.size(), outdim);
-  for( std::size_t i=0; i<outdim; ++i ) {
-    Eigen::MatrixXd expected = Eigen::MatrixXd::Zero(coefficients.size(), coefficients.size());
-    if( i==1 ) { 
-      const Eigen::VectorXd phi = bases[1]->EvaluateBasisFunctions(x);
-      expected.block(bases[0]->NumBasisFunctions(), bases[0]->NumBasisFunctions(), bases[1]->NumBasisFunctions(), bases[1]->NumBasisFunctions()) = 2.0*phi*phi.transpose();
+  for( const auto& order : orders ) {
+    const std::vector<Eigen::MatrixXd> modelHessFD = model->OperatorHessianByFD(x, coefficients, bases, order);
+    EXPECT_EQ(modelHessFD.size(), outdim);
+    EXPECT_EQ(modelHess.size(), outdim);
+    for( std::size_t i=0; i<outdim; ++i ) {
+      Eigen::MatrixXd expected = Eigen::MatrixXd::Zero(coefficients.size(), coefficients.size());
+      if( i==1 ) { 
+	const Eigen::VectorXd phi = bases[1]->EvaluateBasisFunctions(x);
+	expected.block(bases[0]->NumBasisFunctions(), bases[0]->NumBasisFunctions(), bases[1]->NumBasisFunctions(), bases[1]->NumBasisFunctions()) = 2.0*phi*phi.transpose();
+      }
+      
+      EXPECT_EQ(modelHess[i].rows(), coefficients.size());
+      EXPECT_EQ(modelHess[i].cols(), coefficients.size());
+      EXPECT_NEAR((modelHess[i]-expected).norm(), 0.0, 1.0e-6);
+      
+      EXPECT_EQ(modelHessFD[i].rows(), coefficients.size());
+      EXPECT_EQ(modelHessFD[i].cols(), coefficients.size());
+      EXPECT_NEAR((modelHessFD[i]-expected).norm(), 0.0, 1.0e-6);
     }
-
-    EXPECT_EQ(modelHess[i].rows(), coefficients.size());
-    EXPECT_EQ(modelHess[i].cols(), coefficients.size());
-    EXPECT_NEAR((modelHess[i]-expected).norm(), 0.0, 1.0e-6);
-
-    EXPECT_EQ(modelHessFD[i].rows(), coefficients.size());
-    EXPECT_EQ(modelHessFD[i].cols(), coefficients.size());
-    EXPECT_NEAR((modelHessFD[i]-expected).norm(), 0.0, 1.0e-6);
   }
 }
 

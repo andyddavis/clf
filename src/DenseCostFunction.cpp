@@ -16,3 +16,7 @@ void DenseCostFunction::Jacobian(Eigen::VectorXd const& beta, Eigen::MatrixXd& j
     cnt += outputDimension[count].second;
   }
 }
+
+Eigen::MatrixXd DenseCostFunction::Hessian(Eigen::VectorXd const& beta, bool const gn) {
+  assert(false);
+}

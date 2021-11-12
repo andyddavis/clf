@@ -37,6 +37,21 @@ public:
   */
   virtual void Jacobian(Eigen::VectorXd const& beta, Eigen::MatrixXd& jac) const final override;
 
+  /// Compute the Hessian of the cost function
+  /**
+  \f{equation*}{
+  H = 2 \sum_{i=1}^{m} \left( \sum_{j=1}^{d_i} f_i^{(j)}(\beta) \nabla_{\beta}^2 f_i^{(j)}(\beta) + (\nabla_{\beta} f_i(\beta))^{\top} \nabla_{\beta} f_i(\beta) \right), 
+  \f}
+  where \f$\nabla_{\beta}^2 f_i^{(j)}(\beta)\f$ is the Hessian of the \f$j^{th}\f$ output of \f$f_i\f$. Alternatively, we could compute the Gauss-Newton approximation
+  \f{equation*}{
+  H = 2 \sum_{i=1}^{m} (\nabla_{\beta} f_i(\beta))^{\top} \nabla_{\beta} f_i(\beta).
+  \f}
+  @param[in] beta The current parameter value
+  @param[in] gn <tt>true</tt>: Compute the Gauss-Newton Hessian, <tt>false</tt> (default): Compute the full Hessian 
+  \return The Hessian matrix (or Gauss-Newton Hessian)
+  */
+  virtual Eigen::MatrixXd Hessian(Eigen::VectorXd const& beta, bool const gn) override;
+
 private:
 };
 

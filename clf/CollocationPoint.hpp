@@ -64,6 +64,16 @@ public:
   */
   Eigen::MatrixXd OperatorJacobian(Eigen::VectorXd const& loc, Eigen::VectorXd const& coeffs) const;
 
+  /// Evaluate the Jacobian of the operator using finite differences applied to the local function at a given point
+  /**
+  @param[in] loc The location where we are evaluating the action of the operator
+  @param[in] coeffs The coefficients that define the local function
+  @param[in] order The order of the finite difference approximation
+  @param[in] fdEps The step size for the finite difference approximation (defaults to <tt>1.0e-6</tt>)
+  \return The model Jacobian with respect to the coefficeints
+  */
+  Eigen::MatrixXd OperatorJacobianByFD(Eigen::VectorXd const& loc, Eigen::VectorXd const& coeffs, Model::FDOrder const order = Model::FDOrder::FIRST_UPWARD, double const fdEps = 1.0e-6) const;
+
   /// The local index of this collocation point
   /**
   \return The local index
