@@ -14,6 +14,9 @@ namespace clf {
 namespace Optimization {
 /// Information about whether or not the algorithm converged
 enum Convergence {
+  /// Hit the maximum number of Hessian evaluations
+  FAILED_MAX_NUM_HESSIAN_EVALS = -4,
+
   /// Hit the maximum number of Jacobian evaluations
   FAILED_MAX_NUM_JACOBIAN_EVALS = -3,
 

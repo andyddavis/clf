@@ -22,12 +22,14 @@ Parameter Key | Type | Default Value | Description |
 "ParameterTolerance"   | <tt>double</tt> | <tt>1.0e-10</tt> | The tolerance for the parameter norm |
 "MaximumFunctionEvaluations"   | <tt>std::size_t</tt> | <tt>1000</tt> | The maximum number of function evaluations |
 "MaximumJacobianEvaluations"   | <tt>std::size_t</tt> | <tt>1000</tt> | The maximum number of Jacobian evaluations |
+"MaximumHessianEvaluations"   | <tt>std::size_t</tt> | <tt>1000</tt> | The maximum number of Hessian evaluations |
 "MaximumIterations"   | <tt>std::size_t</tt> | <tt>1000</tt> | The maximum number of iterations |
 "InitialDampling"   | <tt>double</tt> | <tt>1.0</tt> | The value of the damping parameter at the first iteration |
-"DampingShrinkFactor"   | <tt>double</tt> | <tt>0.5</tt> | The factor multiplying the damping factor if the error has decreased |
-"DampingGrowFactor"   | <tt>double</tt> | <tt>1.5</tt> | The factor multiplying the damping factor if the error has increased |
+"DampingShrinkFactor"   | <tt>double</tt> | <tt>0.1</tt> | The factor multiplying the damping factor if the error has decreased |
+"DampingGrowFactor"   | <tt>double</tt> | <tt>2.0</tt> | The factor multiplying the damping factor if the error has increased |
 "LineSearchFactor"   | <tt>double</tt> | <tt>0.5</tt> | Each iteration of the line search parameter decreases the step size by this factor |
 "MaxLineSearchSteps"   | <tt>std::size_t</tt> | <tt>10</tt> | The maximum number of line search iterations |
+"GaussNewtonHessian"  | <tt>bool</tt> | <tt>false</tt> |  <tt>true</tt>: Use the Gauss-Newton Hessian to compute the step direction, <tt>false</tt>: Use the full Hessian to compute the step direction  |
 */
 template<typename MatrixType>
 class LevenbergMarquardt : public Optimizer<MatrixType> {
@@ -41,12 +43,14 @@ public:
   Optimizer<MatrixType>(cost, pt),
   betaTol(pt.get<double>("ParameterTolerance", 1.0e-10)),
   maxJacEvals(pt.get<std::size_t>("MaximumJacobianEvaluations", 1000)),
+  maxHessEvals(pt.get<std::size_t>("MaximumHessianEvaluations", 1000)),
   maxIters(pt.get<std::size_t>("MaximumIterations", 1000)),
   initialDamping(pt.get<double>("InitialDamping", 1.0)),
-  dampingShrinkFactor(pt.get<double>("DampingShrinkFactor", 0.5)),
-  dampingGrowFactor(pt.get<double>("DampingGrowFactor", 1.5)),
+  dampingShrinkFactor(pt.get<double>("DampingShrinkFactor", 0.1)),
+  dampingGrowFactor(pt.get<double>("DampingGrowFactor", 2.0)),
   lineSearchFactor(pt.get<double>("LineSearchFactor", 0.5)),
-  maxLineSearchSteps(pt.get<std::size_t>("MaxLineSearchSteps", 10))
+  maxLineSearchSteps(pt.get<std::size_t>("MaxLineSearchSteps", 10)), 
+  gnHessian(pt.get<bool>("GaussNewtonHessian", false))
   {}
 
   virtual ~LevenbergMarquardt() = default;
@@ -80,11 +84,12 @@ public:
     std::size_t iter = 0;
     double damping = initialDamping;
     while( iter<maxIters ) {
-      std::cout << "damping: " << damping << std::endl;
       Optimization::Convergence info;
       double newCost;
-      bool lineSearchSuccess;
-      std::tie(info, newCost, lineSearchSuccess) = Iteration(prevCost, damping, beta, costVec);
+      std::tie(info, newCost) = Iteration(prevCost, damping, beta, costVec);
+
+      // check if the new cost is below the prescribed threshold
+      if( newCost<this->funcTol ) { return std::pair<Optimization::Convergence, double>(Optimization::Convergence::CONVERGED_FUNCTION_SMALL, newCost); }
 
       // check for convergence
       if( info>0 ) { return std::pair<Optimization::Convergence, double>(info, newCost); }
@@ -92,15 +97,15 @@ public:
       // check max function evals
       if( numCostEvals>this->maxEvals ) { return std::pair<Optimization::Convergence, double>(Optimization::Convergence::FAILED_MAX_NUM_COST_EVALS, newCost); }
 
-      // check max jacobian evals
+      // check max Jacobian evals
       if( numJacEvals>maxJacEvals ) { return std::pair<Optimization::Convergence, double>(Optimization::Convergence::FAILED_MAX_NUM_JACOBIAN_EVALS, newCost); }
 
+      // check max Hessian evals
+      if( numHessEvals>maxHessEvals ) { return std::pair<Optimization::Convergence, double>(Optimization::Convergence::FAILED_MAX_NUM_HESSIAN_EVALS, newCost); }
+      
       // update damping parameter and previous cost
-      damping *= ((lineSearchSuccess & newCost<prevCost)? dampingShrinkFactor : dampingGrowFactor);
-      //damping *= (newCost<prevCost? dampingShrinkFactor : dampingGrowFactor);
+      damping *= (newCost<prevCost? dampingShrinkFactor : dampingGrowFactor);
       prevCost = newCost;
-
-      std::cout << "end iter: " << iter << std::endl << "------------" << std::endl << "------------" << std::endl << std::endl;
 
       // increment the iteration
       ++iter;
@@ -112,6 +117,9 @@ public:
 
   /// The maximum number of Jacobian evaluations
   const std::size_t maxJacEvals;
+
+  /// The maximum number of Hessian evaluations
+  const std::size_t maxHessEvals;
 
   /// The maximum number of iterations
   const std::size_t maxIters;
@@ -142,32 +150,30 @@ private:
   @param[in] costVal The current value of the cost function
   @param[in,out] beta In: The current parameter value, Out: The updated parameter value
   @param[in,out] costVec In: The cost given the current parameter value, Out: The cost at the next iteration
-  \return First: Information about convergence or failure, Second: The current cost, Third: <tt>true</tt>---the line search was successful or <tt>false</tt>---the line search failed
+  \return First: Information about convergence or failure, Second: The current cost
   */
-  inline std::tuple<Optimization::Convergence, double, bool> Iteration(double const costVal, double const damping, Eigen::VectorXd& beta, Eigen::VectorXd& costVec) {
+  inline std::pair<Optimization::Convergence, double> Iteration(double const costVal, double const damping, Eigen::VectorXd& beta, Eigen::VectorXd& costVec) {
     // evaluate the cost at the initial guess
-    if( costVal<this->funcTol ) { return std::tuple<Optimization::Convergence, double, bool>(Optimization::Convergence::CONVERGED_FUNCTION_SMALL, costVal, true); }
+    if( costVal<this->funcTol ) { return std::pair<Optimization::Convergence, double>(Optimization::Convergence::CONVERGED_FUNCTION_SMALL, costVal); }
 
     // compute the Jacobian matrix
     MatrixType jac;
     Jacobian(beta, jac);
 
-    //std::cout << "jac: " << std::endl << jac << std::endl;
-    std::cout << "cost vec: " << costVec.transpose() << std::endl;
-    std::cout << "grad: " << (jac.adjoint()*costVec).transpose() << std::endl;
-    std::cout << "grad norm: " << (jac.adjoint()*costVec).norm() << std::endl;
-
-    if( (jac.adjoint()*costVec).norm()<this->gradTol ) { return std::tuple<Optimization::Convergence, double, bool>(Optimization::Convergence::CONVERGED_GRADIENT_SMALL, costVal, true); }
+    // use the jacobian to compute the gradient of the cost function and check for gradient convergence
+    costVec = jac.adjoint()*costVec;
+    if( costVec.norm()<this->gradTol ) { return std::pair<Optimization::Convergence, double>(Optimization::Convergence::CONVERGED_GRADIENT_SMALL, costVal); }
 
     // compute the step direction
-    const Eigen::VectorXd stepDir = StepDirection(damping, jac, costVec);
+    MatrixType hess;
+    Hessian(beta, jac, hess);
+    const Eigen::VectorXd stepDir = StepDirection(damping, hess, costVec);
 
-    double newcost;
-    bool lineSearchSuccess;
-    std::tie(newcost, lineSearchSuccess) = LineSearch(costVal, stepDir, beta, costVec);
+    // do a line search 
+    const double newcost = LineSearch(costVal, stepDir, beta, costVec);
 
     // do a line search to make a step and return the result
-    return std::tuple<Optimization::Convergence, double, bool>(Optimization::Convergence::CONTINUE_RUNNING, newcost, lineSearchSuccess);
+    return std::pair<Optimization::Convergence, double>(Optimization::Convergence::CONTINUE_RUNNING, newcost);
   }
 
   /// Evaluate the cost function
@@ -191,6 +197,18 @@ private:
     ++numJacEvals;
   }
 
+  /// Compute the Hessian matrix
+  /**
+  Also, increment the counter for the number of times we needed to compute the Jacobian matrix
+  @param[in] beta The parameter value
+  @param[in] jac The Jacobian matrix
+  @param[out] hess The Hessian matrix
+  */
+  inline void Hessian(Eigen::VectorXd const& beta, MatrixType const& jac, MatrixType& hess) {
+    this->cost->Hessian(beta, jac, hess, gnHessian);
+    ++numHessEvals;
+  }
+
   /// Compute the step direction
   /**
   @param[in] damping The damping constant that scales the step size
@@ -199,16 +217,8 @@ private:
   \return The step direction
   */
   inline Eigen::VectorXd StepDirection(double const damping, MatrixType& jac, Eigen::VectorXd& costVec) const {
-    // compute the QR factorization of the Jacobian matrix
-    if( damping>1.0e-14 ) {
-      costVec = jac.transpose()*costVec;
-      jac = jac.transpose()*jac;
-      AddScaledIdentity(damping, jac); 
-    }
-
-    auto linSolve = std::make_shared<LinearSolver<MatrixType> >(jac, this->linSolver, damping<=1.0e-14);
-    //auto linSolve = std::make_shared<LinearSolver<MatrixType> >(jac, this->linSolver, true);
-
+    if( damping>1.0e-14 ) { AddScaledIdentity(damping, jac); }
+    auto linSolve = std::make_shared<LinearSolver<MatrixType> >(jac, this->linSolver, false);
     return linSolve->Solve(costVec);
   }
 
@@ -218,9 +228,9 @@ private:
   @param[in] stepDir The step direction
   @param[in, out] beta In: The current parameter value, Out: the updated parameter value
   @param[out] costVec The penalty functions evaluated at the updated parameter value
-  \return First: The new value of the cost function, Second: <tt>true</tt>---the line search was successful or <tt>false</tt>---the line search failed
+  \return The new value of the cost function
   */
-  inline std::pair<double, bool> LineSearch(double const costVal, Eigen::VectorXd const& stepDir, Eigen::VectorXd& beta, Eigen::VectorXd& costVec) {
+  inline double LineSearch(double const costVal, Eigen::VectorXd const& stepDir, Eigen::VectorXd& beta, Eigen::VectorXd& costVec) {
     double alpha = 1.0;
 
     // evaluate the cost at the initial guess
@@ -235,11 +245,8 @@ private:
 
     // take a step
     beta -= alpha*stepDir;
-
-    std::cout << "alpha: " << alpha << std::endl;
-    std::cout << "new cost: " << newCost << std::endl;
    
-    return std::pair<double, bool>(newCost, iter<maxLineSearchSteps);
+    return newCost; 
   }
 
   /// The number of cost function evaluations
@@ -247,6 +254,9 @@ private:
 
   /// The number of Jacobian evaluations
   std::size_t numJacEvals = 0;
+
+  /// The number of Hessian evaluations
+  std::size_t numHessEvals = 0;
 
   /// The damping parameter at the first iteration
   const double initialDamping;
@@ -262,6 +272,9 @@ private:
 
   /// The maximum number of line search iterations
   const std::size_t maxLineSearchSteps;
+
+  /// <tt>true</tt>: Use the Gauss-Newton Hessian to compute the step direction, <tt>false</tt>: Use the full Hessian to compute the step direction
+  const bool gnHessian;
 };
 
 /// An implementation of the Levenberg Marquardt algorithm using a dense Jacobian matrix

@@ -54,7 +54,7 @@ protected:
     EXPECT_NEAR(costVec(6), beta(0)*beta(2), 1.0e-14);
     EXPECT_NEAR(costVec(7), beta(0)*beta(0)*beta(1), 1.0e-14);
 
-    // compute the gradient with finite difference
+    // compute the Jacobian with finite difference
     const Eigen::MatrixXd grad0 = cost->PenaltyFunctionJacobian(0, beta);
     const Eigen::MatrixXd grad0FD_firstd = cost->PenaltyFunctionJacobianByFD(0, beta, CostFunction<MATTYPE>::FDOrder::FIRST_DOWNWARD);
     EXPECT_NEAR((grad0-grad0FD_firstd).norm(), 0.0, 1.0e-7);
@@ -78,6 +78,41 @@ protected:
     const Eigen::MatrixXd grad3 = cost->PenaltyFunctionJacobian(3, beta);
     const Eigen::MatrixXd grad3FD = cost->PenaltyFunctionJacobianByFD(3, beta);
     EXPECT_NEAR((grad3-grad3FD).norm(), 0.0, 1.0e-7);
+
+    // compute the Hessian with finite difference
+    const std::vector<MATTYPE> hess0 = cost->PenaltyFunctionHessian(0, beta);
+    const std::vector<MATTYPE> hess0FD_firstd = cost->PenaltyFunctionHessianByFD(0, beta, CostFunction<MATTYPE>::FDOrder::FIRST_DOWNWARD);
+    EXPECT_EQ(hess0.size(), hess0FD_firstd.size());
+    const std::vector<MATTYPE> hess0FD_firstu = cost->PenaltyFunctionHessianByFD(0, beta, CostFunction<MATTYPE>::FDOrder::FIRST_UPWARD);
+    EXPECT_EQ(hess0.size(), hess0FD_firstu.size());
+    const std::vector<MATTYPE> hess0FD_second = cost->PenaltyFunctionHessianByFD(0, beta, CostFunction<MATTYPE>::FDOrder::SECOND);
+    EXPECT_EQ(hess0.size(), hess0FD_second.size());
+    const std::vector<MATTYPE> hess0FD_fourth = cost->PenaltyFunctionHessianByFD(0, beta, CostFunction<MATTYPE>::FDOrder::FOURTH);
+    EXPECT_EQ(hess0.size(), hess0FD_fourth.size());
+    const std::vector<MATTYPE> hess0FD_sixth = cost->PenaltyFunctionHessianByFD(0, beta, CostFunction<MATTYPE>::FDOrder::SIXTH);
+    EXPECT_EQ(hess0.size(), hess0FD_sixth.size());
+    for( std::size_t i=0; i<hess0.size(); ++i ) {
+      EXPECT_NEAR((hess0[i]-hess0FD_firstd[i]).norm(), 0.0, 1.0e-7);
+      EXPECT_NEAR((hess0[i]-hess0FD_firstu[i]).norm(), 0.0, 1.0e-7);
+      EXPECT_NEAR((hess0[i]-hess0FD_second[i]).norm(), 0.0, 1.0e-7);
+      EXPECT_NEAR((hess0[i]-hess0FD_fourth[i]).norm(), 0.0, 1.0e-7);
+      EXPECT_NEAR((hess0[i]-hess0FD_sixth[i]).norm(), 0.0, 1.0e-7);
+    }
+
+    const std::vector<MATTYPE> hess1 = cost->PenaltyFunctionHessian(1, beta);
+    const std::vector<MATTYPE> hess1FD = cost->PenaltyFunctionHessianByFD(1, beta, CostFunction<MATTYPE>::FDOrder::SIXTH);
+    EXPECT_EQ(hess1.size(), hess1FD.size());
+    for( std::size_t i=0; i<hess1.size(); ++i ) { EXPECT_NEAR((hess1[i]-hess1FD[i]).norm(), 0.0, 1.0e-7); }
+
+    const std::vector<MATTYPE> hess2 = cost->PenaltyFunctionHessian(2, beta);
+    const std::vector<MATTYPE> hess2FD = cost->PenaltyFunctionHessianByFD(2, beta, CostFunction<MATTYPE>::FDOrder::SIXTH);
+    EXPECT_EQ(hess2.size(), hess2FD.size());
+    for( std::size_t i=0; i<hess2.size(); ++i ) { EXPECT_NEAR((hess2[i]-hess2FD[i]).norm(), 0.0, 1.0e-7); }
+
+    const std::vector<MATTYPE> hess3 = cost->PenaltyFunctionHessian(3, beta);
+    const std::vector<MATTYPE> hess3FD = cost->PenaltyFunctionHessianByFD(3, beta, CostFunction<MATTYPE>::FDOrder::SIXTH);
+    EXPECT_EQ(hess3.size(), hess3FD.size());
+    for( std::size_t i=0; i<hess3.size(); ++i ) { EXPECT_NEAR((hess3[i]-hess3FD[i]).norm(), 0.0, 1.0e-7); }
 
     MATTYPE jac;
     cost->Jacobian(beta, jac);
@@ -105,9 +140,16 @@ protected:
     MATTYPE gnHess;
     cost->GaussNewtonHessian(beta, gnHess);
     EXPECT_NEAR(((Eigen::MatrixXd)gnHess-2.0*expectedJac.transpose()*expectedJac).norm(), 0.0, 1.0e-14);
+    cost->GaussNewtonHessianGivenJacobian(jac, gnHess);
+    EXPECT_NEAR(((Eigen::MatrixXd)gnHess-2.0*expectedJac.transpose()*expectedJac).norm(), 0.0, 1.0e-14);
 
     // check the full Hessian 
-    std::cout << cost->Hessian(beta) << std::endl;
+    MATTYPE hess;
+    cost->Hessian(beta, hess);
+    Eigen::MatrixXd hessFD = cost->HessianByFD(beta);
+    EXPECT_NEAR(((Eigen::MatrixXd)hess-hessFD).norm(), 0.0, 1.0e-6);
+    cost->Hessian(beta, jac, hess);
+    EXPECT_NEAR(((Eigen::MatrixXd)hess-hessFD).norm(), 0.0, 1.0e-6);
   }
 };
 

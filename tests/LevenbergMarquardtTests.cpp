@@ -50,10 +50,28 @@ TEST_F(LevenbergMarquardtTests, Dense) {
   TestOptimizer(lm, cost);
 }
 
+TEST_F(LevenbergMarquardtTests, DenseGaussNewtonHessian) {
+  auto cost = std::make_shared<tests::DenseCostFunctionTest>();
+
+  pt::ptree pt;
+  pt.put<bool>("GaussNewtonHessian", true);
+  auto lm = std::make_shared<DenseLevenbergMarquardt>(cost, pt);
+  TestOptimizer(lm, cost);
+}
+
 TEST_F(LevenbergMarquardtTests, Sparse) {
   auto cost = std::make_shared<tests::SparseCostFunctionTest>();
 
   pt::ptree pt;
+  auto lm = std::make_shared<SparseLevenbergMarquardt>(cost, pt);
+  TestOptimizer(lm, cost);
+}
+
+TEST_F(LevenbergMarquardtTests, SparseGaussNewtonHessian) {
+  auto cost = std::make_shared<tests::SparseCostFunctionTest>();
+
+  pt::ptree pt;
+  pt.put<bool>("GaussNewtonHessian", true);
   auto lm = std::make_shared<SparseLevenbergMarquardt>(cost, pt);
   TestOptimizer(lm, cost);
 }

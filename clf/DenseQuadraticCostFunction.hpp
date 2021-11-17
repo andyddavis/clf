@@ -28,7 +28,27 @@ public:
   */
   virtual void Jacobian(Eigen::MatrixXd& jac) const final override;
 
+  /// Evaluate the Hessian \f$\nabla_{\beta}^2 f_i^{(j)}(\beta) \in \mathbb{R}^{n \times n}\f$ of the penalty function
+  /**
+  If the cost function is quadratic, then the penalty functions must be linear. Therefore, the penalty function Hessian is zero.
+  @param[in] ind The index of the penalty function
+  @param[in] beta The input parameter \f$\beta \in \mathbb{R}^{n}\f$
+  @param[in] order The order of the finite difference approximation
+  @param[in] dbeta The \f$\Delta \beta\f$ used to compute finite difference approximations (defaults to \f$1e-8\f$)
+  \return Each component is the Hessian of the \f$j^{th}\f$ couput of the \f$i^{th}\f$ penalty function \f$\nabla_{\beta}^2 f_i^{(j)}(\beta) \in \mathbb{R}^{n \times n}\f$
+  */
+  virtual std::vector<Eigen::MatrixXd> PenaltyFunctionHessianByFD(std::size_t const ind, Eigen::VectorXd const& beta, FDOrder const order = FIRST_UPWARD, double const dbeta = 1.0e-8) const final override;
+
 protected:
+
+  /// Evaluate the Hessian \f$\nabla_{\beta}^2 f_i^{(j)}(\beta) \in \mathbb{R}^{n \times n}\f$ of the penalty function
+  /**
+  Since the cost function is quadratic, the penalty function must be linear. Therefore, its Hessian is zero.
+  @param[in] ind The index of the penalty function
+  @param[in] beta The input parameter \f$\beta \in \mathbb{R}^{n}\f$
+  \return Each component is the Hessian of the \f$j^{th}\f$ couput of the \f$i^{th}\f$ penalty function \f$\nabla_{\beta}^2 f_i^{(j)}(\beta) \in \mathbb{R}^{n \times n}\f$
+  */
+  virtual std::vector<Eigen::MatrixXd> PenaltyFunctionHessianImpl(std::size_t const ind, Eigen::VectorXd const& beta) const final override;
 
 private:
 };

@@ -47,6 +47,116 @@ std::vector<Eigen::Triplet<double> > SparseCostFunction::PenaltyFunctionJacobian
   return sparseJac;
 }
 
-Eigen::SparseMatrix<double> SparseCostFunction::Hessian(Eigen::VectorXd const& beta, bool const gn) {
-  assert(false);
+std::vector<Eigen::SparseMatrix<double> > SparseCostFunction::PenaltyFunctionHessianByFD(std::size_t const ind, Eigen::VectorXd const& beta, FDOrder const order, double const dbeta) const {
+  assert(beta.size()==inputDimension);
+  assert(ind<numPenaltyFunctions);
+  const std::size_t outputDimension = PenaltyFunctionOutputDimension(ind);
+  std::vector<Eigen::SparseMatrix<double> > hess(outputDimension, Eigen::SparseMatrix<double>(inputDimension, inputDimension));
+
+  // precompute if we need this
+  Eigen::MatrixXd jac;
+  if( order==FDOrder::FIRST_UPWARD | order==FDOrder::FIRST_DOWNWARD ) { jac = PenaltyFunctionJacobian(ind, beta); }
+
+  std::vector<std::vector<Eigen::Triplet<double> > > entries(outputDimension);
+  Eigen::VectorXd betaFD = beta;
+  for( std::size_t i=0; i<inputDimension; ++i ) {
+    switch( order ) {
+    case FDOrder::FIRST_UPWARD: {
+      betaFD(i) += dbeta;
+      const Eigen::MatrixXd deriv = (PenaltyFunctionJacobian(ind, betaFD)-jac)/dbeta;
+      betaFD(i) -= dbeta;
+      for( std::size_t j1=0; j1<outputDimension; ++j1 ) { 
+	for( std::size_t j2=0; j2<inputDimension; ++j2 ) { 
+	  if( std::abs(deriv(j1, j2))>sparsityTol ) { entries[j1].emplace_back(i, j2, deriv(j1, j2)); }
+	}
+      }
+      break;
+    }
+    case FDOrder::FIRST_DOWNWARD: {
+      betaFD(i) -= dbeta;
+      const Eigen::MatrixXd deriv = (jac-PenaltyFunctionJacobian(ind, betaFD))/dbeta;
+      betaFD(i) += dbeta;
+      for( std::size_t j1=0; j1<outputDimension; ++j1 ) { 
+	for( std::size_t j2=0; j2<inputDimension; ++j2 ) { 
+	  if( std::abs(deriv(j1, j2))>sparsityTol ) { entries[j1].emplace_back(i, j2, deriv(j1, j2)); }
+	}
+      }
+      break;
+    }
+    case FDOrder::SECOND: {
+      betaFD(i) -= dbeta;
+      Eigen::MatrixXd jacm = PenaltyFunctionJacobian(ind, betaFD);
+      betaFD(i) += 2.0*dbeta;
+      const Eigen::MatrixXd jacp = PenaltyFunctionJacobian(ind, betaFD);
+      betaFD(i) -= dbeta;
+
+      jacm = (jacp-jacm)/(2.0*dbeta);
+      for( std::size_t j1=0; j1<outputDimension; ++j1 ) { 
+	for( std::size_t j2=0; j2<inputDimension; ++j2 ) { 
+	  if( std::abs(jacm(j1, j2))>sparsityTol ) { entries[j1].emplace_back(i, j2, jacm(j1, j2)); }
+	}
+      }
+      break;
+    }
+    case FDOrder::FOURTH: {
+      betaFD(i) -= dbeta;
+      Eigen::MatrixXd jacm1 = PenaltyFunctionJacobian(ind, betaFD);
+      betaFD(i) -= dbeta;
+      const Eigen::MatrixXd jacm2 = PenaltyFunctionJacobian(ind, betaFD);
+      betaFD(i) += 3.0*dbeta;
+      const Eigen::MatrixXd jacp1 = PenaltyFunctionJacobian(ind, betaFD);
+      betaFD(i) += dbeta;
+      const Eigen::MatrixXd jacp2 = PenaltyFunctionJacobian(ind, betaFD);
+      betaFD(i) -= 2.0*dbeta;
+
+      jacm1 = ((jacm2-jacp2)/12.0+(2.0/3.0)*(jacp1-jacm1))/dbeta;
+      for( std::size_t j1=0; j1<outputDimension; ++j1 ) { 
+	for( std::size_t j2=0; j2<inputDimension; ++j2 ) { 
+	  if( std::abs(jacm1(j1, j2))>sparsityTol ) { entries[j1].emplace_back(i, j2, jacm1(j1, j2)); }
+	}
+      }
+      break;
+    }
+    case FDOrder::SIXTH: {
+      betaFD(i) -= dbeta;
+      Eigen::MatrixXd jacm1 = PenaltyFunctionJacobian(ind, betaFD);
+      betaFD(i) -= dbeta;
+      const Eigen::MatrixXd jacm2 = PenaltyFunctionJacobian(ind, betaFD);
+      betaFD(i) -= dbeta;
+      const Eigen::MatrixXd jacm3 = PenaltyFunctionJacobian(ind, betaFD);
+      betaFD(i) += 4.0*dbeta;
+      const Eigen::MatrixXd jacp1 = PenaltyFunctionJacobian(ind, betaFD);
+      betaFD(i) += dbeta;
+      const Eigen::MatrixXd jacp2 = PenaltyFunctionJacobian(ind, betaFD);
+      betaFD(i) += dbeta;
+      const Eigen::MatrixXd jacp3 = PenaltyFunctionJacobian(ind, betaFD);
+      betaFD(i) -= 3.0*dbeta;
+
+      jacm1 = ((jacp3-jacm3)/60.0+(3.0/20.0)*(jacm2-jacp2)+(3.0/4.0)*(jacp1-jacm1))/dbeta;
+      for( std::size_t j1=0; j1<outputDimension; ++j1 ) { 
+	for( std::size_t j2=0; j2<inputDimension; ++j2 ) { 
+	  if( std::abs(jacm1(j1, j2))>sparsityTol ) { entries[j1].emplace_back(i, j2, jacm1(j1, j2)); }
+	}
+      }
+      break;
+    }
+    }
+  }
+
+  for( std::size_t i=0; i<outputDimension; ++i ) { hess[i].setFromTriplets(entries[i].begin(), entries[i].end()); }
+  return hess;
 }
+
+std::vector<Eigen::SparseMatrix<double> > SparseCostFunction::PenaltyFunctionHessianImpl(std::size_t const ind, Eigen::VectorXd const& beta) const {
+  const std::vector<std::vector<Eigen::Triplet<double> > > hess = PenaltyFunctionHessianSparseImpl(ind, beta);
+  if( hess.empty() ) { return PenaltyFunctionHessianByFD(ind, beta); }
+  const size_t outputDimension = PenaltyFunctionOutputDimension(ind);
+  assert(hess.size()==outputDimension);
+
+  std::vector<Eigen::SparseMatrix<double> > hessMat(outputDimension, Eigen::SparseMatrix<double>(inputDimension, inputDimension));
+  for( std::size_t i=0; i<outputDimension; ++i ) { hessMat[i].setFromTriplets(hess[i].begin(), hess[i].end()); }
+  
+  return hessMat;
+}
+
+std::vector<std::vector<Eigen::Triplet<double> > > SparseCostFunction::PenaltyFunctionHessianSparseImpl(std::size_t const ind, Eigen::VectorXd const& beta) const { return std::vector<std::vector<Eigen::Triplet<double> > >(); }

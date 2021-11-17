@@ -137,6 +137,57 @@ protected:
     return jac;
   }
 
+  /// Implement the pentalty function Hessian
+  /**
+  The penalty functions are
+  \f{equation*}{
+  \begin{array}{ccccc}
+  f_0(\beta) = \left[ \begin{array}{c}
+  \beta_0 \\
+  \beta_0 (1-\beta_2)
+  \end{array} \right], &
+  f_1(\beta) = \left[ \begin{array}{c}
+  1-\beta_1 \\
+  1-\beta_1+\beta_2
+  \end{array} \right], &
+  f_2(\beta) = \left[ \begin{array}{c}
+  \beta_2 \\
+  \beta_2 (1-\beta_1)
+  \end{array} \right], &
+  \mbox{and} &
+  f_3(\beta) = \left[ \begin{array}{c}
+  \beta_0 \beta_2 \\
+  \beta_0^2 \beta_1
+  \end{array} \right].
+  \end{array}
+  \f}
+  @param[in] ind The index of the penalty function we are implementing
+  @param[in] beta The parameter value
+  \return The gradient of the \f$i^{th}\f$ penalty function \f$\nabla_{\beta} f_i(\beta)\f$
+  */
+  inline virtual std::vector<Eigen::MatrixXd> PenaltyFunctionHessianImpl(std::size_t const ind, Eigen::VectorXd const& beta) const override {
+    std::vector<Eigen::MatrixXd> hess(2, Eigen::MatrixXd::Zero(inputDimension, inputDimension));
+    switch( ind ) {
+      case 0:
+	hess[1](0, 2) = -1.0;
+	hess[1](2, 0) = -1.0;
+	return hess;
+      case 2:
+	hess[1](1, 2) = -1.0;
+	hess[1](2, 1) = -1.0;
+	return hess;
+      case 3:
+	hess[0](0, 2) = 1.0;
+	hess[0](2, 0) = 1.0;
+
+	hess[1](0, 0) = 2.0*beta(1);
+	hess[1](0, 1) = 2.0*beta(0);
+	hess[1](1, 0) = 2.0*beta(0);
+	return hess;
+    }
+    return hess;
+  }
+
 private:
 };
 
@@ -271,6 +322,57 @@ protected:
       break;
     }
     return jac;
+  }
+
+  /// Implement the pentalty function Hessian
+  /**
+  The penalty functions are
+  \f{equation*}{
+  \begin{array}{ccccc}
+  f_0(\beta) = \left[ \begin{array}{c}
+  \beta_0 \\
+  \beta_0 (1-\beta_2)
+  \end{array} \right], &
+  f_1(\beta) = \left[ \begin{array}{c}
+  1-\beta_1 \\
+  1-\beta_1+\beta_2
+  \end{array} \right], &
+  f_2(\beta) = \left[ \begin{array}{c}
+  \beta_2 \\
+  \beta_2 (1-\beta_1)
+  \end{array} \right], &
+  \mbox{and} &
+  f_3(\beta) = \left[ \begin{array}{c}
+  \beta_0 \beta_2 \\
+  \beta_0^2 \beta_1
+  \end{array} \right].
+  \end{array}
+  \f}
+  @param[in] ind The index of the penalty function we are implementing
+  @param[in] beta The parameter value
+  \return The gradient of the \f$i^{th}\f$ penalty function \f$\nabla_{\beta} f_i(\beta)\f$
+  */
+  inline virtual std::vector<std::vector<Eigen::Triplet<double> > > PenaltyFunctionHessianSparseImpl(std::size_t const ind, Eigen::VectorXd const& beta) const {
+    std::vector<std::vector<Eigen::Triplet<double> > > hess(2, std::vector<Eigen::Triplet<double> >());
+    switch( ind ) {
+    case 0:
+      hess[1].emplace_back(0, 2, -1.0);
+      hess[1].emplace_back(2, 0, -1.0);
+      return hess;
+    case 2:
+      hess[1].emplace_back(1, 2, -1.0);
+      hess[1].emplace_back(2, 1, -1.0);
+      return hess;
+    case 3:
+      hess[0].emplace_back(0, 2, 1.0);
+      hess[0].emplace_back(2, 0, 1.0);
+      
+      hess[1].emplace_back(0, 0, 2.0*beta(1));
+      hess[1].emplace_back(0, 1, 2.0*beta(0));
+      hess[1].emplace_back(1, 0, 2.0*beta(0));
+      return hess;
+    }
+    return hess;
   }
 
 private:

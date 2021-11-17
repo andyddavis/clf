@@ -198,9 +198,20 @@ public:
     assert(beta.size()==inputDimension);
     assert(ind<numPenaltyFunctions);
 
-    assert(false);
-    return std::vector<MatrixType>();
+    const std::vector<MatrixType> hess = PenaltyFunctionHessianImpl(ind, beta);
+    assert(hess.size()==PenaltyFunctionOutputDimension(ind));
+    return hess;
   }
+
+  /// Evaluate the Hessian \f$\nabla_{\beta}^2 f_i^{(j)}(\beta) \in \mathbb{R}^{n \times n}\f$ of the penalty function
+  /**
+  @param[in] ind The index of the penalty function
+  @param[in] beta The input parameter \f$\beta \in \mathbb{R}^{n}\f$
+  @param[in] order The order of the finite difference approximation
+  @param[in] dbeta The \f$\Delta \beta\f$ used to compute finite difference approximations (defaults to \f$1e-8\f$)
+  \return Each component is the Hessian of the \f$j^{th}\f$ couput of the \f$i^{th}\f$ penalty function \f$\nabla_{\beta}^2 f_i^{(j)}(\beta) \in \mathbb{R}^{n \times n}\f$
+  */
+  virtual std::vector<MatrixType> PenaltyFunctionHessianByFD(std::size_t const ind, Eigen::VectorXd const& beta, FDOrder const order = FIRST_UPWARD, double const dbeta = 1.0e-8) const = 0;
 
   /// Evaluate each penalty function \f$f_i(\boldsymbol{\beta})\f$
   /**
@@ -239,13 +250,26 @@ public:
 
   /// Compute the Hessian of the cost function
   /**
-  This is a little silly because it just calls the function it overrides. However, this saves the user from having to call <tt>cost->muq::Optimization::CostFunction::Hessian(beta)</tt> instead of <tt>cost->Hessian(beta)</tt>.
+  The Hessian of the cost function is
+  \f{equation*}{
+  H = 2 \sum_{i=1}^{m} \left( \sum_{j=1}^{d_i} f_i^{(j)}(\beta) \nabla_{\beta}^2 f_i^{(j)}(\beta) + (\nabla_{\beta} f_i(\beta))^{\top} \nabla_{\beta} f_i(\beta) \right), 
+  \f}
+  where \f$\nabla_{\beta}^2 f_i^{(j)}(\beta)\f$ is the Hessian of the \f$j^{th}\f$ output of \f$f_i\f$. Alternatively, we could compute the Gauss-Newton approximation
+  \f{equation*}{
+  H = 2 \sum_{i=1}^{m} (\nabla_{\beta} f_i(\beta))^{\top} \nabla_{\beta} f_i(\beta).
+  \f}
   @param[in] beta The current parameter value
-  \return The Hessian of the cost function
+  @param[out] hess The Hessian matrix
+  @param[in] gn <tt>true</tt>: Compute the Gauss-Newton Hessian, <tt>false</tt> (default): Compute the full Hessian 
   */
-  inline virtual Eigen::MatrixXd Hessian(Eigen::VectorXd const& beta) override { return muq::Optimization::CostFunction::Hessian(beta); }
+  inline virtual void Hessian(Eigen::VectorXd const& beta, MatrixType& hess, bool const gn = false) { 
+    // compute the Gauss-Newton Hessian 
+    GaussNewtonHessian(beta, hess);
+    if( gn ) { return; }
+    HessianGivenGaussNewtonHessian(beta, hess);
+  }
 
-  /// Compute the Hessian of the cost function
+  /// Compute the Hessian of the cost function given that we have already computed the Jacobian
   /**
   The Hessian of the cost function is
   \f{equation*}{
@@ -256,11 +280,15 @@ public:
   H = 2 \sum_{i=1}^{m} (\nabla_{\beta} f_i(\beta))^{\top} \nabla_{\beta} f_i(\beta).
   \f}
   @param[in] beta The current parameter value
+  @param[in] jac The pre-computed Jacobian
+  @param[out] hess The Hessian matrix
   @param[in] gn <tt>true</tt>: Compute the Gauss-Newton Hessian, <tt>false</tt> (default): Compute the full Hessian 
-  \return The Hessian matrix (or Gauss-Newton Hessian)
   */
-  inline virtual MatrixType Hessian(Eigen::VectorXd const& beta, bool const gn) { 
-    assert(false);
+  inline virtual void Hessian(Eigen::VectorXd const& beta, MatrixType const& jac, MatrixType& hess, bool const gn = false) { 
+    // compute the Gauss-Newton Hessian 
+    GaussNewtonHessianGivenJacobian(jac, hess);
+    if( gn ) { return; }
+    HessianGivenGaussNewtonHessian(beta, hess);
   }
 
   /// Compute the Gauss-Newton Hessian of the cost function
@@ -275,6 +303,19 @@ public:
   inline void GaussNewtonHessian(Eigen::VectorXd const& beta, MatrixType& gnHess) const {
     Jacobian(beta, gnHess);
     gnHess = 2.0*gnHess.transpose()*gnHess;
+  }
+
+  /// Compute the Gauss-Newton Hessian of the cost function given that we have already computed the Jacobian
+  /**
+  We compute the Gauss-Newton approximation to the Hessian
+  \f{equation*}{
+  H = 2 \sum_{i=1}^{m} (\nabla_{\beta} f_i(\beta))^{\top} \nabla_{\beta} f_i(\beta).
+  \f}
+  @param[in] jac The pre-computed Jacobian
+  @param[out] gnHess The Gauss-Newton Hessian matrix
+  */
+  inline void GaussNewtonHessianGivenJacobian(MatrixType const& jac, MatrixType& gnHess) const {
+    gnHess = 2.0*jac.transpose()*jac;
   }
 
   /// Is this a quadratic cost function?
@@ -310,6 +351,14 @@ protected:
   \return The gradient of the \f$i^{th}\f$ penalty function \f$\nabla_{\beta} f_i(\beta) \in \mathbb{R}^{d_i \times n}\f$
   */
   inline virtual Eigen::MatrixXd PenaltyFunctionJacobianImpl(std::size_t const ind, Eigen::VectorXd const& beta) const { return PenaltyFunctionJacobianByFD(ind, beta); }
+
+  /// Evaluate the Hessian \f$\nabla_{\beta}^2 f_i^{(j)}(\beta) \in \mathbb{R}^{n \times n}\f$ of the penalty function
+  /**
+  @param[in] ind The index of the penalty function
+  @param[in] beta The input parameter \f$\beta \in \mathbb{R}^{n}\f$
+  \return Each component is the Hessian of the \f$j^{th}\f$ couput of the \f$i^{th}\f$ penalty function \f$\nabla_{\beta}^2 f_i^{(j)}(\beta) \in \mathbb{R}^{n \times n}\f$
+  */
+  inline virtual std::vector<MatrixType> PenaltyFunctionHessianImpl(std::size_t const ind, Eigen::VectorXd const& beta) const { return PenaltyFunctionHessianByFD(ind, beta); }
 
   /// Compute the total cost by summing the squared penalty terms
   /**
@@ -357,7 +406,36 @@ private:
   /**
   \return The Hessian of the cost function (not the Guass-Newton Hessian).
   */
-  inline virtual Eigen::MatrixXd Hessian() override { return Hessian(x, false); }
+  inline virtual Eigen::MatrixXd Hessian() override { 
+    MatrixType hess;
+    Hessian(x, hess, false); 
+    return (Eigen::MatrixXd)hess;
+  }
+
+  /// Compute the Hessian of the cost function given that we have already computed the Gauss-Newton Hessian
+  /**
+  The Hessian of the cost function is
+  \f{equation*}{
+  H = 2 \sum_{i=1}^{m} \left( \sum_{j=1}^{d_i} f_i^{(j)}(\beta) \nabla_{\beta}^2 f_i^{(j)}(\beta) + (\nabla_{\beta} f_i(\beta))^{\top} \nabla_{\beta} f_i(\beta) \right), 
+  \f}
+  where \f$\nabla_{\beta}^2 f_i^{(j)}(\beta)\f$ is the Hessian of the \f$j^{th}\f$ output of \f$f_i\f$. Alternatively, we could compute the Gauss-Newton approximation
+  \f{equation*}{
+  H = 2 \sum_{i=1}^{m} (\nabla_{\beta} f_i(\beta))^{\top} \nabla_{\beta} f_i(\beta).
+  \f}
+  @param[in] beta The current parameter value
+  @param[in,out] hess In: The Gauss-NewtonHessian matrix, out: The Hessian matrix
+  */
+  inline virtual void HessianGivenGaussNewtonHessian(Eigen::VectorXd const& beta, MatrixType& hess) { 
+    // compute the cost vector 
+    const Eigen::VectorXd cost = 2.0*CostVector(beta);
+
+    std::size_t count = 0;
+    for( std::size_t i=0; i<numPenaltyFunctions; ++i ) { 
+      const std::vector<MatrixType> hessi = PenaltyFunctionHessian(i, beta);
+      for( std::size_t j=0; j<hessi.size(); ++j ) { hess += cost(count+j)*hessi[j]; }
+      count += hessi.size();
+    }
+  }
 
 };
 

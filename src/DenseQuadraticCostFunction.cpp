@@ -14,3 +14,11 @@ void DenseQuadraticCostFunction::Jacobian(Eigen::MatrixXd& jac) const {
     cnt += outputDimension[count].second;
   }
 }
+
+std::vector<Eigen::MatrixXd> DenseQuadraticCostFunction::PenaltyFunctionHessianByFD(std::size_t const ind, Eigen::VectorXd const& beta, FDOrder const order, double const dbeta) const { return PenaltyFunctionHessianImpl(ind, beta); }
+
+std::vector<Eigen::MatrixXd> DenseQuadraticCostFunction::PenaltyFunctionHessianImpl(std::size_t const ind, Eigen::VectorXd const& beta) const { 
+  assert(beta.size()==inputDimension);
+  assert(ind<numPenaltyFunctions);
+  return std::vector<Eigen::MatrixXd>(PenaltyFunctionOutputDimension(ind), Eigen::MatrixXd::Zero(inputDimension, inputDimension));
+}

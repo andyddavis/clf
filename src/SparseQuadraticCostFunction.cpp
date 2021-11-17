@@ -40,3 +40,11 @@ Eigen::MatrixXd SparseQuadraticCostFunction::PenaltyFunctionJacobianImpl(std::si
   for( const auto& it : sparseJac ) { jac(it.row(), it.col()) = it.value(); }
   return jac;
 }
+
+std::vector<Eigen::SparseMatrix<double> > SparseQuadraticCostFunction::PenaltyFunctionHessianByFD(std::size_t const ind, Eigen::VectorXd const& beta, FDOrder const order, double const dbeta) const { return PenaltyFunctionHessianImpl(ind, beta); }
+
+std::vector<Eigen::SparseMatrix<double> > SparseQuadraticCostFunction::PenaltyFunctionHessianImpl(std::size_t const ind, Eigen::VectorXd const& beta) const {
+  assert(beta.size()==inputDimension);
+  assert(ind<numPenaltyFunctions);
+  return std::vector<Eigen::SparseMatrix<double> >(PenaltyFunctionOutputDimension(ind), Eigen::SparseMatrix<double>(inputDimension, inputDimension));
+}

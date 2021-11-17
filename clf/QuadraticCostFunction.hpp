@@ -70,6 +70,19 @@ public:
   */
   inline virtual void Jacobian(Eigen::VectorXd const& beta, MatrixType& jac) const final override { Jacobian(jac); }
 
+  /// Compute the Hessian of the cost function
+  /**
+  The Hessian of the cost function is
+  \f{equation*}{
+  H = 2 \sum_{i=1}^{m} (\nabla_{\beta} f_i(\beta))^{\top} \nabla_{\beta} f_i(\beta).
+  \f}
+  since the penalty functions are linear. 
+  @param[in] beta The current parameter value
+  @param[out] hess The Hessian matrix
+  @param[in] gn <tt>true</tt>: Compute the Gauss-Newton Hessian, <tt>false</tt> (default): Compute the full Hessian; In this case the Gauss-Newton Hessian is exact so this flag acutally does nothing.
+  */
+  inline virtual void Hessian(Eigen::VectorXd const& beta, MatrixType& hess, bool const gn = false) final override { this->GaussNewtonHessian(beta, hess); }
+  
   /// Is this a quadratic cost function? Yes, it is.
   /**
   \return <tt>true</tt>: The cost function is quadratic

@@ -37,20 +37,15 @@ public:
   */
   virtual void Jacobian(Eigen::VectorXd const& beta, Eigen::MatrixXd& jac) const final override;
 
-  /// Compute the Hessian of the cost function
+  /// Evaluate the Hessian \f$\nabla_{\beta}^2 f_i^{(j)}(\beta) \in \mathbb{R}^{n \times n}\f$ of the penalty function
   /**
-  \f{equation*}{
-  H = 2 \sum_{i=1}^{m} \left( \sum_{j=1}^{d_i} f_i^{(j)}(\beta) \nabla_{\beta}^2 f_i^{(j)}(\beta) + (\nabla_{\beta} f_i(\beta))^{\top} \nabla_{\beta} f_i(\beta) \right), 
-  \f}
-  where \f$\nabla_{\beta}^2 f_i^{(j)}(\beta)\f$ is the Hessian of the \f$j^{th}\f$ output of \f$f_i\f$. Alternatively, we could compute the Gauss-Newton approximation
-  \f{equation*}{
-  H = 2 \sum_{i=1}^{m} (\nabla_{\beta} f_i(\beta))^{\top} \nabla_{\beta} f_i(\beta).
-  \f}
-  @param[in] beta The current parameter value
-  @param[in] gn <tt>true</tt>: Compute the Gauss-Newton Hessian, <tt>false</tt> (default): Compute the full Hessian 
-  \return The Hessian matrix (or Gauss-Newton Hessian)
+  @param[in] ind The index of the penalty function
+  @param[in] beta The input parameter \f$\beta \in \mathbb{R}^{n}\f$
+  @param[in] order The order of the finite difference approximation
+  @param[in] dbeta The \f$\Delta \beta\f$ used to compute finite difference approximations (defaults to \f$1e-8\f$)
+  \return Each component is the Hessian of the \f$j^{th}\f$ couput of the \f$i^{th}\f$ penalty function \f$\nabla_{\beta}^2 f_i^{(j)}(\beta) \in \mathbb{R}^{n \times n}\f$
   */
-  virtual Eigen::MatrixXd Hessian(Eigen::VectorXd const& beta, bool const gn) override;
+  virtual std::vector<Eigen::MatrixXd> PenaltyFunctionHessianByFD(std::size_t const ind, Eigen::VectorXd const& beta, FDOrder const order = FIRST_UPWARD, double const dbeta = 1.0e-8) const final override;
 
 private:
 };
