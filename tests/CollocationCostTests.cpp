@@ -112,7 +112,23 @@ TEST_F(CollocationCostTests, ConstructAndEvaluate) {
       const Eigen::MatrixXd jacFD = cost->PenaltyFunctionJacobianByFD(j, coefficients, DenseCostFunction::FDOrder::SIXTH, 1.0e-5);
       const Eigen::MatrixXd jac = cost->PenaltyFunctionJacobian(j, coefficients);
       EXPECT_NEAR((jac-jacFD).norm(), 0.0, 1.0e-8);
+
+      const std::vector<Eigen::MatrixXd> hess = cost->PenaltyFunctionHessian(j, coefficients);
+      const std::vector<Eigen::MatrixXd> hessFD = cost->PenaltyFunctionHessianByFD(j, coefficients, CostFunction<Eigen::MatrixXd>::FDOrder::FIRST_UPWARD, 1.0e-4);
+      EXPECT_EQ(hess.size(), hessFD.size());
+      for( std::size_t h=0; h<hess.size(); ++j ) { 
+	std::cout << "jac: " << jac << std::endl << std::endl;
+	std::cout << hess[h] << std::endl << std::endl;
+	std::cout << hessFD[h] << std::endl << std::endl;
+	if( hessFD[h].norm()>1.0e-14 ) { assert(false); }
+	std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl << std::endl;
+      }
+      //std::cout << cost->PenaltyFunctionHessian(j, coefficients) << std::endl << std::endl;
+      //std::cout << cost->PenaltyFunctionHessianByFD(j, coefficients) << std::endl << std::endl;
+      std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl << std::endl;
     }
+
+    std::cout << "TEST HESSIAN INFORMATION" << std::endl;
   }
 }
 

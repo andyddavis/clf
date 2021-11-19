@@ -33,6 +33,8 @@ std::vector<Eigen::MatrixXd> DenseCostFunction::PenaltyFunctionHessianByFD(std::
     case FDOrder::FIRST_UPWARD: {
       betaFD(i) += dbeta;
       const Eigen::MatrixXd jacp = PenaltyFunctionJacobian(ind, betaFD);
+      std::cout << jac << std::endl << std::endl;
+      std::cout << jacp << std::endl << std::endl;
       betaFD(i) -= dbeta;
       for( std::size_t j=0; j<outputDimension; ++j ) { hess[j].row(i) = (jacp.row(j)-jac.row(j))/dbeta; }
       break;
