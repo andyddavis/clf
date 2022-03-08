@@ -27,5 +27,7 @@ Run the tests using
 ./build/run-tests
 ```
 
+Developer note: the Python interface is outdated and not currently functional. We will update this when we have finalized the mathematical formulation.
+
 [//]: # (This may not currently be functional, but to install using <tt>pip3</tt> run the command <tt>./install.sh --tpl_dir ~/Software/install/clf-pip/clf_external</tt>.)
 [//]: # (cmake .. -DCLF_BOOST_DIR= -DCLF_EIGEN3_DIR= -DCLF_GTEST_DIR= -DCLF_MUQ_DIR= -DCLF_NLOPT_DIR=)
