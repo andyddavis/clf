@@ -9,10 +9,6 @@ Our approach represents <img src="https://render.githubusercontent.com/render/ma
 where 
 <img src="https://render.githubusercontent.com/render/math?math=\pi"> is a probability density function that we use to define the residual error and <img src="https://render.githubusercontent.com/render/math?math=\mathcal{R}"> is a regularization. We sample points <img src="https://render.githubusercontent.com/render/math?math=x_i \sim \pi"> and define a <img src="https://render.githubusercontent.com/render/math?math=p"> degree polynomial in a local region. We solve a regression problem at collocation points <img src="https://render.githubusercontent.com/render/math?math=y_{ij} \sim q(\cdot \vert x_i)"> in the local neighborhood.
 
-# Documentation
-
-To view the documentation open the file `documentation/html/index.html` after cloning this repository.
-
 # Building, installing, and running the tests
 
 After cloning this repository, build and install using
@@ -32,6 +28,10 @@ Run the tests using
 ```
 
 Developer note: the Python interface is outdated and not currently functional. We will update this when we have finalized the mathematical formulation.
+
+# Documentation
+
+To view the documentation open the file `documentation/html/index.html` after cloning this repository or run `make doc` after running `cmake` to build the most up-to-date documentation.
 
 [//]: # (This may not currently be functional, but to install using <tt>pip3</tt> run the command <tt>./install.sh --tpl_dir ~/Software/install/clf-pip/clf_external</tt>.)
 [//]: # (cmake .. -DCLF_BOOST_DIR= -DCLF_EIGEN3_DIR= -DCLF_GTEST_DIR= -DCLF_MUQ_DIR= -DCLF_NLOPT_DIR=)
