@@ -1,3 +1,10 @@
+---
+title: Coupled local functions
+author: Andrew Davis
+header-includes: |
+    \usepackage{amsmath}
+---
+
 # Coupled local functions
 
 Our goal is to find $$u$$
