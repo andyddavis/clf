@@ -13,8 +13,10 @@ where
 
 After cloning this repository, build and install using
 
-```cd build
-cmake .. -DCMAKE_INSTALL_PREFIX=/install/dir/```
+```
+cd build
+cmake .. -DCMAKE_INSTALL_PREFIX=/install/dir/
+```
 
 `make -jN`
 
