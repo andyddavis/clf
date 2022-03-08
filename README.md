@@ -11,7 +11,7 @@ where
 
 # Documentation
 
-[Kohler (2002)](documentation/html/index.html)
+To view the documentation open the file `documentation/html/index.html` after cloning this repository.
 
 # Building, installing, and running the tests
 
