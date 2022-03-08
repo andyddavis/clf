@@ -90,10 +90,10 @@ public:
   /// Evaluate the Hessian of the operator applied to the local function at a given point
   /**
   @param[in] loc The location where we are evaluating the action of the operator
-  @param[in] coefficients The coefficients that define the local function
+  @param[in] coeffs The coefficients that define the local function
   \return Each component is the Hessian of the \f$j^{th}\f$ ouput with respect to the coefficeints
   */
-  virtual std::vector<Eigen::MatrixXd> OperatorHessian(Eigen::VectorXd const& loc, Eigen::VectorXd const& coefficients) const override;
+  virtual std::vector<Eigen::MatrixXd> OperatorHessian(Eigen::VectorXd const& loc, Eigen::VectorXd const& coeffs) const override;
 
   /// The local index of this collocation point
   /**

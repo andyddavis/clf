@@ -41,13 +41,13 @@ protected:
   pt::ptree options;
 };
 
-TEST_F(NLoptOptimizerTests, Dense_BOBYQA) {
+/*TEST_F(NLoptOptimizerTests, Dense_BOBYQA) {
   auto cost = std::make_shared<tests::DenseCostFunctionTest>();
 
   options.put("Algorithm", "BOBYQA");
   auto nlopt = std::make_shared<DenseNLoptOptimizer>(cost, options);
   TestOptimizer(nlopt, cost);
-}
+}*/
 
 TEST_F(NLoptOptimizerTests, Dense_NEWUOA) {
   auto cost = std::make_shared<tests::DenseCostFunctionTest>();
@@ -65,37 +65,37 @@ TEST_F(NLoptOptimizerTests, Dense_PRAXIS) {
   TestOptimizer(nlopt, cost);
 }
 
-TEST_F(NLoptOptimizerTests, Dense_SBPLX) {
+/*TEST_F(NLoptOptimizerTests, Dense_SBPLX) {
   auto cost = std::make_shared<tests::DenseCostFunctionTest>();
 
   options.put("Algorithm", "SBPLX");
   auto nlopt = std::make_shared<DenseNLoptOptimizer>(cost, options);
   TestOptimizer(nlopt, cost);
-}
+}*/
 
-TEST_F(NLoptOptimizerTests, Dense_NM) {
+/*TEST_F(NLoptOptimizerTests, Dense_NM) {
   auto cost = std::make_shared<tests::DenseCostFunctionTest>();
 
   options.put("Algorithm", "NM");
   auto nlopt = std::make_shared<DenseNLoptOptimizer>(cost, options);
   TestOptimizer(nlopt, cost);
-}
+}*/
 
-TEST_F(NLoptOptimizerTests, Dense_MMA) {
+/*TEST_F(NLoptOptimizerTests, Dense_MMA) {
   auto cost = std::make_shared<tests::DenseCostFunctionTest>();
 
   options.put("Algorithm", "MMA");
   auto nlopt = std::make_shared<DenseNLoptOptimizer>(cost, options);
   TestOptimizer(nlopt, cost);
-}
+}*/
 
-TEST_F(NLoptOptimizerTests, Dense_SLSQP) {
+/*TEST_F(NLoptOptimizerTests, Dense_SLSQP) {
   auto cost = std::make_shared<tests::DenseCostFunctionTest>();
 
   options.put("Algorithm", "SLSQP");
   auto nlopt = std::make_shared<DenseNLoptOptimizer>(cost, options);
   TestOptimizer(nlopt, cost);
-}
+}*/
 
 TEST_F(NLoptOptimizerTests, Dense_PreTN) {
   auto cost = std::make_shared<tests::DenseCostFunctionTest>();
@@ -153,29 +153,29 @@ TEST_F(NLoptOptimizerTests, Sparse_PRAXIS) {
   TestOptimizer(nlopt, cost);
 }
 
-TEST_F(NLoptOptimizerTests, Sparse_SBPLX) {
+/*TEST_F(NLoptOptimizerTests, Sparse_SBPLX) {
   auto cost = std::make_shared<tests::SparseCostFunctionTest>();
 
   options.put("Algorithm", "SBPLX");
   auto nlopt = std::make_shared<SparseNLoptOptimizer>(cost, options);
   TestOptimizer(nlopt, cost);
-}
+}*/
 
-TEST_F(NLoptOptimizerTests, Sparse_NM) {
+/*TEST_F(NLoptOptimizerTests, Sparse_NM) {
   auto cost = std::make_shared<tests::SparseCostFunctionTest>();
 
   options.put("Algorithm", "NM");
   auto nlopt = std::make_shared<SparseNLoptOptimizer>(cost, options);
   TestOptimizer(nlopt, cost);
-}
+}*/
 
-TEST_F(NLoptOptimizerTests, Sparse_MMA) {
+/*TEST_F(NLoptOptimizerTests, Sparse_MMA) {
   auto cost = std::make_shared<tests::SparseCostFunctionTest>();
 
   options.put("Algorithm", "MMA");
   auto nlopt = std::make_shared<SparseNLoptOptimizer>(cost, options);
   TestOptimizer(nlopt, cost);
-}
+}*/
 
 TEST_F(NLoptOptimizerTests, Sparse_SLSQP) {
   auto cost = std::make_shared<tests::SparseCostFunctionTest>();
@@ -193,13 +193,13 @@ TEST_F(NLoptOptimizerTests, Sparse_PreTN) {
   TestOptimizer(nlopt, cost);
 }
 
-TEST_F(NLoptOptimizerTests, Sparse_COBYLA) {
+/*TEST_F(NLoptOptimizerTests, Sparse_COBYLA) {
   auto cost = std::make_shared<tests::SparseCostFunctionTest>();
 
   options.put("Algorithm", "COBYLA");
   auto nlopt = std::make_shared<SparseNLoptOptimizer>(cost, options);
   TestOptimizer(nlopt, cost, 1.0e-2);
-}
+}*/
 
 TEST_F(NLoptOptimizerTests, Sparse_LMVM) {
   auto cost = std::make_shared<tests::SparseCostFunctionTest>();

@@ -78,7 +78,7 @@ protected:
   std::shared_ptr<CollocationPointCloud> collocationCloud;
 };
 
-TEST_F(CollocationCostTests, ConstructAndEvaluate) {
+/*TEST_F(CollocationCostTests, ConstructAndEvaluate) {
   // create the collocation costs
   for( std::size_t i=0; i<supportCloud->NumPoints(); ++i ) {
     auto support = supportCloud->GetSupportPoint(i);
@@ -130,9 +130,9 @@ TEST_F(CollocationCostTests, ConstructAndEvaluate) {
 
     std::cout << "TEST HESSIAN INFORMATION" << std::endl;
   }
-}
+}*/
 
-TEST_F(CollocationCostTests, MinimizeCost_LevenbergMarquardt) {
+/*TEST_F(CollocationCostTests, MinimizeCost_LevenbergMarquardt) {
   // create the collocation costs
   for( std::size_t i=0; i<supportCloud->NumPoints(); ++i ) {
     std::cout << "SUPPORT POINT: " << i << std::endl;
@@ -173,7 +173,7 @@ TEST_F(CollocationCostTests, MinimizeCost_LevenbergMarquardt) {
 
   }
 
-  EXPECT_TRUE(false);
+  EXPECT_TRUE(false);*/
     /*auto collocationCloud = std::make_shared<CollocationPointCloud>(sampler, supportCloud, cloudOptions);
 
   // create the collocation cost
@@ -192,7 +192,7 @@ TEST_F(CollocationCostTests, MinimizeCost_LevenbergMarquardt) {
     const Eigen::VectorXd x = Eigen::VectorXd::Random(indim);
     EXPECT_NEAR((x.head(outdim)-point->EvaluateLocalFunction(x)).norm(), 0.0, 1.0e-8);
     }*/
-}
+//}
   /*
 TEST_F(CollocationCostTests, CostFunctionEvaluation) {
   // the number of collocation points

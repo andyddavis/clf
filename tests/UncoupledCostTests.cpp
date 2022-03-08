@@ -11,7 +11,7 @@ namespace pt = boost::property_tree;
 
 namespace clf {
 namespace tests {
-  
+
 /// A class that runs the tests for clf::UncoupledCost
 class UncoupledCostTests : public::testing::Test {
 public:
@@ -201,7 +201,7 @@ TEST_F(UncoupledCostTests, MinimizeCost_LevenbergMarquardt) {
   EXPECT_NEAR(uncoupledScale*(eval-rhs).dot(eval-rhs), 0.0, 1.0e-6);
 }
 
-TEST_F(UncoupledCostTests, MinimizeCost_NLopt) {
+/*TEST_F(UncoupledCostTests, MinimizeCost_NLopt) {
   pt::ptree costOptions;
   costOptions.put("UncoupledScale", uncoupledScale);
   cost = std::make_shared<UncoupledCost>(point, costOptions);
@@ -225,7 +225,7 @@ TEST_F(UncoupledCostTests, MinimizeCost_NLopt) {
   const Eigen::VectorXd eval = model->Operator(point->x, coefficients, point->GetBasisFunctions());
   const Eigen::VectorXd rhs = model->RightHandSide(point->x);
   EXPECT_NEAR(uncoupledScale*(eval-rhs).dot(eval-rhs), 0.0, 1.0e-6);
-}
+}*/
 
 } // namespace tests
 } // namespace clf

@@ -255,6 +255,13 @@ std::vector<Eigen::MatrixXd> SupportPoint::OperatorHessian(Eigen::VectorXd const
   return model->OperatorHessian(loc, coefficients, bases);
 }
 
+std::vector<Eigen::MatrixXd> SupportPoint::OperatorHessian(Eigen::VectorXd const& loc) const {
+  assert(loc.size()==model->inputDimension);
+  return model->OperatorHessian(loc, Coefficients(), bases);
+}
+
+std::vector<Eigen::MatrixXd> SupportPoint::OperatorHessian() const { return model->OperatorHessian(x, Coefficients(), bases); }
+
 double SupportPoint::MinimizeUncoupledCost(Eigen::MatrixXd const& forcing, pt::ptree const& options) {
   assert(uncoupledCost);
 

@@ -55,7 +55,7 @@ protected:
   const double c1 = 0.94025;
 };
 
-TEST_F(CoupledSupportPointTests, CouplingFunction) {
+/*TEST_F(CoupledSupportPointTests, CouplingFunction) {
   // create the support points
   pt.put("MagnitudeScale", c0);
   pt.put("ExponentialScale", c1);
@@ -91,4 +91,4 @@ TEST_F(CoupledSupportPointTests, CouplingFunction) {
       }
     }
   }
-}
+}*/

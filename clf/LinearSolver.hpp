@@ -13,15 +13,15 @@ namespace clf {
 
 /// Which solver should we use to solve the system?
 enum LinearSolverType {
-  /// Use a Cholesky solver 
-  Cholesky, 
-  
+  /// Use a Cholesky solver
+  Cholesky,
+
   /// Use a Cholesky solver with pivoting
-  CholeskyPivot, 
-  
+  CholeskyPivot,
+
   /// Use a QR solver
   QR,
-  
+
   /// Use an LU solver
   LU
 };
@@ -66,7 +66,7 @@ public:
       break;
     case LinearSolverType::QR:
       solverQR.emplace(A);
-      break;      
+      break;
     default:
       if( !leastSq ) { assert(A.rows()==A.cols()); }
       solverLU.emplace((leastSq? A.transpose()*A : A));
@@ -102,7 +102,6 @@ public:
   */
   inline Eigen::VectorXd SolveQR(Eigen::VectorXd const& rhs) const {
     const Eigen::Index rank = solverQR->rank();
-    std::cout << "RANK: " << rank << std::endl;
 
     Eigen::VectorXd soln(solverQR->cols());
     soln.tail(soln.size()-rank).setZero();
@@ -120,28 +119,28 @@ public:
 
 private:
 
-  /// The matrix \f$A\f$ that defines the linear system 
+  /// The matrix \f$A\f$ that defines the linear system
   std::optional<MatrixType> matrix;
 
-  /// The Cholesky solver used to compute the solution 
+  /// The Cholesky solver used to compute the solution
   /**
   The decomposition is precomputed at construction if we are using a Cholesky solve.
   */
   std::optional<SolverCholesky> solverCholesky;
 
-  /// The Cholesky solver with pivoting used to compute the solution 
+  /// The Cholesky solver with pivoting used to compute the solution
   /**
   The decomposition is precomputed at construction if we are using a Cholesky solve with pivoting.
   */
   std::optional<SolverCholeskyPivot> solverCholeskyPivot;
 
-  /// The QR solver used to compute the solution 
+  /// The QR solver used to compute the solution
   /**
   The decomposition is precomputed at construction if we are using a QR solver.
   */
   std::optional<SolverQR> solverQR;
 
-  /// The LU solver used to compute the solution 
+  /// The LU solver used to compute the solution
   /**
   The decomposition is precomputed at construction if we are using a LU solver.
   */
@@ -152,6 +151,6 @@ private:
 typedef LinearSolver<Eigen::MatrixXd> DenseLinearSolver;
 typedef LinearSolver<Eigen::SparseMatrix<double> > SparseLinearSolver;
 
-} // namespace clf 
+} // namespace clf
 
 #endif

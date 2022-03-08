@@ -69,7 +69,7 @@ public:
   */
   virtual Eigen::MatrixXd OperatorJacobian(Eigen::VectorXd const& loc, Eigen::VectorXd const& coefficients) const = 0;
 
-  /// Evaluate the Hessian of the operator applied to the local function at the point's location with the stored coefficients
+  /// Evaluate the Hessian of the operator applied to the local function at a given point with the stored coefficients
   /**
   \return Each component is the Hessian of the \f$j^{th}\f$ ouput with respect to the coefficeints
   */

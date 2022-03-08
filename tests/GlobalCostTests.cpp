@@ -87,7 +87,7 @@ public:
 private:
 };
 
-TEST_F(GlobalCostTests, CostEvaluationAndDerivatives) {
+/*TEST_F(GlobalCostTests, CostEvaluationAndDerivatives) {
   pt::ptree pt;
   auto cost = std::make_shared<GlobalCost>(cloud, pt);
   EXPECT_EQ(cost->inputDimension, cloud->numCoefficients);
@@ -175,3 +175,4 @@ TEST_F(GlobalCostTests, CostEvaluationAndDerivatives) {
   EXPECT_EQ(jac.cols(), expectedJac.cols());
   for( std::size_t i=0; i<jac.rows(); ++i ) { for( std::size_t j=0; j<jac.cols(); ++j ) { EXPECT_NEAR(jac.coeff(i, j), expectedJac(i, j), 1.0e-12); } }
 }
+*/

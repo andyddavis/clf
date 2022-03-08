@@ -2,6 +2,7 @@ include(ExternalProject)
 
 ExternalProject_Add(GTEST
   GIT_REPOSITORY https://github.com/google/googletest.git
+  GIT_TAG main
   STEP_TARGETS install
   LOG_DOWNLOAD OFF
   LOG_UPDATE OFF
