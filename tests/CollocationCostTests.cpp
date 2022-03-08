@@ -48,7 +48,7 @@ protected:
 
     // the number of collocation points
     const std::size_t nCollocPoints = 1250;
-    
+
     // options for the cost function
     cloudOptions.put("NumCollocationPoints", nCollocPoints);
     collocationCloud = std::make_shared<CollocationPointCloud>(sampler, supportCloud, cloudOptions);
@@ -116,12 +116,12 @@ TEST_F(CollocationCostTests, ConstructAndEvaluate) {
       const std::vector<Eigen::MatrixXd> hess = cost->PenaltyFunctionHessian(j, coefficients);
       const std::vector<Eigen::MatrixXd> hessFD = cost->PenaltyFunctionHessianByFD(j, coefficients, CostFunction<Eigen::MatrixXd>::FDOrder::FIRST_UPWARD, 1.0e-4);
       EXPECT_EQ(hess.size(), hessFD.size());
-      for( std::size_t h=0; h<hess.size(); ++j ) { 
-	std::cout << "jac: " << jac << std::endl << std::endl;
-	std::cout << hess[h] << std::endl << std::endl;
-	std::cout << hessFD[h] << std::endl << std::endl;
-	if( hessFD[h].norm()>1.0e-14 ) { assert(false); }
-	std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl << std::endl;
+      for( std::size_t h=0; h<hess.size(); ++h ) {
+	       //std::cout << "jac: " << jac << std::endl << std::endl;
+	       std::cout << hess[h] << std::endl << std::endl;
+	       std::cout << hessFD[h] << std::endl << std::endl;
+	        if( hessFD[h].norm()>1.0e-14 ) { assert(false); }
+	         //std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl << std::endl;
       }
       //std::cout << cost->PenaltyFunctionHessian(j, coefficients) << std::endl << std::endl;
       //std::cout << cost->PenaltyFunctionHessianByFD(j, coefficients) << std::endl << std::endl;
@@ -136,7 +136,7 @@ TEST_F(CollocationCostTests, MinimizeCost_LevenbergMarquardt) {
   // create the collocation costs
   for( std::size_t i=0; i<supportCloud->NumPoints(); ++i ) {
     std::cout << "SUPPORT POINT: " << i << std::endl;
-    
+
     auto support = supportCloud->GetSupportPoint(i);
 
     auto cost = std::make_shared<CollocationCost>(support, collocationCloud->CollocationPerSupport(i));
@@ -160,7 +160,7 @@ TEST_F(CollocationCostTests, MinimizeCost_LevenbergMarquardt) {
 
     std::cout << "coeff after: " << coefficients.transpose() << std::endl << std::endl;
 
-    //if( info.first<=0 ) { 
+    //if( info.first<=0 ) {
       std::cout << "num colloc per support i: " << collocationCloud->NumCollocationPerSupport(i) << std::endl;
       std::cout << "num unknowns: " << support->NumCoefficients() << std::endl;
       std::cout << info.first << std::endl;

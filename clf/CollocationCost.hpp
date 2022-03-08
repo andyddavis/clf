@@ -68,6 +68,14 @@ protected:
   */
   virtual Eigen::MatrixXd PenaltyFunctionJacobianImpl(std::size_t const ind, Eigen::VectorXd const& beta) const override;
 
+  /// Evaluate the Hessian \f$\nabla_{\beta}^2 f_i^{(j)}(\beta) \in \mathbb{R}^{n \times n}\f$ of the penalty function
+  /**
+  @param[in] ind The index of the penalty function
+  @param[in] beta The input parameter \f$\beta \in \mathbb{R}^{n}\f$
+  \return Each component is the Hessian of the \f$j^{th}\f$ ouput of the \f$i^{th}\f$ penalty function \f$\nabla_{\beta}^2 f_i^{(j)}(\beta) \in \mathbb{R}^{n \times n}\f$
+  */
+  virtual std::vector<Eigen::MatrixXd> PenaltyFunctionHessianImpl(std::size_t const ind, Eigen::VectorXd const& beta) const override;
+
 private:
 
   /// The collocation points associated with this cost

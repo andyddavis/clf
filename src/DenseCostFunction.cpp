@@ -22,19 +22,17 @@ std::vector<Eigen::MatrixXd> DenseCostFunction::PenaltyFunctionHessianByFD(std::
   assert(ind<numPenaltyFunctions);
   const std::size_t outputDimension = PenaltyFunctionOutputDimension(ind);
   std::vector<Eigen::MatrixXd> hess(outputDimension, Eigen::MatrixXd(inputDimension, inputDimension));
-  
+
   // precompute if we need this
   Eigen::MatrixXd jac;
   if( order==FDOrder::FIRST_UPWARD | order==FDOrder::FIRST_DOWNWARD ) { jac = PenaltyFunctionJacobian(ind, beta); }
-  
+
   Eigen::VectorXd betaFD = beta;
   for( std::size_t i=0; i<inputDimension; ++i ) {
     switch( order ) {
     case FDOrder::FIRST_UPWARD: {
       betaFD(i) += dbeta;
       const Eigen::MatrixXd jacp = PenaltyFunctionJacobian(ind, betaFD);
-      std::cout << jac << std::endl << std::endl;
-      std::cout << jacp << std::endl << std::endl;
       betaFD(i) -= dbeta;
       for( std::size_t j=0; j<outputDimension; ++j ) { hess[j].row(i) = (jacp.row(j)-jac.row(j))/dbeta; }
       break;
@@ -87,6 +85,6 @@ std::vector<Eigen::MatrixXd> DenseCostFunction::PenaltyFunctionHessianByFD(std::
     }
     }
   }
-  
+
   return hess;
 }

@@ -84,4 +84,36 @@ Eigen::MatrixXd CollocationPoint::OperatorJacobianByFD(Eigen::VectorXd const& lo
   return model->OperatorJacobianByFD(loc, coeffs, pnt->GetBasisFunctions(), order, Eigen::VectorXd(), fdEps);
 }
 
+std::vector<Eigen::MatrixXd> CollocationPoint::OperatorHessian() const {
+  assert(model);
+
+  // get the support point
+  auto pnt = supportPoint.lock();
+  assert(pnt);
+  return model->OperatorHessian(x, pnt->Coefficients(), pnt->GetBasisFunctions());
+}
+
+std::vector<Eigen::MatrixXd> CollocationPoint::OperatorHessian(Eigen::VectorXd const& loc) const {
+  assert(model);
+  assert(loc.size()==model->inputDimension);
+
+  // get the support point
+  auto pnt = supportPoint.lock();
+  assert(pnt);
+
+  return model->OperatorJacobian(loc, pnt->Coefficients(), pnt->GetBasisFunctions());
+}
+
+std::vector<Eigen::MatrixXd> CollocationPoint::OperatorHessian(Eigen::VectorXd const& loc, Eigen::VectorXd const& coefficients) const {
+  assert(model);
+  assert(loc.size()==model->inputDimension);
+
+  // get the support point
+  auto pnt = supportPoint.lock();
+  assert(pnt);
+  assert(pnt->NumCoefficients()==coeffs.size());
+
+  return model->OperatorJacobian(loc, coeffs, pnt->GetBasisFunctions());
+}
+
 std::size_t CollocationPoint::LocalIndex() const { return localIndex; }

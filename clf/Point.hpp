@@ -10,7 +10,7 @@ namespace clf {
 /// A generic point in the domain
 class Point {
 public:
-  
+
   /**
   @param[in] x The location of the support point \f$x\f$
   @param[in] model The model that defines the "data" at this support point
@@ -68,6 +68,27 @@ public:
   \return The model Jacobian with respect to the coefficeints
   */
   virtual Eigen::MatrixXd OperatorJacobian(Eigen::VectorXd const& loc, Eigen::VectorXd const& coefficients) const = 0;
+
+  /// Evaluate the Hessian of the operator applied to the local function at the point's location with the stored coefficients
+  /**
+  \return Each component is the Hessian of the \f$j^{th}\f$ ouput with respect to the coefficeints
+  */
+  virtual std::vector<Eigen::MatrixXd> OperatorHessian() const = 0;
+
+  /// Evaluate the Hessian of the operator applied to the local function at a given point with the stored coefficients
+  /**
+  @param[in] loc The location where we are evaluating the action of the operator
+  \return Each component is the Hessian of the \f$j^{th}\f$ ouput with respect to the coefficeints
+  */
+  virtual std::vector<Eigen::MatrixXd> OperatorHessian(Eigen::VectorXd const& loc) const = 0;
+
+  /// Evaluate the Hessian of the operator applied to the local function at a given point
+  /**
+  @param[in] loc The location where we are evaluating the action of the operator
+  @param[in] coefficients The coefficients that define the local function
+  \return Each component is the Hessian of the \f$j^{th}\f$ ouput with respect to the coefficeints
+  */
+  virtual std::vector<Eigen::MatrixXd> OperatorHessian(Eigen::VectorXd const& loc, Eigen::VectorXd const& coefficients) const = 0;
 
   /// The location of the support point \f$x\f$.
   const Eigen::VectorXd x;

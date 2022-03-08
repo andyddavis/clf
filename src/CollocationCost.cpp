@@ -53,6 +53,16 @@ Eigen::MatrixXd CollocationCost::PenaltyFunctionJacobianImpl(std::size_t const i
   return std::sqrt(collocationPoints[ind]->weight)*collocationPoints[ind]->OperatorJacobian(collocationPoints[ind]->x, beta);
 }
 
+std::vector<Eigen::MatrixXd> CollocationCost::PenaltyFunctionHessianImpl(std::size_t const ind, Eigen::VectorXd const& beta) const {
+  assert(ind<collocationPoints.size());
+  assert(collocationPoints[ind]);
+
+  std::vector<Eigen::MatrixXd> hess = collocationPoints[ind]->OperatorHessian(collocationPoints[ind]->x, beta);
+  for( auto& h : hess ) { std::sqrt(collocationPoints[ind]->weight)*h; }
+
+  return hess;
+}
+
 bool CollocationCost::IsQuadratic() const {
   // the cost function is quadratic as long as all of the models are linear
   for( const auto& it : collocationPoints ) { if( !it->model->IsLinear() ) { return false ; } }
