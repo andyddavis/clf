@@ -1,0 +1,15 @@
+var searchData=
+[
+  ['m_1288',['m',['../classclf_1_1tests_1_1DenseLinearSolverTests.html#a2cf3a94c0793d9fad83c3e3886e69882',1,'clf::tests::DenseLinearSolverTests::m()'],['../classclf_1_1tests_1_1SparseLinearSolverTests.html#a8cff79f35cf66acde694f42e328294f4',1,'clf::tests::SparseLinearSolverTests::m()']]],
+  ['markersize_1289',['markersize',['../namespace__plot-result.html#a094d8b2361e68e23c89528859cad8542',1,'_plot-result.markersize()'],['../namespace__plot-1d.html#a21ddf4147277e3ddb50ad5c8f8644e19',1,'_plot-1d.markersize()']]],
+  ['matrix_1290',['matrix',['../classclf_1_1LinearSolver.html#a55de3d207b4b2631fde555820857a87a',1,'clf::LinearSolver']]],
+  ['maxevals_1291',['maxEvals',['../classclf_1_1Optimizer.html#ae0a8b76b4d9f02752a786ce236c05c8d',1,'clf::Optimizer']]],
+  ['maxhessevals_1292',['maxHessEvals',['../classclf_1_1LevenbergMarquardt.html#aedee9e0b21415fe81b75a6320ddf0f50',1,'clf::LevenbergMarquardt']]],
+  ['maxiters_1293',['maxIters',['../classclf_1_1LevenbergMarquardt.html#a5cdfbbcf543a2e1ca3cfcf337f82e6c7',1,'clf::LevenbergMarquardt']]],
+  ['maxjacevals_1294',['maxJacEvals',['../classclf_1_1LevenbergMarquardt.html#aeb3876d103b8d46396ea1e92e964046d',1,'clf::LevenbergMarquardt']]],
+  ['maxlinesearchsteps_1295',['maxLineSearchSteps',['../classclf_1_1LevenbergMarquardt.html#a24089ebe28adaa838a4f287aa8edec2b',1,'clf::LevenbergMarquardt']]],
+  ['maxnonzeros_1296',['maxNonZeros',['../classclf_1_1DOFIndices.html#a65e3bfa47b25dc12133a430c9d706e4c',1,'clf::DOFIndices']]],
+  ['message_1297',['message',['../classclf_1_1exceptions_1_1CLFException.html#a19998d850390a5fb4f880e2c923ad32d',1,'clf::exceptions::CLFException']]],
+  ['model_1298',['model',['../classclf_1_1Point.html#a2fb18cbc12df77c3ea9bc1eac66b50ed',1,'clf::Point::model()'],['../classclf_1_1PointSampler.html#ad946714b169365c9d4339a887407cf42',1,'clf::PointSampler::model()'],['../classclf_1_1tests_1_1CollocationCostTests.html#ab2933cf9a47aaa607226677b28c9f48f',1,'clf::tests::CollocationCostTests::model()'],['../classclf_1_1tests_1_1CollocationPointCloudTests.html#a37f3c774dd1feacb052cec0f564f578d',1,'clf::tests::CollocationPointCloudTests::model()'],['../classclf_1_1tests_1_1CoupledCostTests.html#ae5e26d10d1f1d1b9f5c57baac170dbe9',1,'clf::tests::CoupledCostTests::model()'],['../classCoupledSupportPointTests.html#a5702375c412c67bcbf395d8c132ba663',1,'CoupledSupportPointTests::model()'],['../classclf_1_1tests_1_1LinearModelTests.html#aa57b087495618383421fb6f70c526c9e',1,'clf::tests::LinearModelTests::model()'],['../classclf_1_1tests_1_1SupportPointCloudTests.html#a335f43ef8b5b9fb666133487ff6d9e4f',1,'clf::tests::SupportPointCloudTests::model()'],['../classSupportPointTests.html#ad7e61855c3d710ca2b4cacd43f667a2d',1,'SupportPointTests::model()'],['../classclf_1_1tests_1_1UncoupledCostTests.html#a5412e9d99c8aaf97dd946f1b020f1716',1,'clf::tests::UncoupledCostTests::model()']]],
+  ['multis_1299',['multis',['../classclf_1_1BasisFunctions.html#a08c948f1c5ad1d1dbca4cf27cc89ffcf',1,'clf::BasisFunctions::multis()'],['../classPolynomialBasisTests.html#a3db17de6401946759253ac9a32fec0c3',1,'PolynomialBasisTests::multis()']]]
+];

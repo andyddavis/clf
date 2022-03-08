@@ -1,0 +1,22 @@
+var searchData=
+[
+  ['gaussnewtonhessian_979',['GaussNewtonHessian',['../classclf_1_1CostFunction.html#a7bed29542ff595f72290c38c3e7e0eac',1,'clf::CostFunction']]],
+  ['gaussnewtonhessiangivenjacobian_980',['GaussNewtonHessianGivenJacobian',['../classclf_1_1CostFunction.html#a33b69d765b6109278c31a255824c743a',1,'clf::CostFunction']]],
+  ['getbasisfunctions_981',['GetBasisFunctions',['../classclf_1_1SupportPoint.html#aa8310de0c4f8aac473d8c4b6fbd996cb',1,'clf::SupportPoint']]],
+  ['getbasisfunctionsmap_982',['GetBasisFunctionsMap',['../classclf_1_1BasisFunctions.html#a18ee7ac501d0f38cfc884039032932c4',1,'clf::BasisFunctions']]],
+  ['getcoefficients_983',['GetCoefficients',['../classclf_1_1SupportPointCloud.html#a4c0d5ccac12140cdd51a61bc8d849e3e',1,'clf::SupportPointCloud']]],
+  ['getcollocationpoint_984',['GetCollocationPoint',['../classclf_1_1CollocationPointCloud.html#a8dd759c0791227292a06ed1eb8d4887a',1,'clf::CollocationPointCloud']]],
+  ['getcoupledcost_985',['GetCoupledCost',['../classclf_1_1GlobalCost.html#a21d9fc62ce5a8399171c72647a284c6a',1,'clf::GlobalCost']]],
+  ['getneighbor_986',['GetNeighbor',['../classclf_1_1CoupledCost.html#a54d857667994aa9227596863c64fd6c8',1,'clf::CoupledCost']]],
+  ['getoptimizerconstructormap_987',['GetOptimizerConstructorMap',['../classclf_1_1Optimizer.html#a23ebb895b02fee57f4e4b69f57257edd',1,'clf::Optimizer']]],
+  ['getpoint_988',['GetPoint',['../classclf_1_1CoupledCost.html#a9ecd19c8f47ca3ccfde671dfdc3848f9',1,'clf::CoupledCost::GetPoint()'],['../classclf_1_1PointCloud.html#a363e799efeafe4807f0122ffd062fde5',1,'clf::PointCloud::GetPoint()']]],
+  ['getsupportpoint_989',['GetSupportPoint',['../classclf_1_1SupportPointCloud.html#adde52b89e8c9a0d9b66906891fb81b90',1,'clf::SupportPointCloud']]],
+  ['getuncoupledcost_990',['GetUncoupledCost',['../classclf_1_1GlobalCost.html#a40e7b7b4549c62f17cd1ca6f25e4475f',1,'clf::GlobalCost']]],
+  ['globalcoordinate_991',['GlobalCoordinate',['../classclf_1_1SupportPointBasis.html#aabfec74bb331381d2925827a6440b454',1,'clf::SupportPointBasis']]],
+  ['globalcost_992',['GlobalCost',['../classclf_1_1GlobalCost.html#ac9b9c702634cbc6eb9232449618e7c3d',1,'clf::GlobalCost']]],
+  ['globaldofindices_993',['GlobalDOFIndices',['../classclf_1_1DOFIndices.html#a05959f200abf2f8408b1e4c5291a371d',1,'clf::DOFIndices']]],
+  ['globalindex_994',['GlobalIndex',['../classclf_1_1CollocationPointCloud.html#a62aaccb5bc04fcad0cc1c94c4f5bb554',1,'clf::CollocationPointCloud::GlobalIndex()'],['../classclf_1_1SupportPoint.html#aab7875c1409ca60d34b64f5516a4c8a0',1,'clf::SupportPoint::GlobalIndex()']]],
+  ['globalneighborindex_995',['GlobalNeighborIndex',['../classclf_1_1SupportPoint.html#aa9bbf069c3a1236c5b4bd675e8d0afc0',1,'clf::SupportPoint']]],
+  ['globalneighborindices_996',['GlobalNeighborIndices',['../classclf_1_1SupportPoint.html#a206938b979c66f0d8a8c76f661bd5824',1,'clf::SupportPoint']]],
+  ['gradient_997',['Gradient',['../classclf_1_1CostFunction.html#a7ca33ead1f565460aa02c675afcf0f2c',1,'clf::CostFunction']]]
+];

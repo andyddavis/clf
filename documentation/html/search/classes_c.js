@@ -1,0 +1,24 @@
+var searchData=
+[
+  ['sharedfactory_730',['SharedFactory',['../structclf_1_1SharedFactory.html',1,'clf']]],
+  ['sincosbasis_731',['SinCosBasis',['../classclf_1_1SinCosBasis.html',1,'clf']]],
+  ['sparsecostfunction_732',['SparseCostFunction',['../classclf_1_1SparseCostFunction.html',1,'clf']]],
+  ['sparsecostfunctiontest_733',['SparseCostFunctionTest',['../classclf_1_1tests_1_1SparseCostFunctionTest.html',1,'clf::tests']]],
+  ['sparselevenbergmarquardt_734',['SparseLevenbergMarquardt',['../classclf_1_1SparseLevenbergMarquardt.html',1,'clf']]],
+  ['sparselinearsolvertests_735',['SparseLinearSolverTests',['../classclf_1_1tests_1_1SparseLinearSolverTests.html',1,'clf::tests']]],
+  ['sparsequadraticcostfunction_736',['SparseQuadraticCostFunction',['../classclf_1_1SparseQuadraticCostFunction.html',1,'clf']]],
+  ['sparsequadraticcosttest_737',['SparseQuadraticCostTest',['../classclf_1_1tests_1_1SparseQuadraticCostTest.html',1,'clf::tests']]],
+  ['supportpoint_738',['SupportPoint',['../classclf_1_1SupportPoint.html',1,'clf']]],
+  ['supportpointbasis_739',['SupportPointBasis',['../classclf_1_1SupportPointBasis.html',1,'clf']]],
+  ['supportpointcloud_740',['SupportPointCloud',['../classclf_1_1SupportPointCloud.html',1,'clf']]],
+  ['supportpointclouddimensionexception_741',['SupportPointCloudDimensionException',['../classclf_1_1exceptions_1_1SupportPointCloudDimensionException.html',1,'clf::exceptions']]],
+  ['supportpointcloudnotconnected_742',['SupportPointCloudNotConnected',['../classclf_1_1exceptions_1_1SupportPointCloudNotConnected.html',1,'clf::exceptions']]],
+  ['supportpointcloudnotenoughpointsexception_743',['SupportPointCloudNotEnoughPointsException',['../classclf_1_1exceptions_1_1SupportPointCloudNotEnoughPointsException.html',1,'clf::exceptions']]],
+  ['supportpointcloudtests_744',['SupportPointCloudTests',['../classclf_1_1tests_1_1SupportPointCloudTests.html',1,'clf::tests']]],
+  ['supportpointinvalidbasisexception_745',['SupportPointInvalidBasisException',['../classclf_1_1exceptions_1_1SupportPointInvalidBasisException.html',1,'clf::exceptions']]],
+  ['supportpointsampler_746',['SupportPointSampler',['../classclf_1_1SupportPointSampler.html',1,'clf']]],
+  ['supportpointsamplertests_747',['SupportPointSamplerTests',['../classclf_1_1tests_1_1SupportPointSamplerTests.html',1,'clf::tests']]],
+  ['supportpointtests_748',['SupportPointTests',['../classSupportPointTests.html',1,'']]],
+  ['supportpointwrongnumberofbasesconstructed_749',['SupportPointWrongNumberOfBasesConstructed',['../classclf_1_1exceptions_1_1SupportPointWrongNumberOfBasesConstructed.html',1,'clf::exceptions']]],
+  ['supportpointwrongnumberofnearestneighbors_750',['SupportPointWrongNumberOfNearestNeighbors',['../classclf_1_1exceptions_1_1SupportPointWrongNumberOfNearestNeighbors.html',1,'clf::exceptions']]]
+];

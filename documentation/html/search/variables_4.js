@@ -1,0 +1,20 @@
+var searchData=
+[
+  ['c_1227',['c',['../namespace__plot-1d.html#a60a728c11fd266d0abfed2ee22ee3139',1,'_plot-1d']]],
+  ['c0_1228',['c0',['../classclf_1_1CoupledSupportPoint.html#a97902d457d1cb99cfac9ac7487a3c8c4',1,'clf::CoupledSupportPoint::c0()'],['../classCoupledSupportPointTests.html#a33c56272e3a349be1335137e7a86c3dc',1,'CoupledSupportPointTests::c0()']]],
+  ['c1_1229',['c1',['../classclf_1_1CoupledSupportPoint.html#ac1d84198a742f5bdc2ce6b462fad9358',1,'clf::CoupledSupportPoint::c1()'],['../classCoupledSupportPointTests.html#ada41f0b597cf2874ae82560740cc9cc8',1,'CoupledSupportPointTests::c1()']]],
+  ['cloud_1230',['cloud',['../classclf_1_1DOFIndices.html#a846e3ff16ba2bf3a5a5f995bf8e40361',1,'clf::DOFIndices::cloud()'],['../classclf_1_1LocalFunctions.html#aba3e6b14e1a7d913464babbe87a92b30',1,'clf::LocalFunctions::cloud()'],['../classclf_1_1SupportPoint.html#a0d22a168e8ff518fac2cf5c98c42fb14',1,'clf::SupportPoint::cloud()'],['../classclf_1_1tests_1_1CoupledCostTests.html#a0452ca2dbc9aafa75f2fb9f2e293e87b',1,'clf::tests::CoupledCostTests::cloud()'],['../classGlobalCostTests.html#a5c03b525039d765fd2a693a83d94d368',1,'GlobalCostTests::cloud()'],['../classclf_1_1tests_1_1LocalFunctionsTests.html#aaf1a0ff054f3570516098f5c12c21d00',1,'clf::tests::LocalFunctionsTests::cloud()'],['../classclf_1_1tests_1_1SupportPointCloudTests.html#aef481112bdbf4aa2fd25220b65b5ee78',1,'clf::tests::SupportPointCloudTests::cloud()'],['../classclf_1_1tests_1_1UncoupledCostTests.html#a05d0909c99322222dbecc6a8d86bee5f',1,'clf::tests::UncoupledCostTests::cloud()']]],
+  ['cloudoptions_1231',['cloudOptions',['../classclf_1_1tests_1_1CollocationCostTests.html#a0177ee594730a9f31a518084b504d24f',1,'clf::tests::CollocationCostTests']]],
+  ['cmdclass_1232',['cmdclass',['../namespacesetup.html#aa128e9ba397a7b5b03bb964c4d14268d',1,'setup']]],
+  ['coefficients_1233',['coefficients',['../classclf_1_1SupportPoint.html#acafae79b49e95205ba32b38c8b66faa5',1,'clf::SupportPoint']]],
+  ['collocationcloud_1234',['collocationCloud',['../classclf_1_1tests_1_1CollocationCostTests.html#a24485ddaef905b25c19309909ac59b43',1,'clf::tests::CollocationCostTests::collocationCloud()'],['../classclf_1_1tests_1_1CollocationPointCloudTests.html#a90b7881eeb482622a31b25e347baf59d',1,'clf::tests::CollocationPointCloudTests::collocationCloud()']]],
+  ['collocationpersupport_1235',['collocationPerSupport',['../classclf_1_1CollocationPointCloud.html#ab1a0fed1ed51a819b8fda35eb8f7b6cc',1,'clf::CollocationPointCloud']]],
+  ['collocationpointcloud_1236',['CollocationPointCloud',['../classclf_1_1CollocationPoint.html#a419043de9d79580c7979ac0bcc851343',1,'clf::CollocationPoint']]],
+  ['collocationpoints_1237',['collocationPoints',['../classclf_1_1CollocationCost.html#a1fd225d69f8c27ef36a8bc012d77471d',1,'clf::CollocationCost::collocationPoints()'],['../namespace__plot-1d.html#a627a4cc4c820887b981fae6f5bdd1bfc',1,'_plot-1d.collocationPoints()']]],
+  ['color_1238',['color',['../namespace__plot-result.html#a137997ed256fe6db7858e5dea1e6281f',1,'_plot-result.color()'],['../namespace__plot-1d.html#aacaf6914e259cae89f33448bfbc97fce',1,'_plot-1d.color()']]],
+  ['colors_1239',['colors',['../namespace__plot-1d.html#a19f21ccb2e905957ee92524277709798',1,'_plot-1d']]],
+  ['constantindex_1240',['constantIndex',['../classclf_1_1BasisFunctions.html#aca7fd95d7ecaf15864105213458fbc89',1,'clf::BasisFunctions']]],
+  ['cost_1241',['cost',['../classclf_1_1LocalFunctions.html#a26a166d1d21b78ac86e6fd7a8bee6c0f',1,'clf::LocalFunctions::cost()'],['../classclf_1_1Optimizer.html#a5d62d8e8bec1665cee26904cc7bc6767',1,'clf::Optimizer::cost()'],['../classclf_1_1tests_1_1UncoupledCostTests.html#a43754bf18f1d2553dc0d835450f83b69',1,'clf::tests::UncoupledCostTests::cost()']]],
+  ['coupledcost_1242',['coupledCost',['../classclf_1_1SupportPoint.html#a72c372c3038dd0350fd3ebd351907b33',1,'clf::SupportPoint']]],
+  ['couplingscale_1243',['couplingScale',['../classclf_1_1tests_1_1CoupledCostTests.html#adaff84e97bca702734884e8e6c20558c',1,'clf::tests::CoupledCostTests']]]
+];
