@@ -7,7 +7,7 @@ Our approach represents <img src="https://render.githubusercontent.com/render/ma
 <img src="https://render.githubusercontent.com/render/math?math=\argmin_{\hat{u} \in \mathcal{P}} \int_{\Omega} \frac{1}{2} \| \mathcal{L}(\hat{u}) - f \|^2 d \pi(x)">, 
 
 where 
-<img src="https://render.githubusercontent.com/render/math?math=\pi"> is a probability density function that we use to define the residual error and <img src="https://render.githubusercontent.com/render/math?math=\mathcal{R}"> is a regularization. We sample points <img src="https://render.githubusercontent.com/render/math?math=x_i \sim \pi"> and define a <img src="https://render.githubusercontent.com/render/math?math=p"> degree polynomial in a local region. We solve a regression problem at collocation points <img src="https://render.githubusercontent.com/render/math?math=y_{ij} \sim q"> in the local neighborhood.
+<img src="https://render.githubusercontent.com/render/math?math=\pi"> is a probability density function that we use to define the residual error and <img src="https://render.githubusercontent.com/render/math?math=\mathcal{R}"> is a regularization. We sample points <img src="https://render.githubusercontent.com/render/math?math=x_i \sim \pi"> and define a <img src="https://render.githubusercontent.com/render/math?math=p"> degree polynomial in a local region. We solve a regression problem at collocation points <img src="https://render.githubusercontent.com/render/math?math=y_{ij} \sim q(\cdot \vert x_i)"> in the local neighborhood.
 
 # Building, installing, and running the tests
 
