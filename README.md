@@ -1,4 +1,4 @@
-# Coupled local functions
+# Coupled local functions (CLF)
 
 Our goal is to find <img src="https://render.githubusercontent.com/render/math?math=u"> such that <img src="https://render.githubusercontent.com/render/math?math=\mathcal{L}(u)=f"> for a differential operator <img src="https://render.githubusercontent.com/render/math?math=\mathcal{L}"> and forcing function <img src="https://render.githubusercontent.com/render/math?math=f">. 
 
