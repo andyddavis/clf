@@ -14,8 +14,11 @@ where
 After cloning this repository, build and install using
 
 `cd build`
+
 `cmake .. -DCMAKE_INSTALL_PREFIX=/install/dir/`
+
 `make -jN`
+
 `make install`
 
 [//]: # (This may not currently be functional, but to install using <tt>pip3</tt> run the command <tt>./install.sh --tpl_dir ~/Software/install/clf-pip/clf_external</tt>.)
