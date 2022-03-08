@@ -6,7 +6,7 @@ Our approach represents <img src="https://render.githubusercontent.com/render/ma
 
 In particular, we solve 
 
-<img src="https://render.githubusercontent.com/render/math?math=\argmin \mathcal{L}(u)=f">
+<img src="https://render.githubusercontent.com/render/math?math=\argmin_{\hat{u} \in \mathcal{P}} \int_{\Omega} \| \mathcal{L}(\hat{u}) - f \| \pi(x) \, dx">
 
 [//]: # (This may not currently be functional, but to install using <tt>pip3</tt> run the command <tt>./install.sh --tpl_dir ~/Software/install/clf-pip/clf_external</tt>.)
 [//]: # (cmake .. -DCLF_BOOST_DIR= -DCLF_EIGEN3_DIR= -DCLF_GTEST_DIR= -DCLF_MUQ_DIR= -DCLF_NLOPT_DIR=)
