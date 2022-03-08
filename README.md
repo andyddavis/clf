@@ -2,7 +2,7 @@
 
 Our goal is to find <img src="https://render.githubusercontent.com/render/math?math=u"> such that <img src="https://render.githubusercontent.com/render/math?math=\mathcal{L}(u)=f"> for a differential operator <img src="https://render.githubusercontent.com/render/math?math=\mathcal{L}"> and forcing function <img src="https://render.githubusercontent.com/render/math?math=f">. 
 
-Our approach reprsents <img src="https://render.githubusercontent.com/render/math?math=\hat{u} \approx u"> using <em>local polynomials</em> [Stone (1977)]{www.google.com}.
+Our approach reprsents <img src="https://render.githubusercontent.com/render/math?math=\hat{u} \approx u"> using <em>local polynomials</em> [Stone (1977)](www.google.com).
 
 Stone CJ (1977) Consistent nonparametric regression. The Annals of Statistics pp 595–620
 
