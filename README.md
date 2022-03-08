@@ -6,7 +6,9 @@ Our approach represents <img src="https://render.githubusercontent.com/render/ma
 
 In particular, we solve 
 
-<img src="https://render.githubusercontent.com/render/math?math=\argmin_{\hat{u} \in \mathcal{P}} \int_{\Omega} \| \mathcal{L}(\hat{u}) - f \| \, d \pi(x) + \mathcal{R}(\hat{u})">, where 
+<img src="https://render.githubusercontent.com/render/math?math=\argmin_{\hat{u} \in \mathcal{P}} \int_{\Omega} \| \mathcal{L}(\hat{u}) - f \| \, d \pi(x) + \mathcal{R}(\hat{u})">, 
+
+where 
 <img src="https://render.githubusercontent.com/render/math?math=\pi"> is a probability density function that we use to define the residual error and <img src="https://render.githubusercontent.com/render/math?math=\mathcal{R}"> is a regularization.
 
 [//]: # (This may not currently be functional, but to install using <tt>pip3</tt> run the command <tt>./install.sh --tpl_dir ~/Software/install/clf-pip/clf_external</tt>.)
