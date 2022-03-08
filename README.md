@@ -4,7 +4,7 @@ Our goal is to find <img src="https://render.githubusercontent.com/render/math?m
 
 Our approach represents <img src="https://render.githubusercontent.com/render/math?math=\hat{u} \approx u"> using <em>local polynomials</em> (e.g., see [Davis et al. (2020)](https://arxiv.org/abs/2006.00032), [Kohler (2002)](https://link.springer.com/article/10.1023/A:1022427805425), and [Stone (1977)](https://www.jstor.org/stable/2958783?casa_token=HSIT0xXYt_4AAAAA%3AlVXC5N7urbFzbX3rVp5gtcXLUH8sLGU3s8vxGa0rO7I1VCVnQDOaOnHAW8XshlOn_aeQk0Ai8XOq7GXz5Nc1Br2Ll6Og8PFgLnx-Kk1vUUMyXn9g0Z9P&seq=1#metadata_info_tab_contents)). In particular, we solve 
 
-<img src="https://render.githubusercontent.com/render/math?math=\argmin_{\hat{u} \in \mathcal{P}} \int_{\Omega} \| \mathcal{L}(\hat{u}) - f \| \, d \pi(x)+\mathcal{R}(\hat{u})">, 
+<img src="https://render.githubusercontent.com/render/math?math=\argmin_{\hat{u} \in \mathcal{P}} \int_{\Omega} \| \mathcal{L}(\hat{u}) - f \| \, d \pi(x) \+ \mathcal{R}(\hat{u})">, 
 
 where 
 <img src="https://render.githubusercontent.com/render/math?math=\pi"> is a probability density function that we use to define the residual error and <img src="https://render.githubusercontent.com/render/math?math=\mathcal{R}"> is a regularization.
