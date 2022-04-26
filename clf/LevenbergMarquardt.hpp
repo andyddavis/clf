@@ -143,6 +143,7 @@ private:
   inline void ResetParameters() {
     numCostEvals = 0;
     numJacEvals = 0;
+    numHessEvals = 0;
   }
 
   /// Perform one iteration of the Levenberg Marquardt algorithm
