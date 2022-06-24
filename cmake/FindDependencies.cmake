@@ -37,38 +37,44 @@ else()
   set(shared_library_suffix ".so")
 endif()
 
-set(SPIPACK_BUILT_DEPENDENCIES )
+set(CLF_BUILT_DEPENDENCIES 0)
+set(CLF_DEPENDENCIES )
 
-CLFDependency(BOOST)
-if( CLF_BUILT_BOOST )
-  list(APPEND CLF_BUILT_DEPENDENCIES BOOST)
-endif()
+#CLFDependency(BOOST)
+#if( CLF_BUILT_BOOST )
+#  set(CLF_BUILT_DEPENDENCIES 1)
+#  list(APPEND CLF_DEPENDENCIES BOOST)
+#endif()
 
 CLFDependency(EIGEN3)
 if( CLF_BUILT_EIGEN3 )
-  list(APPEND CLF_BUILT_DEPENDENCIES EIGEN3)
+  set(CLF_BUILT_DEPENDENCIES 1)
+  list(APPEND CLF_DEPENDENCIES EIGEN3)
 endif()
 
-CLFDependency(NLOPT)
-if( CLF_BUILT_NLOPT )
-  list(APPEND CLF_BUILT_DEPENDENCIES NLOPT)
-endif()
+#CLFDependency(NLOPT)
+#if( CLF_BUILT_NLOPT )
+#  set(CLF_BUILT_DEPENDENCIES 1)
+#  list(APPEND CLF_DEPENDENCIES NLOPT)
+#endif()
 
 CLFDependency(HDF5)
 if( CLF_BUILT_HDF5 )
-  list(APPEND CLF_BUILT_DEPENDENCIES HDF5)
+  set(CLF_BUILT_DEPENDENCIES 1)
+  list(APPEND CLF_DEPENDENCIES HDF5)
 endif()
 
-CLFDependency(MUQ)
-if( CLF_BUILT_MUQ )
-  list(APPEND CLF_BUILT_DEPENDENCIES MUQ)
-endif()
+#CLFDependency(MUQ)
+#if( CLF_BUILT_MUQ )
+#  set(CLF_BUILT_DEPENDENCIES 1)
+#  list(APPEND CLF_DEPENDENCIES MUQ)
+#endif()
 
 if( NOT CLF_BUILD_FROM_PIP )
     CLFDependency(GTEST)
 endif()
 
 # add the header only submodules
-list(APPEND CLF_EXTERNAL_INCLUDE_DIRS
-  ${CMAKE_SOURCE_DIR}/external/nanoflann/include/
-)
+#list(APPEND CLF_EXTERNAL_INCLUDE_DIRS
+#  ${CMAKE_SOURCE_DIR}/external/nanoflann/include/
+#)

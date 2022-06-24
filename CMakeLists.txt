@@ -50,9 +50,9 @@ message(STATUS "")
 
 include_directories(${CLF_EXTERNAL_INCLUDE_DIRS} .)
 
-if( CLF_BUILD_FROM_PIP )
-    add_subdirectory(${CMAKE_SOURCE_DIR}/external/pybind11)
-endif()
+#if( CLF_BUILD_FROM_PIP )
+#    add_subdirectory(${CMAKE_SOURCE_DIR}/external/pybind11)
+#endif()
 
 ###############################################
 # The source code
@@ -60,51 +60,57 @@ endif()
 
 # the source code (no pybind11)
 set(CLF_SOURCE
-    src/CLFException.cpp
+    src/LocalFunctions.cpp
 
-    src/UtilityFunctions.cpp
-
-    src/BasisFunctionsExceptions.cpp
-    src/BasisFunctions.cpp
-    src/SinCosBasis.cpp
-    src/PolynomialBasis.cpp
-    src/SupportPointBasis.cpp
-
-    src/ModelExceptions.cpp
-    src/Model.cpp
-    src/LinearModel.cpp
-    src/LaplaceOperator.cpp
-
-    src/DOFIndices.cpp
-
-    src/DenseCostFunction.cpp
-    src/SparseCostFunction.cpp
-    src/DenseQuadraticCostFunction.cpp
-    src/SparseQuadraticCostFunction.cpp
-    src/UncoupledCost.cpp
-    src/CoupledCost.cpp
-    src/CollocationCost.cpp
-    src/GlobalCost.cpp
-
-    src/LevenbergMarquardt.cpp
-    src/NLoptOptimizer.cpp
-
-    src/PointSampler.cpp
-    src/SupportPointSampler.cpp
-    src/CollocationPointSampler.cpp
-
-    src/Point.cpp
-    src/SupportPointExceptions.cpp
-    src/SupportPoint.cpp
-    src/CoupledSupportPoint.cpp
-    src/CollocationPoint.cpp
+    src/Point.cpp	
 
     src/PointCloud.cpp
-    src/SupportPointCloud.cpp
-    src/SupportPointCloudExceptions.cpp
-    src/CollocationPointCloud.cpp
 
-    src/LocalFunctions.cpp
+    #src/CLFException.cpp
+
+    #src/UtilityFunctions.cpp
+
+    #src/BasisFunctionsExceptions.cpp
+    #src/BasisFunctions.cpp
+    #src/SinCosBasis.cpp
+    #src/PolynomialBasis.cpp
+    #src/SupportPointBasis.cpp
+
+    #src/ModelExceptions.cpp
+    #src/Model.cpp
+    #src/LinearModel.cpp
+    #src/LaplaceOperator.cpp
+
+    #src/DOFIndices.cpp
+
+    #src/DenseCostFunction.cpp
+    #src/SparseCostFunction.cpp
+    #src/DenseQuadraticCostFunction.cpp
+    #src/SparseQuadraticCostFunction.cpp
+    #src/UncoupledCost.cpp
+    #src/CoupledCost.cpp
+    #src/CollocationCost.cpp
+    #src/GlobalCost.cpp
+
+    #src/LevenbergMarquardt.cpp
+    #src/NLoptOptimizer.cpp
+
+    #src/PointSampler.cpp
+    #src/SupportPointSampler.cpp
+    #src/CollocationPointSampler.cpp
+
+    #src/Point.cpp
+    #src/SupportPointExceptions.cpp
+    #src/SupportPoint.cpp
+    #src/CoupledSupportPoint.cpp
+    #src/CollocationPoint.cpp
+
+    #src/PointCloud.cpp
+    #src/SupportPointCloud.cpp
+    #src/SupportPointCloudExceptions.cpp
+    #src/CollocationPointCloud.cpp
+
+    #src/LocalFunctions.cpp
 )
 
 # if we are building for python, include the pybind11
@@ -112,18 +118,18 @@ if( CLF_BUILD_FROM_PIP )
     set(CLF_SOURCE
         ${CLF_SOURCE}
 
-        python/Module.cpp
+        #python/Module.cpp
 
-        python/BasisFunctions.cpp
+        #python/BasisFunctions.cpp
 
-        python/Model.cpp
+        #python/Model.cpp
 
-        python/SupportPoint.cpp
-        python/CoupledSupportPoint.cpp
+        #python/SupportPoint.cpp
+        #python/CoupledSupportPoint.cpp
 
-        python/SupportPointCloud.cpp
+        #python/SupportPointCloud.cpp
 
-        python/LocalFunctions.cpp
+        #python/LocalFunctions.cpp
     )
 endif()
 
@@ -139,7 +145,9 @@ else()
     add_library(${CLF_LIBNAME} SHARED ${CLF_SOURCE})
 endif()
 target_link_libraries(${CLF_LIBNAME} PUBLIC ${CLF_EXTERNAL_LIBRARIES})
-add_dependencies(${CLF_LIBNAME} ${CLF_BUILT_DEPENDENCIES})
+if( CLF_BUILT_DEPENDENCIES ) 
+    add_dependencies(${CLF_LIBNAME} ${CLF_DEPENDENCIES})
+endif()
 
 ###############################################
 # Build gtests (if not a python install)
@@ -149,40 +157,46 @@ if( NOT CLF_BUILD_FROM_PIP )
     set(TEST_SOURCE
         tests/_run-tests.cpp
 
-	tests/LinearSolverTests.cpp
+	tests/LocalFunctionsTests.cpp
 
-        tests/BasisFunctionsTests.cpp
-        tests/SinCosBasisTests.cpp
-        tests/PolynomialBasisTests.cpp
-        tests/SupportPointBasisTests.cpp
+	tests/PointTests.cpp
 
-        tests/ModelTests.cpp
-        tests/LinearModelTests.cpp
-        tests/LaplaceOperatorTests.cpp
+	tests/PointCloudTests.cpp
 
-	tests/OptimizerTests.cpp
-        tests/LevenbergMarquardtTests.cpp
-        tests/NLoptOptimizerTests.cpp
-        tests/QuadraticCostOptimizerTests.cpp
+	#tests/LinearSolverTests.cpp
 
-        tests/CostFunctionTests.cpp
-        tests/QuadraticCostFunctionTests.cpp
-        tests/UncoupledCostTests.cpp
-        tests/CoupledCostTests.cpp
-        tests/CollocationCostTests.cpp
-        tests/GlobalCostTests.cpp
+        #tests/BasisFunctionsTests.cpp
+        #tests/SinCosBasisTests.cpp
+        #tests/PolynomialBasisTests.cpp
+        #tests/SupportPointBasisTests.cpp
 
-        tests/SupportPointSamplerTests.cpp
-        tests/CollocationPointSamplerTests.cpp
+        #tests/ModelTests.cpp
+        #tests/LinearModelTests.cpp
+        #tests/LaplaceOperatorTests.cpp
 
-        tests/SupportPointTests.cpp
-        tests/CoupledSupportPointTests.cpp
-        tests/CollocationPointTests.cpp
+	#tests/OptimizerTests.cpp
+        #tests/LevenbergMarquardtTests.cpp
+        #tests/NLoptOptimizerTests.cpp
+        #tests/QuadraticCostOptimizerTests.cpp
 
-        tests/SupportPointCloudTests.cpp
-        tests/CollocationPointCloudTests.cpp
+        #tests/CostFunctionTests.cpp
+        #tests/QuadraticCostFunctionTests.cpp
+        #tests/UncoupledCostTests.cpp
+        #tests/CoupledCostTests.cpp
+        #tests/CollocationCostTests.cpp
+        #tests/GlobalCostTests.cpp
 
-        tests/LocalFunctionsTests.cpp
+        #tests/SupportPointSamplerTests.cpp
+        #tests/CollocationPointSamplerTests.cpp
+
+        #tests/SupportPointTests.cpp
+        #tests/CoupledSupportPointTests.cpp
+        #tests/CollocationPointTests.cpp
+
+        #tests/SupportPointCloudTests.cpp
+        #tests/CollocationPointCloudTests.cpp
+
+        #tests/LocalFunctionsTests.cpp
     )
 
     include_directories(tests/ ${GTEST_INCLUDE_DIR})
@@ -199,13 +213,13 @@ endif()
 # Build examples
 ###############################################
 
-set(POISSON_1D_EXAMPLE_SOURCE
-    examples/Poisson-equation/cpp/_run-1d.cpp
-)
+#set(POISSON_1D_EXAMPLE_SOURCE
+#    examples/Poisson-equation/cpp/_run-1d.cpp
+#)
 
-add_executable(run-poisson-1d ${POISSON_1D_EXAMPLE_SOURCE})
-target_link_libraries(run-poisson-1d ${CLF_LIBNAME} ${CLF_EXTERNAL_LIBRARIES} ${GTEST_LIBRARIES})
-add_dependencies(run-poisson-1d ${CLF_LIBNAME})
+#add_executable(run-poisson-1d ${POISSON_1D_EXAMPLE_SOURCE})
+#target_link_libraries(run-poisson-1d ${CLF_LIBNAME} ${CLF_EXTERNAL_LIBRARIES} ${GTEST_LIBRARIES})
+#add_dependencies(run-poisson-1d ${CLF_LIBNAME})
 
 ###############################################
 # Install step (if not a python install)
