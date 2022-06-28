@@ -6,7 +6,7 @@
 
 using namespace clf;
 
-TEST(LegendrePolynomialsTests, BasicTest) {
+TEST(OrthogonalPolynomialsTests, LegendrePolynomials) {
   LegendrePolynomials len;
 
   // a random number in [-1, 1]
