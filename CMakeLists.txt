@@ -60,6 +60,10 @@ include_directories(${CLF_EXTERNAL_INCLUDE_DIRS} .)
 
 # the source code (no pybind11)
 set(CLF_SOURCE
+    src/BasisFunctions.cpp
+    src/OrthogonalPolynomials.cpp
+    src/LegendrePolynomials.cpp
+
     src/LocalFunctions.cpp
 
     src/Point.cpp	
@@ -156,6 +160,8 @@ endif()
 if( NOT CLF_BUILD_FROM_PIP )
     set(TEST_SOURCE
         tests/_run-tests.cpp
+
+	tests/OrthogonalPolynomialsTests.cpp
 
 	tests/LocalFunctionsTests.cpp
 
