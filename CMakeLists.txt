@@ -165,6 +165,8 @@ if( NOT CLF_BUILD_FROM_PIP )
 
 	tests/OrthogonalPolynomialsTests.cpp
 
+	tests/MultiIndexTests.cpp
+
 	tests/LocalFunctionsTests.cpp
 
 	tests/PointTests.cpp
