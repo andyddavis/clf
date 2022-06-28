@@ -64,6 +64,8 @@ set(CLF_SOURCE
     src/OrthogonalPolynomials.cpp
     src/LegendrePolynomials.cpp
 
+    src/MultiIndex.cpp
+
     src/LocalFunctions.cpp
 
     src/Point.cpp	
