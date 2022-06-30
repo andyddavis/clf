@@ -11,4 +11,8 @@ TEST(MultiIndexTests, BasicTest) {
 
   MultiIndex ind(alpha);
   EXPECT_EQ(ind.Dimension(), d);
+
+  std::size_t order = 0;
+  for( const auto& it : alpha ) { order += it; }
+  EXPECT_EQ(ind.Order(), order);
 }

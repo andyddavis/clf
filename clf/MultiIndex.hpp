@@ -5,19 +5,29 @@
 
 namespace clf {
 
-/// A multi-index \f$\boldsymbol{\alpha} \in \mathbb{N}^{d}\f$
+/// A multi-index \f$\alpha \in \mathbb{N}^{d}\f$
 class MultiIndex {
 public:
 
-  MultiIndex(std::vector<std::size_t> const& indices);
+  /**
+  @param[in] alpha The multi-index \f$\alpha \in \mathbb{N}^{d}\f$
+  */
+  MultiIndex(std::vector<std::size_t> const& alpha);
 
   virtual ~MultiIndex() = default;
 
   /// The dimension \f$d\f$ of the multi-index 
   std::size_t Dimension() const;
 
-  /// The multi-index \f$\boldsymbol{\alpha} \in \mathbb{N}^{d}\f$
-  const std::vector<std::size_t> indices;
+  /// Compute the order of the multi-index \f$\sum_{i=1}^{d} \alpha_i\f$.
+  /**
+     The order is the sum of the elements of alpha.
+     \return The order \f$\sum_{i=1}^{d} \alpha_i\f$.
+  */
+  std::size_t Order() const;
+
+  /// The multi-index \f$\alpha \in \mathbb{N}^{d}\f$
+  const std::vector<std::size_t> alpha;
 
 private:
 };

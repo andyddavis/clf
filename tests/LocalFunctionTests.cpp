@@ -1,11 +1,11 @@
 #include <gtest/gtest.h>
 
-#include "clf/LocalFunctions.hpp"
+#include "clf/LocalFunction.hpp"
 
 using namespace clf;
 
 TEST(LocalFunctionTests, BasicTest) {
-  LocalFunctions func;
+  LocalFunction func;
 
   EXPECT_TRUE(false);
 }

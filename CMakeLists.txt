@@ -64,9 +64,13 @@ set(CLF_SOURCE
     src/OrthogonalPolynomials.cpp
     src/LegendrePolynomials.cpp
 
-    src/MultiIndex.cpp
+    src/FeatureVector.cpp
+    src/FeatureMatrix.cpp
 
-    src/LocalFunctions.cpp
+    src/MultiIndex.cpp
+    src/MultiIndexSet.cpp
+
+    src/LocalFunction.cpp
 
     src/Point.cpp	
 
@@ -166,8 +170,12 @@ if( NOT CLF_BUILD_FROM_PIP )
 	tests/OrthogonalPolynomialsTests.cpp
 
 	tests/MultiIndexTests.cpp
+	tests/MultiIndexSetTests.cpp
 
-	tests/LocalFunctionsTests.cpp
+	tests/FeatureVectorTests.cpp
+	tests/FeatureMatrixTests.cpp
+
+	tests/LocalFunctionTests.cpp
 
 	tests/PointTests.cpp
 

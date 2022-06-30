@@ -5,7 +5,7 @@
 
 namespace clf {
 
-/// Orthogonal polynomials \f$\phi_p: \mathcal{D} \mapsto \mathbb{R}\f$ over the domain \f$\mathcal{D} = [-1, 1]\f$.
+/// Orthogonal polynomials \f$\varphi_p: \mathcal{D} \mapsto \mathbb{R}\f$ over the domain \f$\mathcal{D} = [-1, 1]\f$.
 class LegendrePolynomials : public OrthogonalPolynomials {
 public:
 
@@ -17,20 +17,20 @@ private:
 
   /// Evaluate the constant orthogonal polynomial
   /**
-     \return The first orthogonal polynomial is \f$\phi_0(x) = 1\f$.
+     \return The first orthogonal polynomial is \f$\varphi_0(x) = 1\f$.
    */
   virtual double Phi0() const final override;
 
   /// Evaluate the linear orthogonal polynomial
   /**
      @param[in] x Evaluate the linear basis function derivative at this point
-     \return The second orthogonal polynomial is \f$\phi_1(x) = x\f$.
+     \return The second orthogonal polynomial is \f$\varphi_1(x) = x\f$.
    */
   virtual double Phi1(double const x) const final override;
 
   /// Evaluate the derivative of the linear orthogonal polynomial
   /**
-     \return The derivative of the second orthogonal polynomial \f$\frac{d}{dx} \phi_1 = 1\f$.
+     \return The derivative of the second orthogonal polynomial \f$\frac{d}{dx} \varphi_1 = 1\f$.
    */
   virtual double dPhi1dx() const final override;
 
