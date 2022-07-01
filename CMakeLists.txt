@@ -72,6 +72,9 @@ set(CLF_SOURCE
 
     src/LocalFunction.cpp
 
+    src/SystemOfEquations.cpp
+    src/LinearSystem.cpp
+
     src/Point.cpp	
 
     src/PointCloud.cpp
