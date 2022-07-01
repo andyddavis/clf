@@ -29,6 +29,12 @@ public:
 
   virtual ~FeatureVector() = default;
 
+  /// The input dimension \f$d\f$ 
+  /**
+     \return The input dimension \f$d\f$ 
+   */
+  std::size_t InputDimension() const;
+
   /// The number of basis functions \f$q\f$
   /**
      \return The number of basis functions \f$q\f$

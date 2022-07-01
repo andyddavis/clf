@@ -12,13 +12,20 @@ FeatureMatrix::FeatureMatrix(std::vector<VectorPair> const& featureVectors) :
   numBasisFunctions(ComputeNumBasisFunctions(featureVectors)),
   numFeatureVectors(ComputeNumFeatureVectors(featureVectors)),
   featureVectors(featureVectors)
-{}
+{
+  // make sure the feature vectors have the same input dimension
+  assert(featureVectors.size()>0);
+  for( auto it=featureVectors.begin()+1; it!=featureVectors.end(); ++it ) { assert(featureVectors[0].first->InputDimension()==it->first->InputDimension()); }
+}
 
 FeatureMatrix::FeatureMatrix(std::vector<std::shared_ptr<const FeatureVector> > const& vecs) :
   numBasisFunctions(ComputeNumBasisFunctions(vecs)),
   numFeatureVectors(vecs.size()),
   featureVectors(CreateVectorPairs(vecs))
 {
+  // make sure the feature vectors have the same input dimension
+  assert(featureVectors.size()>0);
+  for( auto it=featureVectors.begin()+1; it!=featureVectors.end(); ++it ) { assert(featureVectors[0].first->InputDimension()==it->first->InputDimension()); }
 }
 
 std::vector<FeatureMatrix::VectorPair> FeatureMatrix::CreateVectorPairs(std::vector<std::shared_ptr<const FeatureVector> > const& vecs) {
@@ -44,6 +51,8 @@ std::size_t FeatureMatrix::ComputeNumFeatureVectors(std::vector<VectorPair> cons
   for( const auto& it : featureVectors ) { num += it.second; }
   return num; 
 }
+
+std::size_t FeatureMatrix::InputDimension() const { return featureVectors[0].first->InputDimension(); }
 
 Eigen::VectorXd FeatureMatrix::ApplyTranspose(Eigen::VectorXd const& x, Eigen::VectorXd const& coeff) const {
   assert(coeff.size()==numBasisFunctions);

@@ -6,6 +6,8 @@ FeatureVector::FeatureVector(std::shared_ptr<const MultiIndexSet> const& set, st
   set(set), basis(basis)
 {}
 
+std::size_t FeatureVector::InputDimension() const { return set->Dimension(); }
+
 std::size_t FeatureVector::NumBasisFunctions() const { return set->NumIndices(); }
 
 Eigen::VectorXd FeatureVector::Evaluate(Eigen::VectorXd const& x) const {

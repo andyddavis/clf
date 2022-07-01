@@ -47,6 +47,12 @@ public:
 
   virtual ~FeatureMatrix() = default;
 
+  /// The input dimension \f$d\f$ 
+  /**
+     \return The input dimension \f$d\f$ 
+  */
+  std::size_t InputDimension() const;
+
   /// Apply the feature matrix transpose to coefficients \f$\Phi(x)^{\top} c\f$
   /**
      @param[in] x The point \f$x\f$ where we are evaluating the feature matrix 

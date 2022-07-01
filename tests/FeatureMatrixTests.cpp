@@ -17,6 +17,7 @@ TEST(FeatureMatrixTests, SingleFeatureVectorTest) {
 
   FeatureMatrix mat(vec, outdim);
   EXPECT_EQ(mat.numBasisFunctions, outdim*set->NumIndices());
+  EXPECT_EQ(mat.InputDimension(), indim);
   EXPECT_EQ(mat.numFeatureVectors, outdim);
 
   const Eigen::VectorXd x = Eigen::VectorXd::Random(indim);
@@ -45,6 +46,7 @@ TEST(FeatureMatrixTests, MultiFeatureVectorTest) {
 
   FeatureMatrix mat({vec1, vec2});
   EXPECT_EQ(mat.numBasisFunctions, set1->NumIndices() + set2->NumIndices());
+  EXPECT_EQ(mat.InputDimension(), indim);
   EXPECT_EQ(mat.numFeatureVectors, outdim);
 
   const Eigen::VectorXd x = Eigen::VectorXd::Random(indim);
@@ -73,6 +75,7 @@ TEST(FeatureMatrixTests, RepeatedFeatureVectorsTest) {
 
   FeatureMatrix mat({vec1, vec2});
   EXPECT_EQ(mat.numBasisFunctions, set1->NumIndices() + (outdim-1)*set2->NumIndices());
+  EXPECT_EQ(mat.InputDimension(), indim);
   EXPECT_EQ(mat.numFeatureVectors, outdim);
 
   const Eigen::VectorXd x = Eigen::VectorXd::Random(indim);

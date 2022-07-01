@@ -13,6 +13,7 @@ TEST(FeatureVectorTests, EvaluateTest) {
   auto basis = std::make_shared<LegendrePolynomials>();
 
   FeatureVector vec(set, basis);
+  EXPECT_EQ(vec.InputDimension(), set->Dimension());
   EXPECT_EQ(vec.NumBasisFunctions(), set->NumIndices());
 
   const Eigen::VectorXd x = Eigen::VectorXd::Random(dim);
