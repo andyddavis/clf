@@ -60,6 +60,8 @@ include_directories(${CLF_EXTERNAL_INCLUDE_DIRS} .)
 
 # the source code (no pybind11)
 set(CLF_SOURCE
+    src/Parameters.cpp
+
     src/BasisFunctions.cpp
     src/OrthogonalPolynomials.cpp
     src/LegendrePolynomials.cpp
@@ -170,6 +172,8 @@ if( NOT CLF_BUILD_FROM_PIP )
     set(TEST_SOURCE
         tests/_run-tests.cpp
 
+        tests/ParametersTests.cpp
+
 	tests/OrthogonalPolynomialsTests.cpp
 
 	tests/MultiIndexTests.cpp
@@ -179,6 +183,12 @@ if( NOT CLF_BUILD_FROM_PIP )
 	tests/FeatureMatrixTests.cpp
 
 	tests/LocalFunctionTests.cpp
+
+	tests/SystemOfEquationsTests.cpp
+	tests/LinearSystemTests.cpp
+
+	tests/CostFunctionTests.cpp
+	tests/LevenbergMarquardtTests.cpp
 
 	tests/PointTests.cpp
 
