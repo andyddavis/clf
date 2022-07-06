@@ -20,6 +20,8 @@ public:
 
   virtual ~CostFunction() = default;
 
+  inline void Evaluate() const {}
+
   /// The number of parameters for the cost function
   const std::size_t indim;
 

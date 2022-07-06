@@ -36,7 +36,7 @@ public:
      \return The parameter's value
    */
   template<typename TYPE>
-  inline TYPE Get(std::string const& name) { 
+  inline TYPE Get(std::string const& name) const { 
     auto it = map.find(name);
     assert(it!=map.end());
     return std::any_cast<TYPE>(it->second);
