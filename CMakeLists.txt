@@ -187,6 +187,7 @@ if( NOT CLF_BUILD_FROM_PIP )
 	tests/SystemOfEquationsTests.cpp
 	tests/LinearSystemTests.cpp
 
+	tests/PenaltyFunctionTests.cpp
 	tests/CostFunctionTests.cpp
 	tests/LevenbergMarquardtTests.cpp
 

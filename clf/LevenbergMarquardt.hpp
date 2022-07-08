@@ -21,6 +21,10 @@ enum Convergence {
 
 /// An implementation of the Levenberg Marquardt algorithm 
 /**
+   Solve an optimization problem with the form 
+   \f{equation*}{
+      \min_{\beta \in \mathbb{R}^{d}} \sum_{i=1}^{m} c_i(\beta)^2
+   \f}
    <B>Configuration Parameters:</B>
    Parameter Key | Type | Default Value | Description |
    ------------- | ------------- | ------------- | ------------- |
@@ -45,7 +49,7 @@ public:
   /**
      \return The number of parameters for the cost function
    */
-  inline std::size_t NumParameters() const { return cost->indim; }
+  inline std::size_t NumParameters() const { return cost->InputDimension(); }
 
   /// Minimize the cost function using the Levenberg Marquardt algorithm
   /**

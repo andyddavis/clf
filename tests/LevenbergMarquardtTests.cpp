@@ -2,20 +2,22 @@
 
 #include "clf/LevenbergMarquardt.hpp"
 
-#include "TestCostFunctions.hpp"
+#include "TestPenaltyFunctions.hpp"
 
 using namespace clf;
 
 TEST(LevenbergMarquardtTests, DenseMatrices) {
   auto para = std::make_shared<Parameters>();
 
-  std::size_t indim = 8;
-  auto cost = std::make_shared<tests::DenseCostFunctionTest>(indim);
+  // create the example penalty functions
+  auto func0 = std::make_shared<tests::DensePenaltyFunctionTest0>();
+  auto func1 = std::make_shared<tests::DensePenaltyFunctionTest1>();
+  auto cost = std::make_shared<DenseCostFunction>(DensePenaltyFunctions({func0, func1}));
 
   DenseLevenbergMarquardt lm(cost, para);
-  EXPECT_EQ(lm.NumParameters(), indim);
+  EXPECT_EQ(lm.NumParameters(), cost->InputDimension());
 
-  Eigen::VectorXd beta = Eigen::VectorXd::Random(indim);
+  Eigen::VectorXd beta = Eigen::VectorXd::Random(lm.NumParameters());
   Eigen::VectorXd costVec;
   const std::pair<Optimization::Convergence, double> result = lm.Minimize(beta, costVec);
   EXPECT_TRUE(result.first>0);
@@ -24,13 +26,15 @@ TEST(LevenbergMarquardtTests, DenseMatrices) {
 TEST(LevenbergMarquardtTests, SparseMatrices) {
   auto para = std::make_shared<Parameters>();
 
-  const std::size_t indim = 13;
-  auto cost = std::make_shared<tests::SparseCostFunctionTest>(indim);
+  // create the example penalty functions
+  auto func0 = std::make_shared<tests::SparsePenaltyFunctionTest0>();
+  auto func1 = std::make_shared<tests::SparsePenaltyFunctionTest1>();
+  auto cost = std::make_shared<SparseCostFunction>(SparsePenaltyFunctions({func0, func1}));
 
   SparseLevenbergMarquardt lm(cost, para);
-  EXPECT_EQ(lm.NumParameters(), indim);
+  EXPECT_EQ(lm.NumParameters(), cost->InputDimension());
 
-  Eigen::VectorXd beta = Eigen::VectorXd::Random(indim);
+  Eigen::VectorXd beta = Eigen::VectorXd::Random(lm.NumParameters());
   Eigen::VectorXd costVec;
   const std::pair<Optimization::Convergence, double> result = lm.Minimize(beta, costVec);
   EXPECT_TRUE(result.first>0);
