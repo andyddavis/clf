@@ -62,6 +62,8 @@ include_directories(${CLF_EXTERNAL_INCLUDE_DIRS} .)
 set(CLF_SOURCE
     src/Parameters.cpp
 
+    src/PenaltyFunction.cpp
+
     src/BasisFunctions.cpp
     src/OrthogonalPolynomials.cpp
     src/LegendrePolynomials.cpp

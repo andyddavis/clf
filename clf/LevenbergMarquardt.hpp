@@ -1,7 +1,6 @@
 #ifndef LEVENBERGMARQUARDT_HPP_
 #define LEVENBERGMARQUARDT_HPP_
 
-#include "clf/Parameters.hpp"
 #include "clf/CostFunction.hpp"
 
 namespace clf {
@@ -10,11 +9,21 @@ namespace Optimization {
 
 /// Information about whether or not the algorithm converged
 enum Convergence {
+  /// Failed because the algorithm hit the maximum number of iterations
+  FAILED_MAX_ITERATIONS = -2,
+
   /// Failed for some unknown or unspecified reason
   FAILED = -1,
 
   /// The algorithm is currently running
   CONTINUE_RUNNING = 0,
+
+  /// Converged for some unknown or unspecified reason
+  CONVERGED = 1,
+
+  /// Converged because the cost function is below a specified value
+  CONVERGED_FUNCTION_SMALL = 2,
+
 };
 
 } // namespace Optimization
@@ -28,7 +37,8 @@ enum Convergence {
    <B>Configuration Parameters:</B>
    Parameter Key | Type | Default Value | Description |
    ------------- | ------------- | ------------- | ------------- |
-   "MaximumFunctionEvaluations"   | <tt>std::size_t</tt> | <tt>1000</tt> | The maximum number of function evaluations. |
+   "MaximumNumIterations"   | <tt>std::size_t</tt> | <tt>1000</tt> | The maximum number of interations evaluations (see clf::LevenbergMarquardt::maxIterations_DEFAULT). |
+   "FunctionTolerance"   | <tt>double</tt> | <tt>0.0</tt> | The tolerance for the cost function value (see clf::LevenbergMarquardt::functionTolerance_DEFAULT). |
  */
 template<typename MatrixType>
 class LevenbergMarquardt {
@@ -64,9 +74,20 @@ public:
     // reset the counters to zero 
     ResetCounters();
 
-    //const std::size_t maxiter = para->Get<std::size_t>("MaximumFunctionEvaluations");
+    // evaluate the cost at the intial guess 
+    double prevCost = EvaluateCost(beta, costVec);
 
-    return std::pair<Optimization::Convergence, double>(Optimization::Convergence::FAILED, std::numeric_limits<double>::quiet_NaN());
+    const std::size_t maxiter = para->Get<std::size_t>("MaximumNumIterations", maxIterations_DEFAULT);
+    std::size_t iter = 0;
+    while( iter++<maxiter ) {
+      // if the cost is sufficiently small, we have converged 
+      if( prevCost<para->Get<double>("FunctionTolerance", functionTolerance_DEFAULT) ) { return std::pair<Optimization::Convergence, double>(Optimization::Convergence::CONVERGED_FUNCTION_SMALL, prevCost); }
+
+      Iteration();
+
+    }
+
+    return std::pair<Optimization::Convergence, double>(Optimization::Convergence::FAILED_MAX_ITERATIONS, std::numeric_limits<double>::quiet_NaN());
   }
   
 private:
@@ -74,6 +95,28 @@ private:
   /// Reset the counters for the number of function/Jacobian/Hessian calls to zero
   inline void ResetCounters() {
     numCostEvals = 0;
+  }
+
+  /// Evaluate the cost function, compute a vector of penalty functions
+  /**
+     @param[in] beta The The parameter vector
+     @param[out] costVec The vector of each penalty function evaluation
+     \return The cost function evaluation (the sum of the squared penalty functions)
+  */
+  inline double EvaluateCost(Eigen::VectorXd const& beta, Eigen::VectorXd& costVec) {
+    // evalute the cost function 
+    costVec = cost->Evaluate(beta);
+
+    // increatement the number of function evaluations 
+    ++numCostEvals;
+
+    // the cost function is the sum of the squared penalty terms
+    return costVec.dot(costVec);
+  }
+
+  /// Perform one iteration of the Levenberg Marquardt algorithm
+  inline void Iteration() const {
+    // compute the jacobian matrix
   }
 
   /// The number of function evaluations 
@@ -87,6 +130,13 @@ private:
 
   /// The cost function we are trying to minimize
   std::shared_ptr<const CostFunction<MatrixType> > cost;
+
+  /// The default maximum number of iterations 
+  inline static std::size_t maxIterations_DEFAULT = 1000;
+
+  /// The default tolerance for the cost function tolerance
+  inline static double functionTolerance_DEFAULT = 0.0;
+
 };
 
 /// The Levenverg Marquardt (see clf::LevenbergMarquardt) optimization algorithm using dense matrices

@@ -5,6 +5,7 @@
 #include <string>
 #include <any>
 #include <assert.h>
+#include <iostream>
 
 namespace clf {
   
@@ -38,6 +39,21 @@ public:
   template<typename TYPE>
   inline TYPE Get(std::string const& name) const { 
     auto it = map.find(name);
+    if( it==map.end() ) { std::cerr << std::endl << "ERROR: Parameter '" << name << "' not found in clf::Parameters object." << std::endl << std::endl; }
+    assert(it!=map.end());
+    return std::any_cast<TYPE>(it->second);
+  }
+
+  /// Get a parameter with a default value 
+  /**
+     @param[in] name The name of the parameters 
+     @param[in] value The default value (if the parameter is not found in the map, return this value)
+     \return The parameter's value
+   */
+  template<typename TYPE>
+  inline TYPE Get(std::string const& name, TYPE const& value) const { 
+    auto it = map.find(name);
+    if( it==map.end() ) { return value; }
     assert(it!=map.end());
     return std::any_cast<TYPE>(it->second);
   }

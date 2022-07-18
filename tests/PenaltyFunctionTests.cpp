@@ -18,6 +18,12 @@ TEST(PenaltyFunctionTests, DenseTest0) {
   EXPECT_EQ(eval.size(), func.outdim);
   EXPECT_NEAR(eval(0), beta(0), 1.0e-14);
   EXPECT_NEAR(eval(1), beta(0)*(1.0-beta(2)), 1.0e-14);
+
+  const Eigen::MatrixXd exactJac = func.Jacobian(beta);
+  const Eigen::MatrixXd fdJac = func.JacobianFD(beta);
+  EXPECT_EQ(exactJac.rows(), fdJac.rows());
+  EXPECT_EQ(exactJac.cols(), fdJac.cols());
+  EXPECT_NEAR((exactJac-fdJac).norm(), 0.0, 1.0e-14);
 }
 
 TEST(PenaltyFunctionTests, DenseTest1) {
@@ -38,6 +44,13 @@ TEST(PenaltyFunctionTests, DenseTest1) {
   EXPECT_NEAR(eval(3), beta(2)*(1.0-beta(1)), 1.0e-14);
   EXPECT_NEAR(eval(4), beta(0)*beta(2), 1.0e-14);
   EXPECT_NEAR(eval(5), beta(0)*beta(0)*beta(1), 1.0e-14);
+
+  const Eigen::MatrixXd exactJac = func.Jacobian(beta);
+  const Eigen::MatrixXd fdJac = func.JacobianFD(beta);
+
+  EXPECT_EQ(exactJac.rows(), fdJac.rows());
+  EXPECT_EQ(exactJac.cols(), fdJac.cols());
+  EXPECT_NEAR((exactJac-fdJac).norm(), 0.0, 1.0e-14);
 }
 
 TEST(PenaltyFunctionTests, SparseTest0) {
@@ -54,6 +67,12 @@ TEST(PenaltyFunctionTests, SparseTest0) {
   EXPECT_EQ(eval.size(), func.outdim);
   EXPECT_NEAR(eval(0), beta(0), 1.0e-14);
   EXPECT_NEAR(eval(1), beta(0)*(1.0-beta(2)), 1.0e-14);
+
+  const Eigen::SparseMatrix<double> exactJac = func.Jacobian(beta);
+  const Eigen::SparseMatrix<double> fdJac = func.JacobianFD(beta);
+  EXPECT_EQ(exactJac.rows(), fdJac.rows());
+  EXPECT_EQ(exactJac.cols(), fdJac.cols());
+  EXPECT_NEAR((exactJac-fdJac).norm(), 0.0, 1.0e-14);
 }
 
 TEST(PenaltyFunctionTests, SparseTest1) {
@@ -74,4 +93,10 @@ TEST(PenaltyFunctionTests, SparseTest1) {
   EXPECT_NEAR(eval(3), beta(2)*(1.0-beta(1)), 1.0e-14);
   EXPECT_NEAR(eval(4), beta(0)*beta(2), 1.0e-14);
   EXPECT_NEAR(eval(5), beta(0)*beta(0)*beta(1), 1.0e-14);
+
+  const Eigen::SparseMatrix<double> exactJac = func.Jacobian(beta);
+  const Eigen::SparseMatrix<double> fdJac = func.JacobianFD(beta);
+  EXPECT_EQ(exactJac.rows(), fdJac.rows());
+  EXPECT_EQ(exactJac.cols(), fdJac.cols());
+  EXPECT_NEAR((exactJac-fdJac).norm(), 0.0, 1.0e-14);
 }

@@ -23,5 +23,6 @@ TEST(ParametersTest, BasicTest) {
   EXPECT_EQ(para.NumParameters(), 3);
   EXPECT_PRED2([](std::string const& str1, std::string const& str2) { return str1==str2; }, para.Get<std::string>("C"), c);
 
-
+  // check default value
+  EXPECT_EQ(para.Get("D", 10), 10);
 }
