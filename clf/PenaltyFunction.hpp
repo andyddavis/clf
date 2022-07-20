@@ -6,6 +6,8 @@
 #include <Eigen/Core>
 #include <Eigen/Sparse>
 
+#include "clf/CLFExceptions.hpp"
+
 #include "clf/Parameters.hpp"
 
 namespace clf {
@@ -15,7 +17,8 @@ namespace clf {
    <B>Configuration Parameters:</B>
    Parameter Key | Type | Default Value | Description |
    ------------- | ------------- | ------------- | ------------- |
-   "DeltaJacobain"   | <tt>double</tt> | <tt>1.0e-2</tt> | The step size for the finite difference approximation of the Jacobian. |
+   "DeltaJacobain"   | <tt>double</tt> | <tt>1.0e-2</tt> | The step size for the finite difference approximation of the Jacobian (see PenaltyFunction::deltaFD_DEFAULT). |
+   "OrderJacobain"   | <tt>std::size_t</tt> | <tt>8</tt> | The accuracy order for the finite difference approximation of the Jacobian (see PenaltyFunction::orderFD_DEFAULT). The options are \f$2\f$, \f$4\f$, \f$6\f$, and \f$8\f$. |
  */
 template<typename MatrixType>
 class PenaltyFunction {
@@ -44,14 +47,66 @@ public:
      @param[in] beta The input parameters \f$\beta\f$
      \return The Jacobian of the penalty function \f$\nabla_{\beta} c \in \mathbb{R}^{n \times d}\f$\
    */
-  inline virtual MatrixType Jacobian(Eigen::VectorXd const& beta) { return JacobianFD(beta); }
+  inline virtual MatrixType Jacobian(Eigen::VectorXd const& beta) { 
+    MatrixType jac(outdim, indim);
+    try {
+      Gradient(beta, 0);
+    } catch(std::exception& e) { 
+      JacobianFD(beta, jac); 
+    }
+
+    return jac;
+  }
+
+  /// Compute the gradient of the \f$i^{\text{th}}\f$ output of the penalty function \f$\nabla_{\beta} c \in \mathbb{R}^{n \times d}\f$
+  /**
+     @param[in] beta The input parameters \f$\beta\f$
+     @param[in] component We are taking the gradient of this component
+     \return The gradient of the penalty function \f$\nabla_{\beta} c \in \mathbb{R}^{n \times d}\f$\
+   */
+  inline virtual Eigen::VectorXd Gradient(Eigen::VectorXd const& beta, std::size_t const component) { 
+    throw exceptions::NotImplemented("clf::PenaltyFunction::Jacobian(Eigen::VectorXd const& beta, std::size_t const component)");
+
+    static const double delta = para->Get<double>("DeltaJacobian", deltaFD_DEFAULT);
+    static const Eigen::VectorXd weights = FiniteDifferenceWeights(para->Get<std::size_t>("OrderJacobian", orderFD_DEFAULT));
+
+    Eigen::VectorXd b = beta;
+    return FirstDerivativeFD(component, delta, weights, b); 
+  }
 
   /// Compute the Jacobian of the penalty function \f$\nabla_{\beta} c \in \mathbb{R}^{n \times d}\f$ using finite difference
   /**
      @param[in] beta The input parameters \f$\beta\f$
-     \return The Jacobian of the penalty function \f$\nabla_{\beta} c \in \mathbb{R}^{n \times d}\f$\
+     \return The Jacobian of the penalty function \f$\nabla_{\beta} c \in \mathbb{R}^{n \times d}\f$
    */
-  virtual MatrixType JacobianFD(Eigen::VectorXd beta) = 0;
+  /*MatrixType JacobianFD(Eigen::VectorXd const& beta) {
+    MatrixType jac; 
+    JacobianFD(beta, jac);
+    return jac;
+    }*/
+
+  /// Compute the Jacobian of the penalty function \f$\nabla_{\beta} c \in \mathbb{R}^{n \times d}\f$ using finite difference
+  /**
+     @param[in] beta The input parameters \f$\beta\f$
+     \return The Jacobian of the penalty function \f$\nabla_{\beta} c \in \mathbb{R}^{n \times d}\f$
+   */
+  virtual void JacobianFD(Eigen::VectorXd const& beta, MatrixType& jac) = 0;
+
+  /// Compute the Hessian of the \f$i^{\text{th}}\f$ output of the penalty function \f$\nabla_{\beta}^2 c_i \in \mathbb{R}^{d \times d}\f$
+  /**
+     @param[in] beta The input parameters \f$\beta\f$
+     @param[in] component We are taking the Hessian of this component
+     \return The Hessian of the \f$i^{\text{th}}\f$ output of the penalty function \f$\nabla_{\beta}^2 c_i \in \mathbb{R}^{d \times d}\f$\
+   */
+  inline virtual MatrixType Hessian(Eigen::VectorXd const& beta, std::size_t const component) { return HessianFD(beta, component); }
+
+  /// Compute the Hessian of the \f$i^{\text{th}}\f$ output of the penalty function \f$\nabla_{\beta}^2 c_i \in \mathbb{R}^{d \times d}\f$ using finite difference
+  /**
+     @param[in] beta The input parameters \f$\beta\f$
+     @param[in] component We are taking the Hessian of this component
+     \return The Hessian of the \f$i^{\text{th}}\f$ output of the penalty function \f$\nabla_{\beta}^2 c_i \in \mathbb{R}^{d \times d}\f$\
+   */
+  virtual MatrixType HessianFD(Eigen::VectorXd const& beta, std::size_t const component) = 0;
 
   /// The input dimension \f$d\f$
   const std::size_t indim;
@@ -88,11 +143,41 @@ protected:
     }
   }
   
+  /// Compute the first derivative of \f$i^{\text{th}}\f$ component with respect to each input \f$\nabla_{\beta} c_i\f$ using finite difference
+  /**
+     @param[in] component We want the first derivative of the \f$i^{\th}\f$ component 
+     @param[in] delta The step size for the finite difference 
+     @param[in] weights The weights for the finite difference 
+     @param[in,out] beta The input parameters, pass by reference to avoid having to copy to modify with the step size. Should not actually be changed at the end.
+   */
+  inline Eigen::VectorXd FirstDerivativeFD(std::size_t const component, double const delta, Eigen::VectorXd const& weights, Eigen::VectorXd& beta) {
+    Eigen::VectorXd vec = Eigen::VectorXd::Zero(outdim);
+    
+    for( std::size_t j=0; j<weights.size(); ++j ) {
+      beta(component) += delta;
+      vec += weights(j)*Evaluate(beta);
+    }
+    beta(component) -= weights.size()*delta;
+    for( std::size_t j=0; j<weights.size(); ++j ) {
+      beta(component) -= delta;
+      vec -= weights(j)*Evaluate(beta);
+    }
+    beta(component) += weights.size()*delta;
+
+    return vec;
+  }
+
   /// The parameters for this penalty function 
   /**
      Used to determine the parameters for the finite different approximation of the Jacobian and Hessian.
    */
   std::shared_ptr<const Parameters> para;
+
+  /// The default value for the finite diference delta
+  inline static double deltaFD_DEFAULT = 1.0e-2;
+
+  /// The default value for the finite diference order
+  inline static std::size_t orderFD_DEFAULT = 8;
 
 private:
 
@@ -114,14 +199,30 @@ public:
   /// Compute the Jacobian of the penalty function \f$\nabla_{\beta} c \in \mathbb{R}^{n \times d}\f$ using finite difference
   /**
      @param[in] beta The input parameters \f$\beta\f$
-     \return The Jacobian of the penalty function \f$\nabla_{\beta} c \in \mathbb{R}^{n \times d}\f$\
+     \return The Jacobian of the penalty function \f$\nabla_{\beta} c \in \mathbb{R}^{n \times d}\f$
    */
-  virtual Eigen::MatrixXd JacobianFD(Eigen::VectorXd beta) final override;
+  virtual void JacobianFD(Eigen::VectorXd const& beta, Eigen::MatrixXd& jac) final override;
+
+  /// Compute the Hessian of the \f$i^{\text{th}}\f$ output of the penalty function \f$\nabla_{\beta}^2 c_i \in \mathbb{R}^{d \times d}\f$ using finite difference
+  /**
+     @param[in] beta The input parameters \f$\beta\f$
+     @param[in] component We are taking the Hessian of this component
+     \return The Hessian of the \f$i^{\text{th}}\f$ output of the penalty function \f$\nabla_{\beta}^2 c_i \in \mathbb{R}^{d \times d}\f$\
+   */
+  virtual Eigen::MatrixXd HessianFD(Eigen::VectorXd const& beta, std::size_t const component) final override;
   
 private:
 };
 
 /// A penalty function (see clf::PenaltyFunction) used to define a cost fuction (see clf::CostFunction) that can be minimized using the Levenberg Marquardt algorithm (see clf::LevenbergMarquardt) using sparse matrices
+/**
+   <B>Configuration Parameters:</B>
+
+   In addition to the parameters required by clf::PenaltyFunction, the sparse version uses:
+   Parameter Key | Type | Default Value | Description |
+   ------------- | ------------- | ------------- | ------------- |
+   "SparsityTolerance"   | <tt>double</tt> | <tt>1.0e-14</tt> | When adding to a sparse matrix, any value less than this tolerance is conserided zero (see SparsePenaltyFunction::sparsityTolerance_DEFAULT). |
+*/
 class SparsePenaltyFunction : public PenaltyFunction<Eigen::SparseMatrix<double> > {
 public:
   
@@ -134,14 +235,49 @@ public:
   
   virtual ~SparsePenaltyFunction() = default;
 
+  /// Compute the Jacobian of the penalty function \f$\nabla_{\beta} c \in \mathbb{R}^{n \times d}\f$
+  /**
+     @param[in] beta The input parameters \f$\beta\f$
+     \return The Jacobian of the penalty function \f$\nabla_{\beta} c \in \mathbb{R}^{n \times d}\f$\
+   */
+  virtual Eigen::SparseMatrix<double> Jacobian(Eigen::VectorXd const& beta) final override;
+
   /// Compute the Jacobian of the penalty function \f$\nabla_{\beta} c \in \mathbb{R}^{n \times d}\f$ using finite difference
   /**
      @param[in] beta The input parameters \f$\beta\f$
      \return The Jacobian of the penalty function \f$\nabla_{\beta} c \in \mathbb{R}^{n \times d}\f$\
    */
-  inline virtual Eigen::SparseMatrix<double> JacobianFD(Eigen::VectorXd beta) final override;
+  inline virtual void JacobianFD(Eigen::VectorXd const& beta, Eigen::SparseMatrix<double>& jac) final override;
+
+  /// Compute the terms of the sparse Jacobian of the penalty function \f$\nabla_{\beta} c \in \mathbb{R}^{n \times d}\f$ using
+  /**
+     @param[in] beta The input parameters \f$\beta\f$
+     @param[out] entries The entries of the Jacobian matrix
+   */
+  virtual void JacobianEntries(Eigen::VectorXd const& beta, std::vector<Eigen::Triplet<double> >& entries);
+
+  /// Compute the terms of the sparse Jacobian of the penalty function \f$\nabla_{\beta} c \in \mathbb{R}^{n \times d}\f$ using finite difference
+  /**
+     @param[in] beta The input parameters \f$\beta\f$
+     @param[out] entries The entries of the Jacobian matrix
+   */
+  void JacobianEntriesFD(Eigen::VectorXd const& beta, std::vector<Eigen::Triplet<double> >& entries);
+
+  /// Compute the Hessian of the \f$i^{\text{th}}\f$ output of the penalty function \f$\nabla_{\beta}^2 c_i \in \mathbb{R}^{d \times d}\f$ using finite difference
+  /**
+     @param[in] beta The input parameters \f$\beta\f$
+     @param[in] component We are taking the Hessian of this component
+     \return The Hessian of the \f$i^{\text{th}}\f$ output of the penalty function \f$\nabla_{\beta}^2 c_i \in \mathbb{R}^{d \times d}\f$\
+   */
+  virtual Eigen::SparseMatrix<double> HessianFD(Eigen::VectorXd const& beta, std::size_t const component) final override;
 
 private:
+
+  /// The default value for the sparsity tolerance. 
+  /**
+     When adding to a sparse matrix, any value less than this tolerance is conserided zero.
+  */
+  inline static double sparsityTolerance_DEFAULT = 1.0e-14;
 };
 
 /// A vector of penalty functions (see clf::PenaltyFunction) used to define a cost fuction (see clf::CostFunction) that can be minimized using the Levenberg Marquardt algorithm (see clf::LevenbergMarquardt)

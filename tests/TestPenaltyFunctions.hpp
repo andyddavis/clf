@@ -43,13 +43,48 @@ public:
      \end{bmatrix} \in \mathbb{R}^{2 \times 3}.
      \f}
      @param[in] beta The input parameters \f$\beta\f$
-     \return The Jacobian of the penalty function \f$\nabla_{\beta} c \in \mathbb{R}^{2 \times 3}\f$
+     @param[in] component We are taking the gradient of this component
+     \return The gradient of the penalty function \f$\nabla_{\beta} c \in \mathbb{R}^{2 \times 3}\f$
   */
-  inline virtual Eigen::MatrixXd Jacobian(Eigen::VectorXd const& beta) override { 
+  inline virtual Eigen::VectorXd Gradient(Eigen::VectorXd const& beta, std::size_t const component) override { 
+    switch( component ) { 
+    case 0: 
+      return Eigen::Vector3d(1.0, 0.0, 0.0);
+    case 1: 
+      return Eigen::Vector3d(1.0-beta(2), 0.0, -beta(0));
+    }
+
+    assert(false); // something went wrong
+    return Eigen::VectorXd();
+  }
+
+  /// Evaluate the Hessian of the \f$i^{\text{th}}\f$ output of the penalty function \f$\nabla_{\beta}^2 c \in \mathbb{R}^{2 \times 3}\f$
+  /**
+     The input dimension is \f$3\f$ (i.e., \f$d=3\f$ and \f$\beta \in \mathbb{R}^{3}\f$) and the Hessian of the first component of the the penalty function is
+     \f{equation*}{
+     \nabla_{\beta}^2 c_1(\beta) = \begin{bmatrix}
+     0 & 0 & 0 \\
+     0 & 0 & 0 \\
+     0 & 0 & 0
+     \end{bmatrix} \in \mathbb{R}^{3 \times 3}
+     \f}
+     and the Hessian of the second component of the the penalty function is
+     \f{equation*}{
+     \nabla_{\beta}^2 c_2(\beta) = \begin{bmatrix}
+     0 & 0 & -1 \\ 
+     0 & 0 & 0 \\ 
+     -1 & 0 & 0 
+     \end{bmatrix} \in \mathbb{R}^{3 \times 3}.
+     \f}
+     @param[in] beta The input parameters \f$\beta\f$
+     @param[in] component We are taking the Hessian of this component
+     \return The Hessian of the \f$i^{\text{th}}\f$ output of the penalty function \f$\nabla_{\beta}^2 c_i \in \mathbb{R}^{d \times d}\f$\
+  */
+  inline virtual Eigen::MatrixXd Hessian(Eigen::VectorXd const& beta, std::size_t const component) override { 
     assert(beta.size()==3);
-    Eigen::MatrixXd jac(2, 3);
-    jac.row(0) << 1.0, 0.0, 0.0;
-    jac.row(1) << 1.0-beta(2), 0.0, -beta(0);
+    
+    Eigen::MatrixXd jac = Eigen::MatrixXd::Zero(3, 3);
+    if( component==1 ) { jac(0, 2) = -1.0; jac(2, 0) = -1.0; }
 
     return jac;
   }
@@ -166,20 +201,15 @@ public:
      \end{bmatrix} \in \mathbb{R}^{2 \times 3}.
      \f}
      @param[in] beta The input parameters \f$\beta\f$
-     \return The Jacobian of the penalty function \f$\nabla_{\beta} c \in \mathbb{R}^{2 \times 3}\f$
+     @param[out] entries The entries of the Jacobian matrix
   */
-  inline virtual Eigen::SparseMatrix<double> Jacobian(Eigen::VectorXd const& beta) override { 
+  inline virtual void JacobianEntries(Eigen::VectorXd const& beta, std::vector<Eigen::Triplet<double> >& entries) override { 
     assert(beta.size()==3);
 
-    std::vector<Eigen::Triplet<double> > entries(3);
+    entries.resize(3);
     entries[0] = Eigen::Triplet<double>(0, 0, 1.0);
     entries[1] = Eigen::Triplet<double>(1, 0, 1.0-beta(2));
     entries[2] = Eigen::Triplet<double>(1, 2, -beta(0));
-
-    Eigen::SparseMatrix<double> jac(2, 3);
-    jac.setFromTriplets(entries.begin(), entries.end());
-
-    return jac;
   }
 
 private:
@@ -239,12 +269,12 @@ public:
      \end{bmatrix} \in \mathbb{R}^{6 \times 3}.
      \f}
      @param[in] beta The input parameters \f$\beta\f$
-     \return The Jacobian of the penalty function \f$\nabla_{\beta} c \in \mathbb{R}^{2 \times 3}\f$
+     @param[out] entries The entries of the Jacobian matrix
   */
-  inline virtual Eigen::SparseMatrix<double> Jacobian(Eigen::VectorXd const& beta) override { 
+  inline virtual void JacobianEntries(Eigen::VectorXd const& beta, std::vector<Eigen::Triplet<double> >& entries) override { 
     assert(beta.size()==3);
 
-    std::vector<Eigen::Triplet<double> > entries(10);
+    entries.resize(10);
     entries[0] = Eigen::Triplet<double>(0, 1, -1.0);
     entries[1] = Eigen::Triplet<double>(1, 1, -1.0);
     entries[2] = Eigen::Triplet<double>(1, 2, 1.0);
@@ -255,11 +285,6 @@ public:
     entries[7] = Eigen::Triplet<double>(4, 2, beta(0));
     entries[8] = Eigen::Triplet<double>(5, 0, 2.0*beta(0)*beta(1));
     entries[9] = Eigen::Triplet<double>(5, 1, beta(0)*beta(0));
-
-    Eigen::SparseMatrix<double> jac(6, 3);
-    jac.setFromTriplets(entries.begin(), entries.end());
-
-    return jac;
   }
 
 private:

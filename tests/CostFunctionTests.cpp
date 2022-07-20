@@ -24,6 +24,14 @@ TEST(CostFunctionTests, DenseMatrices) {
   Eigen::VectorXd expected(8);
   expected << beta(0), beta(0)*(1.0-beta(2)), 1.0-beta(1), 1.0-beta(1)+beta(2), beta(2), beta(2)*(1.0-beta(1)), beta(0)*beta(2), beta(0)*beta(0)*beta(1);
   EXPECT_NEAR((eval-expected).norm(), 0.0, 1.0e-14);
+
+  Eigen::MatrixXd jac;
+  cost.Jacobian(beta, jac);
+  EXPECT_EQ(jac.cols(), func0->indim);
+  EXPECT_EQ(jac.cols(), func1->indim);
+  EXPECT_EQ(jac.rows(), func0->outdim+func1->outdim);
+  EXPECT_NEAR((jac.topLeftCorner(func0->outdim, func0->indim)-func0->Jacobian(beta)).norm(), 0.0, 1.0e-14);
+  EXPECT_NEAR((jac.bottomLeftCorner(func1->outdim, func1->indim)-func1->Jacobian(beta)).norm(), 0.0, 1.0e-14);
 }
 
 TEST(CostFunctionTests, SparseMatrices) {
@@ -44,4 +52,12 @@ TEST(CostFunctionTests, SparseMatrices) {
   Eigen::VectorXd expected(8);
   expected << beta(0), beta(0)*(1.0-beta(2)), 1.0-beta(1), 1.0-beta(1)+beta(2), beta(2), beta(2)*(1.0-beta(1)), beta(0)*beta(2), beta(0)*beta(0)*beta(1);
   EXPECT_NEAR((eval-expected).norm(), 0.0, 1.0e-14);
+
+  Eigen::SparseMatrix<double> jac;
+  cost.Jacobian(beta, jac);
+  EXPECT_EQ(jac.cols(), func0->indim);
+  EXPECT_EQ(jac.cols(), func1->indim);
+  EXPECT_EQ(jac.rows(), func0->outdim+func1->outdim);
+  EXPECT_NEAR((jac.topLeftCorner(func0->outdim, func0->indim)-func0->Jacobian(beta)).norm(), 0.0, 1.0e-14);
+  EXPECT_NEAR((jac.bottomLeftCorner(func1->outdim, func1->indim)-func1->Jacobian(beta)).norm(), 0.0, 1.0e-14);
 }

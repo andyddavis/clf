@@ -57,6 +57,21 @@ public:
    */
   inline std::size_t InputDimension() const { return penaltyFunctions[0]->indim; } 
 
+  /// Compute the Jacobian of the penalty functions \f$\nabla_{\beta} c \in \mathbb{R}^{\bar{n} \times d}\f$
+  /**
+     The Jacobian of the penalty function is 
+     \f{equation*}{
+     \nabla_{\beta} c(\beta) = \begin{bmatrix}
+     \nabla_{\beta} c_0(\beta) \\
+     \vdots \\
+     \nabla_{\beta} c_m(\beta) 
+     \end{bmatrix}.
+     \f}
+     @param[in] beta The input parameters \f$\beta\f$
+     @param[out] jac The Jacobian of the penalty function \f$\nabla_{\beta} c \in \mathbb{R}^{\bar{n} \times d}\f$
+   */
+  inline virtual void Jacobian(Eigen::VectorXd const& beta, MatrixType& jac) const = 0;
+
   /// The number of terms in the sum \f$\bar{n}\f$
   const std::size_t numTerms;
 
@@ -65,6 +80,11 @@ public:
      This is the number of functions \f$c_i: \mathbb{R}^{d} \mapsto \mathbb{R}^{n_i}\f$ 
    */
   const std::size_t numPenaltyFunctions;
+
+protected:
+
+  /// The penalty functions that define the cost function 
+  const PenaltyFunctions<MatrixType> penaltyFunctions;
 
 private:
 
@@ -78,16 +98,65 @@ private:
     for( const auto& it : penaltyFunctions ) { num += it->outdim; }
     return num;
   } 
-
-  /// The penalty functions that define the cost function 
-  const PenaltyFunctions<MatrixType> penaltyFunctions;
 };
 
 /// A cost function (see clf::CostFunction) that can be minimized using the Levenberg Marquardt algorithm (see clf::LevenbergMarquardt) using dense matrices
-typedef CostFunction<Eigen::MatrixXd> DenseCostFunction;
+class DenseCostFunction : public CostFunction<Eigen::MatrixXd> {
+public:
+  
+  /**
+     @param[in] penaltyFuncs A vector of penalty functions such that the \f$i^{\text{th}}\f$ entry is \f$c_i: \mathbb{R}^{d} \mapsto \mathbb{R}^{n_i}\f$
+  */
+  DenseCostFunction(DensePenaltyFunctions const& penaltyFunctions);
+
+  virtual ~DenseCostFunction() = default; 
+
+  /// Compute the Jacobian of the penalty functions \f$\nabla_{\beta} c \in \mathbb{R}^{\bar{n} \times d}\f$
+  /**
+     The Jacobian of the penalty function is 
+     \f{equation*}{
+     \nabla_{\beta} c(\beta) = \begin{bmatrix}
+     \nabla_{\beta} c_0(\beta) \\
+     \vdots \\
+     \nabla_{\beta} c_m(\beta) 
+     \end{bmatrix}.
+     \f}
+     @param[in] beta The input parameters \f$\beta\f$
+     @param[out] jac The Jacobian of the penalty function \f$\nabla_{\beta} c \in \mathbb{R}^{\bar{n} \times d}\f$
+  */
+  virtual void Jacobian(Eigen::VectorXd const& beta, Eigen::MatrixXd& jac) const final override;
+
+private:
+};
 
 /// A cost function (see clf::CostFunction) that can be minimized using the Levenberg Marquardt algorithm (see clf::LevenbergMarquardt) using sparse matrices
-typedef CostFunction<Eigen::SparseMatrix<double> > SparseCostFunction;
+class SparseCostFunction : public CostFunction<Eigen::SparseMatrix<double> > {
+public:
+  
+  /**
+     @param[in] penaltyFuncs A vector of penalty functions such that the \f$i^{\text{th}}\f$ entry is \f$c_i: \mathbb{R}^{d} \mapsto \mathbb{R}^{n_i}\f$
+  */
+  SparseCostFunction(SparsePenaltyFunctions const& penaltyFunctions);
+
+  virtual ~SparseCostFunction() = default; 
+
+  /// Compute the Jacobian of the penalty functions \f$\nabla_{\beta} c \in \mathbb{R}^{\bar{n} \times d}\f$
+  /**
+     The Jacobian of the penalty function is 
+     \f{equation*}{
+     \nabla_{\beta} c(\beta) = \begin{bmatrix}
+     \nabla_{\beta} c_0(\beta) \\
+     \vdots \\
+     \nabla_{\beta} c_m(\beta) 
+     \end{bmatrix}.
+     \f}
+     @param[in] beta The input parameters \f$\beta\f$
+     @param[out] jac The Jacobian of the penalty function \f$\nabla_{\beta} c \in \mathbb{R}^{\bar{n} \times d}\f$
+  */
+  virtual void Jacobian(Eigen::VectorXd const& beta, Eigen::SparseMatrix<double>& jac) const final override;
+
+private:
+};
 
 } // namespace clf 
 

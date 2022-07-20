@@ -24,6 +24,8 @@ enum Convergence {
   /// Converged because the cost function is below a specified value
   CONVERGED_FUNCTION_SMALL = 2,
 
+  /// Converged because the cost function gradient is below a specified value
+  CONVERGED_GRADIENT_SMALL = 3,
 };
 
 } // namespace Optimization
@@ -39,6 +41,7 @@ enum Convergence {
    ------------- | ------------- | ------------- | ------------- |
    "MaximumNumIterations"   | <tt>std::size_t</tt> | <tt>1000</tt> | The maximum number of interations evaluations (see clf::LevenbergMarquardt::maxIterations_DEFAULT). |
    "FunctionTolerance"   | <tt>double</tt> | <tt>0.0</tt> | The tolerance for the cost function value (see clf::LevenbergMarquardt::functionTolerance_DEFAULT). |
+   "GradientTolerance"   | <tt>double</tt> | <tt>1.0e-10</tt> | The tolerance for the cost function gradient value (see clf::LevenbergMarquardt::gradientTolerance_DEFAULT). |
  */
 template<typename MatrixType>
 class LevenbergMarquardt {
@@ -48,7 +51,7 @@ public:
      @param[in] cost The cost function that we are trying to minimize
      @param[in] para The parameters for this algorithm
    */
-  inline LevenbergMarquardt(std::shared_ptr<const CostFunction<MatrixType> > const& cost, std::shared_ptr<Parameters> const& para) :
+  inline LevenbergMarquardt(std::shared_ptr<const CostFunction<MatrixType> > const& cost, std::shared_ptr<Parameters> const& para = std::make_shared<Parameters>()) :
     para(para),
     cost(cost)
   {}
@@ -75,7 +78,7 @@ public:
     ResetCounters();
 
     // evaluate the cost at the intial guess 
-    double prevCost = EvaluateCost(beta, costVec);
+    double prevCost = Evaluate(beta, costVec);
 
     const std::size_t maxiter = para->Get<std::size_t>("MaximumNumIterations", maxIterations_DEFAULT);
     std::size_t iter = 0;
@@ -83,7 +86,7 @@ public:
       // if the cost is sufficiently small, we have converged 
       if( prevCost<para->Get<double>("FunctionTolerance", functionTolerance_DEFAULT) ) { return std::pair<Optimization::Convergence, double>(Optimization::Convergence::CONVERGED_FUNCTION_SMALL, prevCost); }
 
-      Iteration();
+      Iteration(prevCost, beta, costVec);
 
     }
 
@@ -95,6 +98,7 @@ private:
   /// Reset the counters for the number of function/Jacobian/Hessian calls to zero
   inline void ResetCounters() {
     numCostEvals = 0;
+    numJacEvals = 0;
   }
 
   /// Evaluate the cost function, compute a vector of penalty functions
@@ -103,7 +107,7 @@ private:
      @param[out] costVec The vector of each penalty function evaluation
      \return The cost function evaluation (the sum of the squared penalty functions)
   */
-  inline double EvaluateCost(Eigen::VectorXd const& beta, Eigen::VectorXd& costVec) {
+  inline double Evaluate(Eigen::VectorXd const& beta, Eigen::VectorXd& costVec) {
     // evalute the cost function 
     costVec = cost->Evaluate(beta);
 
@@ -114,9 +118,37 @@ private:
     return costVec.dot(costVec);
   }
 
+  /// Evaluate the cost function Jacobian
+  /**
+     @param[in] beta The The parameter vector
+     @param[out] costVec The cost function jacobian
+  */
+  inline void Jacobian(Eigen::VectorXd const& beta, MatrixType& jac) {
+    assert(cost);
+
+    // evalute the cost function 
+    cost->Jacobian(beta, jac);
+
+    // increatement the number of Jacobian evaluations 
+    ++numJacEvals;
+  }
+
   /// Perform one iteration of the Levenberg Marquardt algorithm
-  inline void Iteration() const {
+  inline std::pair<Optimization::Convergence, double> Iteration(double const costVal, Eigen::VectorXd const& beta, Eigen::VectorXd& costVec) {
     // compute the jacobian matrix
+    MatrixType jac;
+    Jacobian(beta, jac);
+
+    // use the jacobian to compute the gardient of the cost function and check for gradient convergence
+    costVec = jac.adjoint()*costVec; // re-write gradient in costVec to save memory
+    if( costVec.norm()<para->Get<std::size_t>("GradientTolerance", gradientTolerance_DEFAULT) ) { return std::pair<Optimization::Convergence, double>(Optimization::Convergence::CONVERGED_GRADIENT_SMALL, costVal); }
+
+    // compute the hessian
+
+    //std::cout << std::endl << std::endl << "end of iteration" << std::endl << std::endl;
+    costVec = cost->Evaluate(beta);
+
+    return std::pair<Optimization::Convergence, double>(Optimization::Convergence::CONTINUE_RUNNING, costVal);
   }
 
   /// The number of function evaluations 
@@ -124,6 +156,12 @@ private:
      Starts at zero and reset to zero each time LevenbergMarquardt::Minimize is called. After LevenbergMarquardt::Minimize is called, this is the number of times CostFunction::Evaluate was called.
    */
   std::size_t numCostEvals = 0; 
+
+  /// The number of Jacobian evaluations 
+  /**
+     Starts at zero and reset to zero each time LevenbergMarquardt::Minimize is called. After LevenbergMarquardt::Minimize is called, this is the number of times CostFunction::Jacobian was called.
+   */
+  std::size_t numJacEvals = 0; 
 
   /// The parameters for this algorithm
   std::shared_ptr<const Parameters> para;
@@ -137,6 +175,8 @@ private:
   /// The default tolerance for the cost function tolerance
   inline static double functionTolerance_DEFAULT = 0.0;
 
+  /// The default tolerance for the cost function gradient tolerance
+  inline static double gradientTolerance_DEFAULT = 1.0e-10;
 };
 
 /// The Levenverg Marquardt (see clf::LevenbergMarquardt) optimization algorithm using dense matrices

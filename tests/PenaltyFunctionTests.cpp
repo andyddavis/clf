@@ -20,10 +20,23 @@ TEST(PenaltyFunctionTests, DenseTest0) {
   EXPECT_NEAR(eval(1), beta(0)*(1.0-beta(2)), 1.0e-14);
 
   const Eigen::MatrixXd exactJac = func.Jacobian(beta);
-  const Eigen::MatrixXd fdJac = func.JacobianFD(beta);
+  EXPECT_EQ(exactJac.rows(), 2);
+  EXPECT_EQ(exactJac.cols(), 3);  
+  Eigen::MatrixXd fdJac;
+  func.JacobianFD(beta, fdJac);
   EXPECT_EQ(exactJac.rows(), fdJac.rows());
   EXPECT_EQ(exactJac.cols(), fdJac.cols());
   EXPECT_NEAR((exactJac-fdJac).norm(), 0.0, 1.0e-14);
+
+  for( std::size_t i=0; i<2; ++i ) { // test the each component hessian
+    const Eigen::MatrixXd exactHess = func.Hessian(beta, i);
+    EXPECT_EQ(exactHess.rows(), 3);
+    EXPECT_EQ(exactHess.cols(), 3);
+    const Eigen::MatrixXd fdHess = func.HessianFD(beta, i);
+    EXPECT_EQ(exactHess.rows(), fdHess.rows());
+    EXPECT_EQ(exactHess.cols(), fdHess.cols());
+    EXPECT_NEAR((exactHess-fdHess).norm(), 0.0, 1.0e-14);
+  }
 }
 
 TEST(PenaltyFunctionTests, DenseTest1) {
@@ -46,7 +59,8 @@ TEST(PenaltyFunctionTests, DenseTest1) {
   EXPECT_NEAR(eval(5), beta(0)*beta(0)*beta(1), 1.0e-14);
 
   const Eigen::MatrixXd exactJac = func.Jacobian(beta);
-  const Eigen::MatrixXd fdJac = func.JacobianFD(beta);
+  Eigen::MatrixXd fdJac;
+  func.JacobianFD(beta, fdJac);
 
   EXPECT_EQ(exactJac.rows(), fdJac.rows());
   EXPECT_EQ(exactJac.cols(), fdJac.cols());
@@ -69,7 +83,8 @@ TEST(PenaltyFunctionTests, SparseTest0) {
   EXPECT_NEAR(eval(1), beta(0)*(1.0-beta(2)), 1.0e-14);
 
   const Eigen::SparseMatrix<double> exactJac = func.Jacobian(beta);
-  const Eigen::SparseMatrix<double> fdJac = func.JacobianFD(beta);
+  Eigen::SparseMatrix<double> fdJac;
+  func.JacobianFD(beta, fdJac);
   EXPECT_EQ(exactJac.rows(), fdJac.rows());
   EXPECT_EQ(exactJac.cols(), fdJac.cols());
   EXPECT_NEAR((exactJac-fdJac).norm(), 0.0, 1.0e-14);
@@ -95,7 +110,8 @@ TEST(PenaltyFunctionTests, SparseTest1) {
   EXPECT_NEAR(eval(5), beta(0)*beta(0)*beta(1), 1.0e-14);
 
   const Eigen::SparseMatrix<double> exactJac = func.Jacobian(beta);
-  const Eigen::SparseMatrix<double> fdJac = func.JacobianFD(beta);
+  Eigen::SparseMatrix<double> fdJac;
+  func.JacobianFD(beta, fdJac);
   EXPECT_EQ(exactJac.rows(), fdJac.rows());
   EXPECT_EQ(exactJac.cols(), fdJac.cols());
   EXPECT_NEAR((exactJac-fdJac).norm(), 0.0, 1.0e-14);

@@ -60,9 +60,12 @@ include_directories(${CLF_EXTERNAL_INCLUDE_DIRS} .)
 
 # the source code (no pybind11)
 set(CLF_SOURCE
+    src/CLFExceptions.cpp
+
     src/Parameters.cpp
 
     src/PenaltyFunction.cpp
+    src/CostFunction.cpp
 
     src/BasisFunctions.cpp
     src/OrthogonalPolynomials.cpp
