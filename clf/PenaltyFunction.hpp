@@ -17,8 +17,8 @@ namespace clf {
    <B>Configuration Parameters:</B>
    Parameter Key | Type | Default Value | Description |
    ------------- | ------------- | ------------- | ------------- |
-   "DeltaJacobain"   | <tt>double</tt> | <tt>1.0e-2</tt> | The step size for the finite difference approximation of the Jacobian (see PenaltyFunction::deltaFD_DEFAULT). |
-   "OrderJacobain"   | <tt>std::size_t</tt> | <tt>8</tt> | The accuracy order for the finite difference approximation of the Jacobian (see PenaltyFunction::orderFD_DEFAULT). The options are \f$2\f$, \f$4\f$, \f$6\f$, and \f$8\f$. |
+   "DeltaFD"   | <tt>double</tt> | <tt>1.0e-2</tt> | The step size for the finite difference approximation (see PenaltyFunction::deltaFD_DEFAULT). |
+   "OrderFD"   | <tt>std::size_t</tt> | <tt>8</tt> | The accuracy order for the finite difference approximation (see PenaltyFunction::orderFD_DEFAULT). The options are \f$2\f$, \f$4\f$, \f$6\f$, and \f$8\f$. |
  */
 template<typename MatrixType>
 class PenaltyFunction {
@@ -47,66 +47,30 @@ public:
      @param[in] beta The input parameters \f$\beta\f$
      \return The Jacobian of the penalty function \f$\nabla_{\beta} c \in \mathbb{R}^{n \times d}\f$\
    */
-  inline virtual MatrixType Jacobian(Eigen::VectorXd const& beta) { 
-    MatrixType jac(outdim, indim);
-    try {
-      Gradient(beta, 0);
-    } catch(std::exception& e) { 
-      JacobianFD(beta, jac); 
-    }
-
-    return jac;
-  }
-
-  /// Compute the gradient of the \f$i^{\text{th}}\f$ output of the penalty function \f$\nabla_{\beta} c \in \mathbb{R}^{n \times d}\f$
-  /**
-     @param[in] beta The input parameters \f$\beta\f$
-     @param[in] component We are taking the gradient of this component
-     \return The gradient of the penalty function \f$\nabla_{\beta} c \in \mathbb{R}^{n \times d}\f$\
-   */
-  inline virtual Eigen::VectorXd Gradient(Eigen::VectorXd const& beta, std::size_t const component) { 
-    throw exceptions::NotImplemented("clf::PenaltyFunction::Jacobian(Eigen::VectorXd const& beta, std::size_t const component)");
-
-    static const double delta = para->Get<double>("DeltaJacobian", deltaFD_DEFAULT);
-    static const Eigen::VectorXd weights = FiniteDifferenceWeights(para->Get<std::size_t>("OrderJacobian", orderFD_DEFAULT));
-
-    Eigen::VectorXd b = beta;
-    return FirstDerivativeFD(component, delta, weights, b); 
-  }
+  inline virtual MatrixType Jacobian(Eigen::VectorXd const& beta) { return JacobianFD(beta); }
 
   /// Compute the Jacobian of the penalty function \f$\nabla_{\beta} c \in \mathbb{R}^{n \times d}\f$ using finite difference
   /**
      @param[in] beta The input parameters \f$\beta\f$
      \return The Jacobian of the penalty function \f$\nabla_{\beta} c \in \mathbb{R}^{n \times d}\f$
    */
-  /*MatrixType JacobianFD(Eigen::VectorXd const& beta) {
-    MatrixType jac; 
-    JacobianFD(beta, jac);
-    return jac;
-    }*/
+  virtual MatrixType JacobianFD(Eigen::VectorXd const& beta) = 0;
 
-  /// Compute the Jacobian of the penalty function \f$\nabla_{\beta} c \in \mathbb{R}^{n \times d}\f$ using finite difference
+  /// Compute the weighted sum of the Hessian of each the penalty function \f$\sum_{i=1}^{n} w_i \nabla_{\beta}^2 c_i \in \mathbb{R}^{d \times d}\f$
   /**
      @param[in] beta The input parameters \f$\beta\f$
-     \return The Jacobian of the penalty function \f$\nabla_{\beta} c \in \mathbb{R}^{n \times d}\f$
+     @param[in] weights The weights for the weighted sum
+     \return The weighted sum of the Hessian of each the penalty function \f$\sum_{i=1}^{n} w_i \nabla_{\beta}^2 c_i \in \mathbb{R}^{d \times d}\f$
    */
-  virtual void JacobianFD(Eigen::VectorXd const& beta, MatrixType& jac) = 0;
+  inline virtual MatrixType Hessian(Eigen::VectorXd const& beta, Eigen::VectorXd const& weights) { return HessianFD(beta, weights); }
 
-  /// Compute the Hessian of the \f$i^{\text{th}}\f$ output of the penalty function \f$\nabla_{\beta}^2 c_i \in \mathbb{R}^{d \times d}\f$
+  /// Compute the weighted sum of the Hessian of each the penalty function \f$\sum_{i=1}^{n} w_i \nabla_{\beta}^2 c_i \in \mathbb{R}^{d \times d}\f$ using finite difference
   /**
      @param[in] beta The input parameters \f$\beta\f$
-     @param[in] component We are taking the Hessian of this component
-     \return The Hessian of the \f$i^{\text{th}}\f$ output of the penalty function \f$\nabla_{\beta}^2 c_i \in \mathbb{R}^{d \times d}\f$\
+     @param[in] weights The weights for the weighted sum
+     \return The weighted sum of the Hessian of each the penalty function \f$\sum_{i=1}^{n} w_i \nabla_{\beta}^2 c_i \in \mathbb{R}^{d \times d}\f$
    */
-  inline virtual MatrixType Hessian(Eigen::VectorXd const& beta, std::size_t const component) { return HessianFD(beta, component); }
-
-  /// Compute the Hessian of the \f$i^{\text{th}}\f$ output of the penalty function \f$\nabla_{\beta}^2 c_i \in \mathbb{R}^{d \times d}\f$ using finite difference
-  /**
-     @param[in] beta The input parameters \f$\beta\f$
-     @param[in] component We are taking the Hessian of this component
-     \return The Hessian of the \f$i^{\text{th}}\f$ output of the penalty function \f$\nabla_{\beta}^2 c_i \in \mathbb{R}^{d \times d}\f$\
-   */
-  virtual MatrixType HessianFD(Eigen::VectorXd const& beta, std::size_t const component) = 0;
+  virtual MatrixType HessianFD(Eigen::VectorXd const& beta, Eigen::VectorXd const& weights) = 0;
 
   /// The input dimension \f$d\f$
   const std::size_t indim;
@@ -201,15 +165,15 @@ public:
      @param[in] beta The input parameters \f$\beta\f$
      \return The Jacobian of the penalty function \f$\nabla_{\beta} c \in \mathbb{R}^{n \times d}\f$
    */
-  virtual void JacobianFD(Eigen::VectorXd const& beta, Eigen::MatrixXd& jac) final override;
+  virtual Eigen::MatrixXd JacobianFD(Eigen::VectorXd const& beta) final override;
 
-  /// Compute the Hessian of the \f$i^{\text{th}}\f$ output of the penalty function \f$\nabla_{\beta}^2 c_i \in \mathbb{R}^{d \times d}\f$ using finite difference
+  /// Compute the weighted sum of the Hessian of each the penalty function \f$\sum_{i=1}^{n} w_i \nabla_{\beta}^2 c_i \in \mathbb{R}^{d \times d}\f$ using finite difference
   /**
      @param[in] beta The input parameters \f$\beta\f$
-     @param[in] component We are taking the Hessian of this component
-     \return The Hessian of the \f$i^{\text{th}}\f$ output of the penalty function \f$\nabla_{\beta}^2 c_i \in \mathbb{R}^{d \times d}\f$\
+     @param[in] weights The weights for the weighted sum
+     \return The weighted sum of the Hessian of each the penalty function \f$\sum_{i=1}^{n} w_i \nabla_{\beta}^2 c_i \in \mathbb{R}^{d \times d}\f$
    */
-  virtual Eigen::MatrixXd HessianFD(Eigen::VectorXd const& beta, std::size_t const component) final override;
+  virtual Eigen::MatrixXd HessianFD(Eigen::VectorXd const& beta, Eigen::VectorXd const& weights) final override;
   
 private:
 };
@@ -246,8 +210,8 @@ public:
   /**
      @param[in] beta The input parameters \f$\beta\f$
      \return The Jacobian of the penalty function \f$\nabla_{\beta} c \in \mathbb{R}^{n \times d}\f$\
-   */
-  inline virtual void JacobianFD(Eigen::VectorXd const& beta, Eigen::SparseMatrix<double>& jac) final override;
+  */
+  virtual Eigen::SparseMatrix<double> JacobianFD(Eigen::VectorXd const& beta) final override;
 
   /// Compute the terms of the sparse Jacobian of the penalty function \f$\nabla_{\beta} c \in \mathbb{R}^{n \times d}\f$ using
   /**
@@ -263,13 +227,37 @@ public:
    */
   void JacobianEntriesFD(Eigen::VectorXd const& beta, std::vector<Eigen::Triplet<double> >& entries);
 
-  /// Compute the Hessian of the \f$i^{\text{th}}\f$ output of the penalty function \f$\nabla_{\beta}^2 c_i \in \mathbb{R}^{d \times d}\f$ using finite difference
+  /// Compute entries of the weighted sum of the Hessian of each the penalty function \f$\sum_{i=1}^{n} w_i \nabla_{\beta}^2 c_i \in \mathbb{R}^{d \times d}\f$
   /**
      @param[in] beta The input parameters \f$\beta\f$
-     @param[in] component We are taking the Hessian of this component
-     \return The Hessian of the \f$i^{\text{th}}\f$ output of the penalty function \f$\nabla_{\beta}^2 c_i \in \mathbb{R}^{d \times d}\f$\
+     @param[in] weights The weights for the weighted sum
+     @param[out] entries The entries of the Hessian matrix
    */
-  virtual Eigen::SparseMatrix<double> HessianFD(Eigen::VectorXd const& beta, std::size_t const component) final override;
+  virtual void HessianEntries(Eigen::VectorXd const& beta, Eigen::VectorXd const& weights, std::vector<Eigen::Triplet<double> >& entries);
+
+  /// Compute entries of the weighted sum of the Hessian of each the penalty function \f$\sum_{i=1}^{n} w_i \nabla_{\beta}^2 c_i \in \mathbb{R}^{d \times d}\f$ using finite difference
+  /**
+     @param[in] beta The input parameters \f$\beta\f$
+     @param[in] weights The weights for the weighted sum
+     @param[out] entries The entries of the Hessian matrix
+   */
+  void HessianEntriesFD(Eigen::VectorXd const& beta, Eigen::VectorXd const& weights, std::vector<Eigen::Triplet<double> >& entries);
+
+  /// Compute weighted the sum of the Hessian of each the penalty function \f$\sum_{i=1}^{n} w_i \nabla_{\beta}^2 c_i \in \mathbb{R}^{d \times d}\f$
+  /**
+     @param[in] beta The input parameters \f$\beta\f$
+     @param[in] weights The weights for the weighted sum
+     \return The weighted sum of the Hessian of each the penalty function \f$\sum_{i=1}^{n} w_i \nabla_{\beta}^2 c_i \in \mathbb{R}^{d \times d}\f$
+   */
+  virtual Eigen::SparseMatrix<double> Hessian(Eigen::VectorXd const& beta, Eigen::VectorXd const& weights) final override;
+
+  /// Compute the weighted sum of the Hessian of each the penalty function \f$\sum_{i=1}^{n} \nabla_{\beta}^2 c_i \in \mathbb{R}^{d \times d}\f$ using finite difference
+  /**
+     @param[in] beta The input parameters \f$\beta\f$
+     @param[in] weights The weights for the weighted sum
+     \return The sum of the Hessian of each the penalty function \f$\sum_{i=1}^{n} w_i \nabla_{\beta}^2 c_i \in \mathbb{R}^{d \times d}\f$
+   */
+  virtual Eigen::SparseMatrix<double> HessianFD(Eigen::VectorXd const& beta, Eigen::VectorXd const& weights) final override;
 
 private:
 

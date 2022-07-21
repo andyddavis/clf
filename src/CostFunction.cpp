@@ -4,11 +4,11 @@ using namespace clf;
 
 DenseCostFunction::DenseCostFunction(DensePenaltyFunctions const& penaltyFunctions) : CostFunction<Eigen::MatrixXd>(penaltyFunctions) {}
 
-void DenseCostFunction::Jacobian(Eigen::VectorXd const& beta, Eigen::MatrixXd& jac) const {
+Eigen::MatrixXd DenseCostFunction::Jacobian(Eigen::VectorXd const& beta) const {
   assert(beta.size()==InputDimension());
   
   const std::size_t indim = InputDimension();
-  jac.resize(numTerms, indim); 
+  Eigen::MatrixXd jac(numTerms, indim); 
   std::size_t start = 0;
   for( const auto& it : penaltyFunctions ) {
     assert(it);
@@ -17,11 +17,13 @@ void DenseCostFunction::Jacobian(Eigen::VectorXd const& beta, Eigen::MatrixXd& j
     start += it->outdim;
   }
   assert(start==numTerms);
+
+  return jac;
 }
 
 SparseCostFunction::SparseCostFunction(SparsePenaltyFunctions const& penaltyFunctions) : CostFunction<Eigen::SparseMatrix<double> >(penaltyFunctions) {}
 
-void SparseCostFunction::Jacobian(Eigen::VectorXd const& beta, Eigen::SparseMatrix<double>& jac) const { 
+Eigen::SparseMatrix<double> SparseCostFunction::Jacobian(Eigen::VectorXd const& beta) const { 
   assert(beta.size()==InputDimension());
   
   std::vector<Eigen::Triplet<double> > entries;
@@ -35,7 +37,8 @@ void SparseCostFunction::Jacobian(Eigen::VectorXd const& beta, Eigen::SparseMatr
     start += it->outdim;
   }
   
-  jac.resize(numTerms, InputDimension()); 
+  Eigen::SparseMatrix<double> jac(numTerms, InputDimension()); 
   jac.setFromTriplets(entries.begin(), entries.end());
+  return jac;
 }
 

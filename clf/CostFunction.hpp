@@ -68,9 +68,88 @@ public:
      \end{bmatrix}.
      \f}
      @param[in] beta The input parameters \f$\beta\f$
-     @param[out] jac The Jacobian of the penalty function \f$\nabla_{\beta} c \in \mathbb{R}^{\bar{n} \times d}\f$
+     \return The Jacobian of the penalty function \f$\nabla_{\beta} c \in \mathbb{R}^{\bar{n} \times d}\f$
    */
-  inline virtual void Jacobian(Eigen::VectorXd const& beta, MatrixType& jac) const = 0;
+  virtual MatrixType Jacobian(Eigen::VectorXd const& beta) const = 0;
+
+  /// Compute the gradient of the cost function \f$2 \sum_{i=1}^{m} \sum_{j=1}^{n_i} c_{i,j}(\beta) \nabla_{\beta} c_{i,j}(\beta)\f$ given that we have already computed the Jacobian (CostFunction::Jacobian) and the cost (CostFunction::Evaluate);
+  /**
+     The gradient of the cost function is \f$2 \sum_{i=1}^{m} \sum_{j=1}^{n_i} c_{i,j}(\beta) \nabla_{\beta} c_{i,j}(\beta)\f$, where \f$c_{i,j}\f$ is the \f$j^{\text{th}}\f$ component of the \f$i^{\text{th}}\f$ penalty function.
+     @param[in] cost The penalty function evaluations (output of CostFunction::Evaluate)
+     @param[in] jac The Jacobian (output of CostFunction::Jacobian)
+     \return The gradient of the cost function 
+   */
+  inline virtual Eigen::VectorXd Gradient(Eigen::VectorXd const& cost, MatrixType const& jac) const { return 2.0*jac.adjoint()*cost; }
+
+  /// Compute the gradient of the cost function \f$2 \sum_{i=1}^{m} \sum_{j=1}^{n_i} c_{i,j}(\beta) \nabla_{\beta} c_{i,j}(\beta)\f$
+  /**
+     The gradient of the cost function is \f$2 \sum_{i=1}^{m} \sum_{j=1}^{n_i} c_{i,j}(\beta) \nabla_{\beta} c_{i,j}(\beta)\f$, where \f$c_{i,j}\f$ is the \f$j^{\text{th}}\f$ component of the \f$i^{\text{th}}\f$ penalty function.
+     @param[in] beta The input parameters \f$\beta\f$
+     \return The gradient of the cost function 
+   */
+  inline virtual Eigen::VectorXd Gradient(Eigen::VectorXd const& beta) const { return Gradient(Evaluate(beta), Jacobian(beta)); }
+
+  /// Compute the Hessian of the cost function 
+  /**
+     The Hessian of the penalty function is 
+     \f{equation*}{
+     H = 2 \sum_{i=1}^{m} \sum_{j=1}^{n_i} \left( \nabla_{\beta} c_{i,j}(\beta) \nabla_{\beta} c_{i,j}(\beta)^{\top} + c_{i,j}(\beta) \nabla_{\beta}^2 c_{i,j}(\beta) \right),
+     \f}
+     where \f$c_{i,j}(\beta)\f$ is the \f$j^{\text{th}}\f$ component of the \f$i^{\text{th}}\f$ penalty function. This function either computes the Hessian or the Gauss-Newton approximation to the Hessian:
+     \f{equation*}{
+     H_{\text{gn}} = 2 \sum_{i=1}^{m} \sum_{j=1}^{n_i} \nabla_{\beta} c_{i,j}(\beta) \nabla_{\beta} c_{i,j}(\beta)^{\top}.
+     \f}
+     @param[in] beta The input parameters \f$\beta\f$
+     @param[in] gn True: compute the Gauss-Newton Hessian, False (default): compute the true Hessian
+     \return The Hessian (or Gauss-Newton Hessian) of the cost function
+   */
+  inline MatrixType Hessian(Eigen::VectorXd const& beta, bool const gn = false) const { return Hessian(beta, Jacobian(beta), gn); } 
+
+  /// Compute the Hessian of the cost function given that we know the Jacobian
+  /**
+     The Hessian of the penalty function is 
+     \f{equation*}{
+     H = 2 \sum_{i=1}^{m} \sum_{j=1}^{n_i} \left( \nabla_{\beta} c_{i,j}(\beta) \nabla_{\beta} c_{i,j}(\beta)^{\top} + c_{i,j}(\beta) \nabla_{\beta}^2 c_{i,j}(\beta) \right),
+     \f}
+     where \f$c_{i,j}(\beta)\f$ is the \f$j^{\text{th}}\f$ component of the \f$i^{\text{th}}\f$ penalty function. This function either computes the Hessian or the Gauss-Newton approximation to the Hessian:
+     \f{equation*}{
+     H_{\text{gn}} = 2 \sum_{i=1}^{m} \sum_{j=1}^{n_i} \nabla_{\beta} c_{i,j}(\beta) \nabla_{\beta} c_{i,j}(\beta)^{\top}.
+     \f}
+     @param[in] beta The input parameters \f$\beta\f$
+     @param[in] jac The Jacobian (output of CostFunction::Jacobian)
+     @param[in] gn True: compute the Gauss-Newton Hessian, False (default): compute the true Hessian
+     \return The Hessian (or Gauss-Newton Hessian) of the cost function
+   */
+  inline MatrixType Hessian(Eigen::VectorXd const& beta, MatrixType const& jac, bool const gn = false) const { return Hessian(beta, Evaluate(beta), jac, gn); }
+
+  /// Compute the Hessian of the cost function given that we know the Jacobian and the penalty function evaluations
+  /**
+     The Hessian of the penalty function is 
+     \f{equation*}{
+     H = 2 \sum_{i=1}^{m} \sum_{j=1}^{n_i} \left( \nabla_{\beta} c_{i,j}(\beta) \nabla_{\beta} c_{i,j}(\beta)^{\top} + c_{i,j}(\beta) \nabla_{\beta}^2 c_{i,j}(\beta) \right),
+     \f}
+     where \f$c_{i,j}(\beta)\f$ is the \f$j^{\text{th}}\f$ component of the \f$i^{\text{th}}\f$ penalty function. This function either computes the Hessian or the Gauss-Newton approximation to the Hessian:
+     \f{equation*}{
+     H_{\text{gn}} = 2 \sum_{i=1}^{m} \sum_{j=1}^{n_i} \nabla_{\beta} c_{i,j}(\beta) \nabla_{\beta} c_{i,j}(\beta)^{\top}.
+     \f}
+     @param[in] beta The input parameters \f$\beta\f$
+     @param[in] cost The penalty function evaluations (output of CostFunction::Evaluate)
+     @param[in] jac The Jacobian (output of CostFunction::Jacobian)
+     @param[in] gn True: compute the Gauss-Newton Hessian, False (default): compute the true Hessian
+     \return The Hessian (or Gauss-Newton Hessian) of the cost function
+   */
+  inline MatrixType Hessian(Eigen::VectorXd const& beta, Eigen::VectorXd const& cost, MatrixType const& jac, bool const gn = false) const {
+    MatrixType hess = jac.adjoint()*jac;
+    if( gn ) { return 2.0*hess; }
+
+    std::size_t start = 0;
+    for( const auto& it : penaltyFunctions ) { 
+      hess += it->Hessian(beta, cost.segment(start, it->outdim)); 
+      start += it->outdim;
+    }
+
+    return 2.0*hess;
+  }
 
   /// The number of terms in the sum \f$\bar{n}\f$
   const std::size_t numTerms;
@@ -122,9 +201,9 @@ public:
      \end{bmatrix}.
      \f}
      @param[in] beta The input parameters \f$\beta\f$
-     @param[out] jac The Jacobian of the penalty function \f$\nabla_{\beta} c \in \mathbb{R}^{\bar{n} \times d}\f$
+     \return The Jacobian of the penalty function \f$\nabla_{\beta} c \in \mathbb{R}^{\bar{n} \times d}\f$
   */
-  virtual void Jacobian(Eigen::VectorXd const& beta, Eigen::MatrixXd& jac) const final override;
+  virtual Eigen::MatrixXd Jacobian(Eigen::VectorXd const& beta) const final override;
 
 private:
 };
@@ -151,9 +230,9 @@ public:
      \end{bmatrix}.
      \f}
      @param[in] beta The input parameters \f$\beta\f$
-     @param[out] jac The Jacobian of the penalty function \f$\nabla_{\beta} c \in \mathbb{R}^{\bar{n} \times d}\f$
+     \return The Jacobian of the penalty function \f$\nabla_{\beta} c \in \mathbb{R}^{\bar{n} \times d}\f$
   */
-  virtual void Jacobian(Eigen::VectorXd const& beta, Eigen::SparseMatrix<double>& jac) const final override;
+  virtual Eigen::SparseMatrix<double> Jacobian(Eigen::VectorXd const& beta) const final override;
 
 private:
 };

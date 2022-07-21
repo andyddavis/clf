@@ -42,6 +42,7 @@ enum Convergence {
    "MaximumNumIterations"   | <tt>std::size_t</tt> | <tt>1000</tt> | The maximum number of interations evaluations (see clf::LevenbergMarquardt::maxIterations_DEFAULT). |
    "FunctionTolerance"   | <tt>double</tt> | <tt>0.0</tt> | The tolerance for the cost function value (see clf::LevenbergMarquardt::functionTolerance_DEFAULT). |
    "GradientTolerance"   | <tt>double</tt> | <tt>1.0e-10</tt> | The tolerance for the cost function gradient value (see clf::LevenbergMarquardt::gradientTolerance_DEFAULT). |
+   "GaussNewtonHessian"   | <tt>bool</tt> | <tt>false</tt> | Should we use the Gauss Newton approximation of the Hessian? |
  */
 template<typename MatrixType>
 class LevenbergMarquardt {
@@ -99,6 +100,7 @@ private:
   inline void ResetCounters() {
     numCostEvals = 0;
     numJacEvals = 0;
+    numHessEvals = 0;
   }
 
   /// Evaluate the cost function, compute a vector of penalty functions
@@ -111,7 +113,7 @@ private:
     // evalute the cost function 
     costVec = cost->Evaluate(beta);
 
-    // increatement the number of function evaluations 
+    // increament the number of function evaluations 
     ++numCostEvals;
 
     // the cost function is the sum of the squared penalty terms
@@ -121,16 +123,33 @@ private:
   /// Evaluate the cost function Jacobian
   /**
      @param[in] beta The The parameter vector
-     @param[out] costVec The cost function jacobian
+     @param[out] jac The cost function Jacobian
   */
   inline void Jacobian(Eigen::VectorXd const& beta, MatrixType& jac) {
     assert(cost);
 
-    // evalute the cost function 
-    cost->Jacobian(beta, jac);
+    // evalute the cost function Jacobian
+    jac = cost->Jacobian(beta);
 
-    // increatement the number of Jacobian evaluations 
+    // increament the number of Jacobian evaluations 
     ++numJacEvals;
+  }
+
+  /// Evaluate the cost function Hessian given that we already know the penalty function evaluations and the jacobian
+  /**
+     @param[in] beta The The parameter vector
+     @param[in] costVec The cost function jacobian
+     @param[in] jac The cost function Jacobian
+     @param[out] hess The cost function Hessian
+  */
+  inline void Hessian(Eigen::VectorXd const& beta, Eigen::VectorXd const& costVec, MatrixType const& jac, MatrixType& hess) {
+    assert(cost);
+
+    // evalute the cost function Hessian
+    hess = cost->Hessian(beta, costVec, jac, para->Get<bool>("GaussNewtonHessian", false));
+
+    // increament the number of Jacobian evaluations 
+    ++numHessEvals;
   }
 
   /// Perform one iteration of the Levenberg Marquardt algorithm
@@ -140,13 +159,16 @@ private:
     Jacobian(beta, jac);
 
     // use the jacobian to compute the gardient of the cost function and check for gradient convergence
-    costVec = jac.adjoint()*costVec; // re-write gradient in costVec to save memory
-    if( costVec.norm()<para->Get<std::size_t>("GradientTolerance", gradientTolerance_DEFAULT) ) { return std::pair<Optimization::Convergence, double>(Optimization::Convergence::CONVERGED_GRADIENT_SMALL, costVal); }
+    const Eigen::VectorXd grad = cost->Gradient(costVec, jac);
+    if( grad.norm()<para->Get<std::size_t>("GradientTolerance", gradientTolerance_DEFAULT) ) { return std::pair<Optimization::Convergence, double>(Optimization::Convergence::CONVERGED_GRADIENT_SMALL, costVal); }
 
     // compute the hessian
+    MatrixType hess;
+    Hessian(beta, costVec, jac, hess);
 
-    //std::cout << std::endl << std::endl << "end of iteration" << std::endl << std::endl;
-    costVec = cost->Evaluate(beta);
+    // compute the step direction 
+
+    // do a line search
 
     return std::pair<Optimization::Convergence, double>(Optimization::Convergence::CONTINUE_RUNNING, costVal);
   }
@@ -162,6 +184,12 @@ private:
      Starts at zero and reset to zero each time LevenbergMarquardt::Minimize is called. After LevenbergMarquardt::Minimize is called, this is the number of times CostFunction::Jacobian was called.
    */
   std::size_t numJacEvals = 0; 
+
+  /// The number of Hessian evaluations 
+  /**
+     Starts at zero and reset to zero each time LevenbergMarquardt::Minimize is called. After LevenbergMarquardt::Minimize is called, this is the number of times CostFunction::Hessian was called.
+   */
+  std::size_t numHessEvals = 0; 
 
   /// The parameters for this algorithm
   std::shared_ptr<const Parameters> para;
