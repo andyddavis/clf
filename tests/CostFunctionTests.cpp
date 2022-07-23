@@ -57,7 +57,7 @@ TEST(CostFunctionTests, DenseMatrices) {
     }
     gradFD /= delta;
   }
-  EXPECT_NEAR((grad-gradFD).norm(), 0.0, 1.0e-13);
+  EXPECT_NEAR((grad-gradFD).norm(), 0.0, 1.0e-12);
 
   const Eigen::MatrixXd hess = cost.Hessian(beta);
   Eigen::MatrixXd hessFD = Eigen::MatrixXd::Zero(func0->indim, func0->indim);
@@ -81,7 +81,7 @@ TEST(CostFunctionTests, DenseMatrices) {
     }
     hessFD /= delta;
   }
-  EXPECT_NEAR((hess-hessFD).norm(), 0.0, 1.0e-13);
+  EXPECT_NEAR((hess-hessFD).norm(), 0.0, 1.0e-12);
 }
 
 TEST(CostFunctionTests, SparseMatrices) {

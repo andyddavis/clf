@@ -120,7 +120,10 @@ public:
      @param[in] gn True: compute the Gauss-Newton Hessian, False (default): compute the true Hessian
      \return The Hessian (or Gauss-Newton Hessian) of the cost function
    */
-  inline MatrixType Hessian(Eigen::VectorXd const& beta, MatrixType const& jac, bool const gn = false) const { return Hessian(beta, Evaluate(beta), jac, gn); }
+  inline MatrixType Hessian(Eigen::VectorXd const& beta, MatrixType const& jac, bool const gn = false) const {
+    if( gn ) { return 2.0*jac.adjoint()*jac; }
+    return Hessian(beta, Evaluate(beta), jac, gn);
+  }
 
   /// Compute the Hessian of the cost function given that we know the Jacobian and the penalty function evaluations
   /**

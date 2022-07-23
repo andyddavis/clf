@@ -82,6 +82,8 @@ set(CLF_SOURCE
     src/SystemOfEquations.cpp
     src/LinearSystem.cpp
 
+    src/LevenbergMarquardt.cpp
+
     src/Point.cpp	
 
     src/PointCloud.cpp
@@ -178,6 +180,8 @@ if( NOT CLF_BUILD_FROM_PIP )
         tests/_run-tests.cpp
 
         tests/ParametersTests.cpp
+
+        tests/LinearSolverTests.cpp
 
 	tests/OrthogonalPolynomialsTests.cpp
 

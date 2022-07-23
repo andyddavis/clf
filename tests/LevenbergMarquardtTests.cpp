@@ -21,6 +21,12 @@ TEST(LevenbergMarquardtTests, DenseMatrices) {
   Eigen::VectorXd costVec;
   const std::pair<Optimization::Convergence, double> result = lm.Minimize(beta, costVec);
   EXPECT_TRUE(result.first>0);
+
+  Eigen::VectorXd expected(3);
+  expected << 0.0, 1.0, 0.0;
+  EXPECT_NEAR((beta-expected).norm(), 0.0, 1.0e-10);
+  EXPECT_NEAR(costVec.norm(), 0.0, 1.0e-10);
+  EXPECT_NEAR(cost->Gradient(beta).norm(), 0.0, 1.0e-10);
 }
 
 TEST(LevenbergMarquardtTests, SparseMatrices) {
@@ -38,4 +44,10 @@ TEST(LevenbergMarquardtTests, SparseMatrices) {
   Eigen::VectorXd costVec;
   const std::pair<Optimization::Convergence, double> result = lm.Minimize(beta, costVec);
   EXPECT_TRUE(result.first>0);
+
+  Eigen::VectorXd expected(3);
+  expected << 0.0, 1.0, 0.0;
+  EXPECT_NEAR((beta-expected).norm(), 0.0, 1.0e-10);
+  EXPECT_NEAR(costVec.norm(), 0.0, 1.0e-10);
+  EXPECT_NEAR(cost->Gradient(beta).norm(), 0.0, 1.0e-10);
 }
