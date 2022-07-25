@@ -27,8 +27,9 @@ TEST(SystemOfEquationsTests, Construction) {
   auto mat = std::make_shared<FeatureMatrix>(vec, outdim);
   auto func = std::make_shared<LocalFunction>(mat);
 
-  const Eigen::VectorXd eval = func->Evaluate(x);
-  const Eigen::VectorXd op = system.Operator(func, x);
+  const Eigen::VectorXd coeff = Eigen::VectorXd::Random(func->NumCoefficients());
+  const Eigen::VectorXd eval = func->Evaluate(x, coeff);
+  const Eigen::VectorXd op = system.Operator(func, x, coeff);
   EXPECT_EQ(op.size(), outdim);
   EXPECT_EQ(op.size(), eval.size());
   EXPECT_NEAR((eval-op).norm(), 0.0, 1.0e-14);

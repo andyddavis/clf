@@ -29,7 +29,7 @@ public:
      @param[in] outdim The output dimension \f$n\f$
      @param[in] para The parameters for this penalty function 
   */
-  inline PenaltyFunction(std::size_t const indim, std::size_t const outdim, std::shared_ptr<Parameters> const& para = std::make_shared<Parameters>()) :
+  inline PenaltyFunction(std::size_t const indim, std::size_t const outdim, std::shared_ptr<const Parameters> const& para = std::make_shared<Parameters>()) :
     indim(indim), outdim(outdim), para(para)
   {}
 
@@ -156,7 +156,7 @@ public:
      @param[in] outdim The output dimension \f$n\f$
      @param[in] para The parameters for this penalty function 
   */
-  DensePenaltyFunction(std::size_t const indim, std::size_t const outdim, std::shared_ptr<Parameters> const& para = std::make_shared<Parameters>());
+  DensePenaltyFunction(std::size_t const indim, std::size_t const outdim, std::shared_ptr<const Parameters> const& para = std::make_shared<Parameters>());
   
   virtual ~DensePenaltyFunction() = default;
   
@@ -195,7 +195,7 @@ public:
      @param[in] outdim The output dimension \f$n\f$
      @param[in] para The parameters for this penalty function 
   */
-  SparsePenaltyFunction(std::size_t const indim, std::size_t const outdim, std::shared_ptr<Parameters> const& para = std::make_shared<Parameters>());
+  SparsePenaltyFunction(std::size_t const indim, std::size_t const outdim, std::shared_ptr<const Parameters> const& para = std::make_shared<Parameters>());
   
   virtual ~SparsePenaltyFunction() = default;
 

@@ -84,6 +84,8 @@ set(CLF_SOURCE
 
     src/LevenbergMarquardt.cpp
 
+    src/LocalResidual.cpp
+
     src/Point.cpp	
 
     src/PointCloud.cpp
@@ -199,6 +201,8 @@ if( NOT CLF_BUILD_FROM_PIP )
 	tests/PenaltyFunctionTests.cpp
 	tests/CostFunctionTests.cpp
 	tests/LevenbergMarquardtTests.cpp
+
+	tests/LocalResidualTests.cpp
 
 	tests/PointTests.cpp
 

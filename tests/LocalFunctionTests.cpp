@@ -20,7 +20,8 @@ TEST(LocalFunctionTests, Construction) {
   EXPECT_EQ(func.OutputDimension(), outdim);
   EXPECT_EQ(func.NumCoefficients(), mat->numBasisFunctions);
 
-  // the coefficients should initialize to zero so the function is zero 
-  const Eigen::VectorXd eval = func.Evaluate(Eigen::VectorXd::Random(indim));
-  EXPECT_NEAR(eval.norm(), 0.0, 1.0e-14);
+  const Eigen::VectorXd x = Eigen::VectorXd::Random(indim);
+  const Eigen::VectorXd coeff = Eigen::VectorXd::Random(func.NumCoefficients());
+  const Eigen::VectorXd eval = func.Evaluate(x, coeff);
+  EXPECT_NEAR((eval-mat->ApplyTranspose(x, coeff)).norm(), 0.0, 1.0e-14);
 }

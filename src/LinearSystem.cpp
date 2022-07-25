@@ -23,9 +23,10 @@ Eigen::MatrixXd LinearSystem::Operator(Eigen::VectorXd const& x) const {
   return Eigen::MatrixXd::Identity(outdim, matdim); 
 }
 
-Eigen::VectorXd LinearSystem::Operator(std::shared_ptr<LocalFunction> const& u, Eigen::VectorXd const& x) const {
+Eigen::VectorXd LinearSystem::Operator(std::shared_ptr<LocalFunction> const& u, Eigen::VectorXd const& x, Eigen::VectorXd const& coeff) const {
   assert(u->InputDimension()==indim);
   assert(u->OutputDimension()==matdim);
+  assert(u->NumCoefficients()==coeff.size());
   assert(x.size()==indim);
-  return Operator(x)*u->Evaluate(x);
+  return Operator(x)*u->Evaluate(x, coeff);
 }

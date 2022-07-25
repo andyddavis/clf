@@ -21,7 +21,7 @@ and coefficients \f$c \in \mathbb{R}^{\bar{q}}\f$ such that \f$u(x) = \Phi(x)^{\
 class LocalFunction {
 public:
 
-  /// Construct a local function, setting the coefficients \f$c \in \mathbb{R}^{\bar{q}}\f$ to zero initially
+  /// Construct a local function
   /**
      @param[in] featureMatrix The feature matrix that defines this local function
    */
@@ -47,20 +47,18 @@ public:
   */
   std::size_t NumCoefficients() const;
 
-  /// Evaluate the location function \f$u(x)\f$ at a point \f$x \in \mathcal{B}\f$
+  /// Evaluate the location function \f$u(x; c)\f$ at a point \f$x \in \mathcal{B}\f$ given coefficients \f$c \in \mathbb{R}^{\bar{q}}\f$
   /**
      @param[in] x The location where we want to evaluate the location function 
+     @param[in] coeff The coefficients \f$c \in \mathbb{R}^{\bar{q}}\f$ that define this location function 
      \return The local function evaluation \f$u(x)\f$
    */
-  Eigen::VectorXd Evaluate(Eigen::VectorXd const& x) const;
+  Eigen::VectorXd Evaluate(Eigen::VectorXd const& x, Eigen::VectorXd const& coeff) const;
 
 private:
 
   /// The feature matrix \f$\Phi(x)\f$ that defines this local function
   std::shared_ptr<const FeatureMatrix> featureMatrix;
-
-  /// The coefficients \f$c\f$ that define this location function 
-  Eigen::VectorXd coefficients;
 };
 
 } // namespace clf

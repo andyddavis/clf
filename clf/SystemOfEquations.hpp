@@ -33,9 +33,10 @@ public:
      Defaults to \f$\mathcal{L}(u(x), x) = u(x)\f$.
      @param[in] u The function \f$u\f$
      @param[in] x The location \f$x\f$
+     @param[in] coeff The coefficients \f$c\f$ that define the location function 
      \return The operator evaluation  \f$\mathcal{L}(u(x), x)\f$
    */
-  virtual Eigen::VectorXd Operator(std::shared_ptr<LocalFunction> const& u, Eigen::VectorXd const& x) const;
+  virtual Eigen::VectorXd Operator(std::shared_ptr<LocalFunction> const& u, Eigen::VectorXd const& x, Eigen::VectorXd const& coeff) const;
 
   /// The input dimension \f$d\f$
   const std::size_t indim;

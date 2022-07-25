@@ -8,9 +8,10 @@ SystemOfEquations::SystemOfEquations(std::size_t const indim, std::size_t const 
 
 Eigen::VectorXd SystemOfEquations::RightHandSide(Eigen::VectorXd const& x) const { return Eigen::VectorXd::Zero(outdim); }
 
-Eigen::VectorXd SystemOfEquations::Operator(std::shared_ptr<LocalFunction> const& u, Eigen::VectorXd const& x) const { 
+Eigen::VectorXd SystemOfEquations::Operator(std::shared_ptr<LocalFunction> const& u, Eigen::VectorXd const& x, Eigen::VectorXd const& coeff) const { 
   assert(u->InputDimension()==indim);
   assert(u->OutputDimension()==outdim);
+  assert(u->NumCoefficients()==coeff.size());
   assert(x.size()==indim);
-  return u->Evaluate(x);
+  return u->Evaluate(x, coeff);
 }

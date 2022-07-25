@@ -2,7 +2,7 @@
 
 using namespace clf;
 
-DensePenaltyFunction::DensePenaltyFunction(std::size_t const indim, std::size_t const outdim, std::shared_ptr<Parameters> const& para) :
+DensePenaltyFunction::DensePenaltyFunction(std::size_t const indim, std::size_t const outdim, std::shared_ptr<const Parameters> const& para) :
   PenaltyFunction<Eigen::MatrixXd>(indim, outdim, para)
 {}
 
@@ -45,7 +45,7 @@ Eigen::MatrixXd DensePenaltyFunction::HessianFD(Eigen::VectorXd const& beta, Eig
   return hess;
 }
 
-SparsePenaltyFunction::SparsePenaltyFunction(std::size_t const indim, std::size_t const outdim, std::shared_ptr<Parameters> const& para) :
+SparsePenaltyFunction::SparsePenaltyFunction(std::size_t const indim, std::size_t const outdim, std::shared_ptr<const Parameters> const& para) :
   PenaltyFunction<Eigen::SparseMatrix<double> >(indim, outdim, para)
 {}
 

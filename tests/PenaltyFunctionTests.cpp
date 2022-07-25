@@ -95,7 +95,7 @@ TEST(PenaltyFunctionTests, SparseTest0) {
   const Eigen::SparseMatrix<double> fdJac = func.JacobianFD(beta);
   EXPECT_EQ(exactJac.rows(), fdJac.rows());
   EXPECT_EQ(exactJac.cols(), fdJac.cols());
-  EXPECT_NEAR((exactJac-fdJac).norm(), 0.0, 1.0e-14);
+  EXPECT_NEAR((exactJac-fdJac).norm(), 0.0, 1.0e-13);
 
   const Eigen::VectorXd weights = Eigen::VectorXd::Random(2);
   const Eigen::SparseMatrix<double> exactHess = func.Hessian(beta, weights);

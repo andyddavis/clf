@@ -1,6 +1,8 @@
 #ifndef LINEARSOLVER_HPP_
 #define LINEARSOLVER_HPP_
 
+#include <optional>
+
 #include <Eigen/Sparse>
 #include <Eigen/QR>
 #include <Eigen/LU>
