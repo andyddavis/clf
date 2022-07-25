@@ -32,6 +32,9 @@ public:
   virtual Eigen::VectorXd Evaluate(Eigen::VectorXd const& beta) override;
 
   /// The number of local points \f$m\f$ 
+  /**
+     \return The number of local points \f$m\f$ 
+   */
   std::size_t NumLocalPoints() const; 
 
 private:
