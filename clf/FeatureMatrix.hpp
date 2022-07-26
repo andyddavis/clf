@@ -61,6 +61,25 @@ public:
   */
   Eigen::VectorXd ApplyTranspose(Eigen::VectorXd const& x, Eigen::VectorXd const& coeff) const;
 
+  /// Get the \f$i^{\text{th}}\f$ feature vector 
+  /**
+     @param[in] ind The index \f$i\f$ of the feature vector we want 
+     \return The \f$i^{\text{th}}\f$ feature vector 
+   */
+  std::shared_ptr<const FeatureVector> GetFeatureVector(std::size_t const ind) const;
+
+  /// Get the first iterator to a feature vector pair
+  /**
+     \return The first iterator to FeatureMatrix::featureVectors
+   */
+  std::vector<VectorPair>::const_iterator Begin() const;
+
+  /// Get the end iterator to a feature vector pair
+  /**
+     \return The end iterator to FeatureMatrix::featureVectors
+   */
+  std::vector<VectorPair>::const_iterator End() const;
+
   /// The total number of basis function \f$\bar{q}\f$
   const std::size_t numBasisFunctions;
 

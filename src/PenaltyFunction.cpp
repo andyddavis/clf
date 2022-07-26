@@ -1,5 +1,7 @@
 #include "clf/PenaltyFunction.hpp"
 
+#include "clf/FiniteDifference.hpp"
+
 using namespace clf;
 
 DensePenaltyFunction::DensePenaltyFunction(std::size_t const indim, std::size_t const outdim, std::shared_ptr<const Parameters> const& para) :
@@ -8,12 +10,11 @@ DensePenaltyFunction::DensePenaltyFunction(std::size_t const indim, std::size_t 
 
 Eigen::MatrixXd DensePenaltyFunction::JacobianFD(Eigen::VectorXd const& beta) {
   const double delta = para->Get<double>("DeltaFD", deltaFD_DEFAULT);
-  const Eigen::VectorXd weights = FiniteDifferenceWeights(para->Get<std::size_t>("OrderFD", orderFD_DEFAULT));
+  const Eigen::VectorXd weights = FiniteDifference::Weights(para->Get<std::size_t>("OrderFD", orderFD_DEFAULT));
   
   Eigen::MatrixXd jac = Eigen::MatrixXd::Zero(outdim, indim);
   Eigen::VectorXd b = beta;
   for( std::size_t i=0; i<indim; ++i ) { jac.col(i) = FirstDerivativeFD(i, delta, weights, b); }
-  jac /= delta;
   return jac;
 }
 
@@ -22,22 +23,11 @@ Eigen::MatrixXd DensePenaltyFunction::HessianFD(Eigen::VectorXd const& beta, Eig
   Eigen::MatrixXd hess = Eigen::MatrixXd::Zero(indim, indim);
 
   const double delta = para->Get<double>("DeltaFD", deltaFD_DEFAULT);
-  const Eigen::VectorXd weights = FiniteDifferenceWeights(para->Get<std::size_t>("OrderFD", orderFD_DEFAULT));
+  const Eigen::VectorXd weights = FiniteDifference::Weights(para->Get<std::size_t>("OrderFD", orderFD_DEFAULT));
 
   Eigen::VectorXd b = beta;
   for( std::size_t i=0; i<indim; ++i ) {
-    Eigen::MatrixXd secondDeriv = Eigen::MatrixXd::Zero(outdim, indim);
-    for( std::size_t j=0; j<weights.size(); ++j ) {
-      b(i) += delta;
-      secondDeriv += weights(j)*Jacobian(b);
-    }
-    b(i) -= weights.size()*delta;
-    for( std::size_t j=0; j<weights.size(); ++j ) {
-      b(i) -= delta;
-      secondDeriv -= weights(j)*Jacobian(b);
-    }
-    b(i) += weights.size()*delta;
-    secondDeriv /= delta;
+    const Eigen::MatrixXd secondDeriv = FiniteDifference::Derivative<Eigen::MatrixXd>(i, delta, weights, b, [this](Eigen::VectorXd const& beta) { return this->Jacobian(beta); });
     
     for( std::size_t j=0; j<outdim; ++j ) { hess.row(i) += sumWeights(j)*secondDeriv.row(j); }
   }
@@ -71,7 +61,7 @@ void SparsePenaltyFunction::JacobianEntries(Eigen::VectorXd const& beta, std::ve
 
 void SparsePenaltyFunction::JacobianEntriesFD(Eigen::VectorXd const& beta, std::vector<Eigen::Triplet<double> >& entries) {
   const double delta = para->Get<double>("DeltaFD", deltaFD_DEFAULT);
-  const Eigen::VectorXd weights = FiniteDifferenceWeights(para->Get<std::size_t>("OrderFD", orderFD_DEFAULT));
+  const Eigen::VectorXd weights = FiniteDifference::Weights(para->Get<std::size_t>("OrderFD", orderFD_DEFAULT));
   
   entries.clear();
   Eigen::VectorXd b = beta;
@@ -81,7 +71,7 @@ void SparsePenaltyFunction::JacobianEntriesFD(Eigen::VectorXd const& beta, std::
     const Eigen::VectorXd vec = FirstDerivativeFD(i, delta, weights, b);
         
     for( std::size_t j=0; j<outdim; ++j ) {
-      if( std::abs(vec(j))>sparseTol ) { entries.emplace_back(j, i, vec(j)/delta); }
+      if( std::abs(vec(j))>sparseTol ) { entries.emplace_back(j, i, vec(j)); }
     }
   }
 }
@@ -91,7 +81,7 @@ void SparsePenaltyFunction::HessianEntries(Eigen::VectorXd const& beta, Eigen::V
 void SparsePenaltyFunction::HessianEntriesFD(Eigen::VectorXd const& beta, Eigen::VectorXd const& sumWeights, std::vector<Eigen::Triplet<double> >& entries) {
   assert(sumWeights.size()==outdim);
   const double delta = para->Get<double>("DeltaFD", deltaFD_DEFAULT);
-  const Eigen::VectorXd weights = FiniteDifferenceWeights(para->Get<std::size_t>("OrderFD", orderFD_DEFAULT));
+  const Eigen::VectorXd weights = FiniteDifference::Weights(para->Get<std::size_t>("OrderFD", orderFD_DEFAULT));
 
   Eigen::VectorXd b = beta;
   const double sparseTol = para->Get<double>("SparsityTolerance", sparsityTolerance_DEFAULT);

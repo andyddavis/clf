@@ -64,6 +64,8 @@ set(CLF_SOURCE
 
     src/Parameters.cpp
 
+    src/FiniteDifference.cpp
+
     src/PenaltyFunction.cpp
     src/CostFunction.cpp
 
@@ -80,6 +82,7 @@ set(CLF_SOURCE
     src/LocalFunction.cpp
 
     src/SystemOfEquations.cpp
+    src/IdentityModel.cpp
     src/LinearSystem.cpp
 
     src/LevenbergMarquardt.cpp
@@ -195,7 +198,7 @@ if( NOT CLF_BUILD_FROM_PIP )
 
 	tests/LocalFunctionTests.cpp
 
-	tests/SystemOfEquationsTests.cpp
+	tests/IdentityModelTests.cpp
 	tests/LinearSystemTests.cpp
 
 	tests/PenaltyFunctionTests.cpp

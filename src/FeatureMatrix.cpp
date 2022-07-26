@@ -74,3 +74,18 @@ Eigen::VectorXd FeatureMatrix::ApplyTranspose(Eigen::VectorXd const& x, Eigen::V
 
   return output;
 }
+
+std::shared_ptr<const FeatureVector> FeatureMatrix::GetFeatureVector(std::size_t const ind) const {
+  assert(ind<numFeatureVectors);
+
+  std::size_t jnd = 0;
+  for( auto const& it : featureVectors ) {
+    jnd += it.second;
+    if( ind<jnd ) { return it.first; }
+  }
+  return nullptr;
+}
+
+std::vector<FeatureMatrix::VectorPair>::const_iterator FeatureMatrix::Begin() const { return featureVectors.begin(); }
+
+std::vector<FeatureMatrix::VectorPair>::const_iterator FeatureMatrix::End() const { return featureVectors.end(); }

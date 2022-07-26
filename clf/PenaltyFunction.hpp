@@ -3,12 +3,11 @@
 
 #include <memory>
 
-#include <Eigen/Core>
 #include <Eigen/Sparse>
 
-#include "clf/CLFExceptions.hpp"
-
 #include "clf/Parameters.hpp"
+
+#include "clf/FiniteDifference.hpp"
 
 namespace clf {
 
@@ -79,33 +78,6 @@ public:
   const std::size_t outdim;
 
 protected:
-
-  /// Get the weights used for the finite difference approximation
-  /**
-     @param[in] order The accuracy order for the finite difference approximation
-     \return The weights using centered difference
-   */
-  inline Eigen::VectorXd FiniteDifferenceWeights(std::size_t const order) const {
-    Eigen::VectorXd weights;
-    switch( order ) { 
-    case 2: 
-      weights.resize(1);
-      weights << 0.5;
-      return weights;
-    case 4: 
-      weights.resize(2);
-      weights << 2.0/3.0, -1.0/12.0;
-      return weights;
-    case 6: 
-      weights.resize(3);
-      weights << 0.75, -3.0/20.0, 1.0/60;
-      return weights;
-    default: // default to 8th order
-      weights.resize(4);
-      weights << 0.8, -0.2, 4.0/105.0, -1.0/280.0;
-      return weights;
-    }
-  }
   
   /// Compute the first derivative of \f$i^{\text{th}}\f$ component with respect to each input \f$\nabla_{\beta} c_i\f$ using finite difference
   /**
@@ -114,22 +86,7 @@ protected:
      @param[in] weights The weights for the finite difference 
      @param[in,out] beta The input parameters, pass by reference to avoid having to copy to modify with the step size. Should not actually be changed at the end.
    */
-  inline Eigen::VectorXd FirstDerivativeFD(std::size_t const component, double const delta, Eigen::VectorXd const& weights, Eigen::VectorXd& beta) {
-    Eigen::VectorXd vec = Eigen::VectorXd::Zero(outdim);
-    
-    for( std::size_t j=0; j<weights.size(); ++j ) {
-      beta(component) += delta;
-      vec += weights(j)*Evaluate(beta);
-    }
-    beta(component) -= weights.size()*delta;
-    for( std::size_t j=0; j<weights.size(); ++j ) {
-      beta(component) -= delta;
-      vec -= weights(j)*Evaluate(beta);
-    }
-    beta(component) += weights.size()*delta;
-
-    return vec;
-  }
+  inline Eigen::VectorXd FirstDerivativeFD(std::size_t const component, double const delta, Eigen::VectorXd const& weights, Eigen::VectorXd& beta) { return FiniteDifference::Derivative<Eigen::VectorXd>(component, delta, weights, beta, [this](Eigen::VectorXd const& beta) { return this->Evaluate(beta); }); }
 
   /// The parameters for this penalty function 
   /**

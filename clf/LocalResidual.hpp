@@ -1,6 +1,10 @@
 #ifndef LOCALRESIDUAL_HPP_
 #define LOCALRESIDUAL_HPP_
 
+#include "clf/PointCloud.hpp"
+
+#include "clf/SystemOfEquations.hpp"
+
 #include "clf/PenaltyFunction.hpp"
 
 namespace clf {
@@ -17,10 +21,11 @@ class LocalResidual : public DensePenaltyFunction {
 public:
 
   /**
+     @param[in] system The system of equations that we want to locally satisfy
      @param[in] point The center point for the ball \f$\mathcal{B}_{\delta}(x)\f$
      @param[in] para Parameters for the residual computation
    */
-  LocalResidual(Eigen::VectorXd const& point, std::shared_ptr<const Parameters> const& para = std::make_shared<Parameters>());
+LocalResidual(std::shared_ptr<LocalFunction> const& func, std::shared_ptr<SystemOfEquations> const& system, Point const& point, std::shared_ptr<const Parameters> const& para = std::make_shared<Parameters>());
 
   virtual ~LocalResidual() = default;
 
@@ -29,13 +34,27 @@ public:
      @param[in] beta The coefficients for the local function
      \return The residual evaluated at each local point
    */
-  virtual Eigen::VectorXd Evaluate(Eigen::VectorXd const& beta) override;
+  virtual Eigen::VectorXd Evaluate(Eigen::VectorXd const& beta) final override;
+
+  /// Evaluate the Jacobian
+  /**
+     @param[in] beta The coefficients for the local function
+     \return The the Jacobian evaluated at each local point
+   */
+  virtual Eigen::MatrixXd Jacobian(Eigen::VectorXd const& beta) final override;
 
   /// The number of local points \f$m\f$ 
   /**
      \return The number of local points \f$m\f$ 
    */
   std::size_t NumLocalPoints() const; 
+
+  /// Get the \$i^{\text{th}}\f$ local point 
+  /**
+     @param[in] ind The index of the point we want 
+     \return The \$i^{\text{th}}\f$ local point 
+   */
+  Point GetPoint(std::size_t const ind) const;
 
 private:
 
@@ -46,10 +65,16 @@ private:
      @param[in] delta The radius of the local ball \f$\delta\f$
      \return The points \f$\{ x_i \in \mathcal{B}_{\delta}(x) \}_{i=1}^{m}\f$
    */
-  static std::vector<Eigen::VectorXd> GeneratePoints(Eigen::VectorXd const& point, std::size_t const num, double const delta);
+  static PointCloud GeneratePoints(Point const& point, std::size_t const num, double const delta);
 
   /// The points \f$\{ x_i \in \mathcal{B}_{\delta}(x) \}_{i=1}^{m}\f$
-  const std::vector<Eigen::VectorXd> points;
+  const PointCloud points;
+
+  /// The local function \f$u\f$
+  std::shared_ptr<LocalFunction> function;
+
+  /// The system of equations we want to locally satisfy
+  std::shared_ptr<const SystemOfEquations> system;
 };
 
 } // namespace clf

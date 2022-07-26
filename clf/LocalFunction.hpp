@@ -1,6 +1,8 @@
 #ifndef LOCALFUNCTION_HPP_
 #define LOCALFUNCTION_HPP_
 
+#include "clf/Point.hpp"
+
 #include "clf/FeatureMatrix.hpp"
 
 namespace clf {
@@ -26,6 +28,13 @@ public:
      @param[in] featureMatrix The feature matrix that defines this local function
    */
   LocalFunction(std::shared_ptr<const FeatureMatrix> const& featureMatrix);
+
+  /**
+     @param[in] set The set multi-indices that determines the order of each basis function 
+     @param[in] basis The basis functions 
+     @param[in] The output dimension of this local function
+   */
+  LocalFunction(std::shared_ptr<MultiIndexSet> const& set, std::shared_ptr<BasisFunctions> const& basis, std::size_t const outdim);
 
   virtual ~LocalFunction() = default;
 
@@ -55,10 +64,18 @@ public:
    */
   Eigen::VectorXd Evaluate(Eigen::VectorXd const& x, Eigen::VectorXd const& coeff) const;
 
-private:
+  /// Evaluate the location function \f$u(x; c)\f$ at a point \f$x \in \mathcal{B}\f$ given coefficients \f$c \in \mathbb{R}^{\bar{q}}\f$
+  /**
+     @param[in] x The location where we want to evaluate the location function 
+     @param[in] coeff The coefficients \f$c \in \mathbb{R}^{\bar{q}}\f$ that define this location function 
+     \return The local function evaluation \f$u(x)\f$
+   */
+  Eigen::VectorXd Evaluate(Point const& x, Eigen::VectorXd const& coeff) const;
 
   /// The feature matrix \f$\Phi(x)\f$ that defines this local function
   std::shared_ptr<const FeatureMatrix> featureMatrix;
+
+private:
 };
 
 } // namespace clf

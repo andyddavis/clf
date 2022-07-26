@@ -21,6 +21,9 @@ TEST(FeatureMatrixTests, SingleFeatureVectorTest) {
   EXPECT_EQ(mat.numFeatureVectors, outdim);
 
   const Eigen::VectorXd x = Eigen::VectorXd::Random(indim);
+
+  for( std::size_t i=0; i<outdim; ++i ) { EXPECT_NEAR((mat.GetFeatureVector(i)->Evaluate(x)-vec->Evaluate(x)).norm(), 0.0, 1.0e-14); }
+
   const Eigen::VectorXd coeff = Eigen::VectorXd::Random(mat.numBasisFunctions);
   const Eigen::VectorXd output = mat.ApplyTranspose(x, coeff);
   EXPECT_EQ(output.size(), outdim);
@@ -50,6 +53,10 @@ TEST(FeatureMatrixTests, MultiFeatureVectorTest) {
   EXPECT_EQ(mat.numFeatureVectors, outdim);
 
   const Eigen::VectorXd x = Eigen::VectorXd::Random(indim);
+
+  EXPECT_NEAR((mat.GetFeatureVector(0)->Evaluate(x)-vec1->Evaluate(x)).norm(), 0.0, 1.0e-14);
+  EXPECT_NEAR((mat.GetFeatureVector(1)->Evaluate(x)-vec2->Evaluate(x)).norm(), 0.0, 1.0e-14);
+
   const Eigen::VectorXd coeff = Eigen::VectorXd::Random(mat.numBasisFunctions);
   const Eigen::VectorXd output = mat.ApplyTranspose(x, coeff);
   EXPECT_EQ(output.size(), outdim);
@@ -79,6 +86,10 @@ TEST(FeatureMatrixTests, RepeatedFeatureVectorsTest) {
   EXPECT_EQ(mat.numFeatureVectors, outdim);
 
   const Eigen::VectorXd x = Eigen::VectorXd::Random(indim);
+
+  EXPECT_NEAR((mat.GetFeatureVector(0)->Evaluate(x)-vec1.first->Evaluate(x)).norm(), 0.0, 1.0e-14);
+  for( std::size_t i=1; i<outdim; ++i ) { EXPECT_NEAR((mat.GetFeatureVector(i)->Evaluate(x)-vec2.first->Evaluate(x)).norm(), 0.0, 1.0e-14); }
+
   const Eigen::VectorXd coeff = Eigen::VectorXd::Random(mat.numBasisFunctions);
   const Eigen::VectorXd output = mat.ApplyTranspose(x, coeff);
   EXPECT_EQ(output.size(), outdim);
