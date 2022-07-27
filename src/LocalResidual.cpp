@@ -59,3 +59,15 @@ Eigen::MatrixXd LocalResidual::Jacobian(Eigen::VectorXd const& beta) {
 
   return jac;
 }
+
+Eigen::MatrixXd LocalResidual::Hessian(Eigen::VectorXd const& beta, Eigen::VectorXd const& weights) {
+  Eigen::MatrixXd hess = Eigen::MatrixXd::Zero(indim, indim);
+
+  std::size_t start = 0;
+  for( std::size_t i=0; i<NumLocalPoints(); ++i ) {
+    hess += system->HessianWRTCoefficients(function, points.Get(i).x, beta, weights.segment(start, system->outdim));
+    start += system->outdim;
+  }
+
+  return hess;
+}

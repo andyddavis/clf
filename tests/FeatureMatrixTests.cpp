@@ -12,8 +12,11 @@ TEST(FeatureMatrixTests, SingleFeatureVectorTest) {
   std::shared_ptr<MultiIndexSet> set = MultiIndexSet::CreateTotalOrder(indim, maxOrder);
   
   auto basis = std::make_shared<LegendrePolynomials>();
+
+  const double delta = 0.1;
+  const Eigen::VectorXd xbar = Eigen::VectorXd::Random(indim);
   
-  auto vec = std::make_shared<FeatureVector>(set, basis);
+  auto vec = std::make_shared<FeatureVector>(set, basis, delta, xbar);
 
   FeatureMatrix mat(vec, outdim);
   EXPECT_EQ(mat.numBasisFunctions, outdim*set->NumIndices());
@@ -43,9 +46,12 @@ TEST(FeatureMatrixTests, MultiFeatureVectorTest) {
   std::shared_ptr<MultiIndexSet> set2 = MultiIndexSet::CreateTotalOrder(indim, maxOrder2);
   
   auto basis = std::make_shared<LegendrePolynomials>();
+
+  const double delta = 0.1;
+  const Eigen::VectorXd xbar = Eigen::VectorXd::Random(indim);
   
-  auto vec1 = std::make_shared<FeatureVector>(set1, basis);
-  auto vec2 = std::make_shared<FeatureVector>(set2, basis);
+  auto vec1 = std::make_shared<FeatureVector>(set1, basis, delta, xbar);
+  auto vec2 = std::make_shared<FeatureVector>(set2, basis, delta, xbar);
 
   FeatureMatrix mat({vec1, vec2});
   EXPECT_EQ(mat.numBasisFunctions, set1->NumIndices() + set2->NumIndices());
@@ -76,9 +82,12 @@ TEST(FeatureMatrixTests, RepeatedFeatureVectorsTest) {
   std::shared_ptr<MultiIndexSet> set2 = MultiIndexSet::CreateTotalOrder(indim, maxOrder2);
   
   auto basis = std::make_shared<LegendrePolynomials>();
+
+  const double delta = 0.1;
+  const Eigen::VectorXd xbar = Eigen::VectorXd::Random(indim);
   
-  const FeatureMatrix::VectorPair vec1 = FeatureMatrix::VectorPair(std::make_shared<FeatureVector>(set1, basis), 1);
-  const FeatureMatrix::VectorPair vec2 = FeatureMatrix::VectorPair(std::make_shared<FeatureVector>(set2, basis), outdim-1);
+  const FeatureMatrix::VectorPair vec1 = FeatureMatrix::VectorPair(std::make_shared<FeatureVector>(set1, basis, delta, xbar), 1);
+  const FeatureMatrix::VectorPair vec2 = FeatureMatrix::VectorPair(std::make_shared<FeatureVector>(set2, basis, delta, xbar), outdim-1);
 
   FeatureMatrix mat({vec1, vec2});
   EXPECT_EQ(mat.numBasisFunctions, set1->NumIndices() + (outdim-1)*set2->NumIndices());

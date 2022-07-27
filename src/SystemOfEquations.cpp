@@ -25,3 +25,23 @@ Eigen::MatrixXd SystemOfEquations::JacobianWRTCoefficientsFD(std::shared_ptr<Loc
 
   return jac;
 }
+
+Eigen::MatrixXd SystemOfEquations::HessianWRTCoefficients(std::shared_ptr<LocalFunction> const& u, Eigen::VectorXd const& x, Eigen::VectorXd const& coeff, Eigen::VectorXd const& weights) const { return HessianWRTCoefficientsFD(u, x, coeff, weights); }
+
+Eigen::MatrixXd SystemOfEquations::HessianWRTCoefficientsFD(std::shared_ptr<LocalFunction> const& u, Eigen::VectorXd const& x, Eigen::VectorXd const& coeff, Eigen::VectorXd const& sumWeights) const {
+  assert(sumWeights.size()==outdim);
+
+  Eigen::MatrixXd hess = Eigen::MatrixXd::Zero(coeff.size(), coeff.size());
+
+  const double delta = para->Get<double>("DeltaFD", deltaFD_DEFAULT);
+  const Eigen::VectorXd weights = FiniteDifference::Weights(para->Get<std::size_t>("OrderFD", orderFD_DEFAULT));
+
+  Eigen::VectorXd c = coeff;
+  for( std::size_t i=0; i<u->NumCoefficients(); ++i ) {
+    const Eigen::MatrixXd secondDeriv = FiniteDifference::Derivative<Eigen::MatrixXd>(i, delta, weights, c, [this, &u, &x](Eigen::VectorXd const& c) { return this->JacobianWRTCoefficients(u, x, c); });
+
+    for( std::size_t j=0; j<outdim; ++j ) { hess.row(i) += sumWeights(j)*secondDeriv.row(j); }
+  }
+
+  return hess;
+}

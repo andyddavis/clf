@@ -1,5 +1,5 @@
-#ifndef LINEARSYSTEM_HPP_
-#define LINEARSYSTEM_HPP_
+#ifndef LINEARMODEL_HPP_
+#define LINEARMODEL_HPP_
 
 #include <optional>
 
@@ -9,9 +9,9 @@ namespace clf {
 
 /// A system of equations with the form \f$A(x) u(x) - f(x) = 0\f$, where \f$u(x) = \Phi(x)^{\top} c\f$ and \f$A \in \mathbb{R}^{m \times \hat{m}}\f$.
 /**
-   Let \f$u: \Omega \mapsto \mathbb{R}^{\hat{m}}\f$, where \f$\Omega \subseteq \mathbb{R}^{d}\f$. The system of equations is composed of two parts. 
+   This model defaults to \f$A(x)\f$ being the identity, but if that is the desired model then clf::IdentityModel might be a slightly more efficient choice.
 */
-class LinearSystem : public SystemOfEquations {
+class LinearModel : public SystemOfEquations {
 public:
 
   /**
@@ -19,22 +19,22 @@ public:
      @param[in] indim The input dimension \f$d\f$
      @param[in] outdim The output dimension \f$m\f$
    */
-  LinearSystem(std::size_t const indim, std::size_t const outdim);
+  LinearModel(std::size_t const indim, std::size_t const outdim);
 
   /**
      @param[in] indim The input dimension \f$d\f$
      @param[in] outdim The output dimension \f$m\f$
      @param[in] matdim The number of columns \f$\hat{m}\f$ in \f$A(x)\f$
    */
-  LinearSystem(std::size_t const indim, std::size_t const outdim, std::size_t const matdim);
+  LinearModel(std::size_t const indim, std::size_t const outdim, std::size_t const matdim);
 
   /**
      @param[in] indim The input dimension \f$d\f$
      @param[in] A The matrix \f$A \in \mathbb{R}^{m \times \hat{m}}\f$
    */
-  LinearSystem(std::size_t const indim, Eigen::MatrixXd const A);
+  LinearModel(std::size_t const indim, Eigen::MatrixXd const A);
 
-  virtual ~LinearSystem() = default;
+  virtual ~LinearModel() = default;
 
   /// Evaluate the matrix \f$A(x) \in \mathbb{R}^{m \times \hat{m}}\f$.
   /**
@@ -53,6 +53,25 @@ public:
      \return The operator evaluation  \f$\mathcal{L}(u(x), x)\f$
    */
   virtual Eigen::VectorXd Operator(std::shared_ptr<LocalFunction> const& u, Eigen::VectorXd const& x, Eigen::VectorXd const& coeff) const final override; 
+
+  /// Evaluate the Jacobian of the operator with respect to the cofficients \f$c\f$, \f$\nabla_{c} \mathcal{L}(u(x; c), x)\f$ given the function \f$u\f$ and at the location \f$x\f$.
+  /**
+     @param[in] u The function \f$u\f$
+     @param[in] x The location \f$x\f$
+     @param[in] coeff The coefficients \f$c\f$ that define the location function 
+     \return The operator evaluation  \f$\mathcal{L}(u(x), x)\f$
+   */
+  virtual Eigen::MatrixXd JacobianWRTCoefficients(std::shared_ptr<LocalFunction> const& u, Eigen::VectorXd const& x, Eigen::VectorXd const& coeff) const final override;
+
+  /// Compute the weighted sum of the Hessian of each output of the operator with respect to the cofficients \f$c\f$, \f$\sum_{i=1}^{m} w_i \nabla_{c}^2 \mathcal{L}_i(u(x; c), x)\f$ given the function \f$u\f$ and at the location \f$x\f$.
+  /**
+     @param[in] u The function \f$u\f$
+     @param[in] x The location \f$x\f$
+     @param[in] coeff The coefficients \f$c\f$ that define the location function 
+     @param[in] wieghts The weights for the sum
+     \return The operator Hessian \f$\sum_{i=1}^{m} w_i \nabla_{c}^2 \mathcal{L}_i(u(x; c), x)\f$
+   */
+  virtual Eigen::MatrixXd HessianWRTCoefficients(std::shared_ptr<LocalFunction> const& u, Eigen::VectorXd const& x, Eigen::VectorXd const& coeff, Eigen::VectorXd const& weights) const final override;
 
 private:
 

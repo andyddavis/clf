@@ -10,9 +10,12 @@ TEST(LocalFunctionTests, Construction) {
   const std::size_t outdim = 3;
   const std::size_t maxOrder = 4;
   std::shared_ptr<MultiIndexSet> set = MultiIndexSet::CreateTotalOrder(indim, maxOrder);
+
+  const double delta = 0.1;
+  const Eigen::VectorXd xbar = Eigen::VectorXd::Random(indim);
   
   auto basis = std::make_shared<LegendrePolynomials>();
-  auto vec = std::make_shared<FeatureVector>(set, basis);
+  auto vec = std::make_shared<FeatureVector>(set, basis, delta, xbar);
   auto mat = std::make_shared<FeatureMatrix>(vec, outdim);
 
   LocalFunction func(mat);

@@ -21,9 +21,12 @@ TEST(IdentityModel, BasicTest) {
 
   const std::size_t maxOrder = 4;
   std::shared_ptr<MultiIndexSet> set = MultiIndexSet::CreateTotalOrder(indim, maxOrder);
+
+  const double delta = 0.5;
+  const Eigen::VectorXd xbar = Eigen::VectorXd::Random(indim);
   
   auto basis = std::make_shared<LegendrePolynomials>();
-  auto vec = std::make_shared<FeatureVector>(set, basis);
+  auto vec = std::make_shared<FeatureVector>(set, basis, delta, xbar);
   auto mat = std::make_shared<FeatureMatrix>(vec, outdim);
   auto func = std::make_shared<LocalFunction>(mat);
 
@@ -43,16 +46,26 @@ TEST(IdentityModel, BasicTest) {
   std::size_t start = 0;
   for( std::size_t i=0; i<outdim; ++i ) {
     EXPECT_NEAR(jac.row(i).segment(0, start).norm(), 0.0, 1.0e-12);
-    EXPECT_NEAR(jacFD.row(i).segment(0, start).norm(), 0.0, 1.0e-12);
+    EXPECT_NEAR(jacFD.row(i).segment(0, start).norm(), 0.0, 1.0e-10);
 
     const Eigen::VectorXd phi = vec->Evaluate(x);
     EXPECT_NEAR((jac.row(i).segment(start, phi.size()).transpose()-phi).norm(), 0.0, 1.0e-12);
-    EXPECT_NEAR((jacFD.row(i).segment(start, phi.size()).transpose()-phi).norm(), 0.0, 1.0e-12);
+    EXPECT_NEAR((jacFD.row(i).segment(start, phi.size()).transpose()-phi).norm(), 0.0, 1.0e-10);
     start += phi.size();
 
     EXPECT_NEAR(jac.row(i).segment(start, func->NumCoefficients()-start).norm(), 0.0, 1.0e-12);
-    EXPECT_NEAR(jacFD.row(i).segment(start, func->NumCoefficients()-start).norm(), 0.0, 1.0e-12);
+    EXPECT_NEAR(jacFD.row(i).segment(start, func->NumCoefficients()-start).norm(), 0.0, 1.0e-10);
   }
 
-  EXPECT_NEAR((jac-jacFD).norm(), 0.0, 1.0e-12);
+  EXPECT_NEAR((jac-jacFD).norm(), 0.0, 1.0e-10);
+
+  const Eigen::VectorXd weights = Eigen::VectorXd::Random(outdim);
+  const Eigen::MatrixXd hess = system.HessianWRTCoefficients(func, x, coeff, weights);
+  EXPECT_EQ(hess.rows(), func->NumCoefficients());
+  EXPECT_EQ(hess.cols(), func->NumCoefficients());
+  EXPECT_NEAR(hess.norm(), 0.0, 1.0e-14);
+  const Eigen::MatrixXd hessFD = system.HessianWRTCoefficientsFD(func, x, coeff, weights);
+  EXPECT_EQ(hessFD.rows(), func->NumCoefficients());
+  EXPECT_EQ(hessFD.cols(), func->NumCoefficients());
+  EXPECT_NEAR(hessFD.norm(), 0.0, 1.0e-10);
 }

@@ -46,13 +46,13 @@ public:
    */
   virtual Eigen::VectorXd Operator(std::shared_ptr<LocalFunction> const& u, Eigen::VectorXd const& x, Eigen::VectorXd const& coeff) const = 0;
 
-  /// Evaluate the Jacobian of the operator with respect to the cofficients \f$c\f$, \f$\nabla_{c} \mathcal{L}(u(x; c), x)\f$ given the function \f$u\f$ and at the location \f$x\f$.
+  /// Compute the Jacobian of the operator with respect to the cofficients \f$c\f$, \f$\nabla_{c} \mathcal{L}(u(x; c), x)\f$ given the function \f$u\f$ and at the location \f$x\f$.
   /**
      Defaults to approximating the Jacobian with finite difference (see SystemOfEquations::JacobianWRTCoefficientsFD)
      @param[in] u The function \f$u\f$
      @param[in] x The location \f$x\f$
      @param[in] coeff The coefficients \f$c\f$ that define the location function 
-     \return The operator evaluation  \f$\mathcal{L}(u(x), x)\f$
+     \return The operator Jacobian \f$\nabla_{c} \mathcal{L}(u(x; c), x)\f$
    */
   virtual Eigen::MatrixXd JacobianWRTCoefficients(std::shared_ptr<LocalFunction> const& u, Eigen::VectorXd const& x, Eigen::VectorXd const& coeff) const;
 
@@ -64,6 +64,27 @@ public:
      \return The operator evaluation  \f$\mathcal{L}(u(x), x)\f$
    */
   Eigen::MatrixXd JacobianWRTCoefficientsFD(std::shared_ptr<LocalFunction> const& u, Eigen::VectorXd const& x, Eigen::VectorXd const& coeff) const;
+
+  /// Compute the weighted sum of the Hessian of each output of the operator with respect to the cofficients \f$c\f$, \f$\sum_{i=1}^{m} w_i \nabla_{c}^2 \mathcal{L}_i(u(x; c), x)\f$ given the function \f$u\f$ and at the location \f$x\f$.
+  /**
+     Defaults to approximating the Hessian with finite difference (see SystemOfEquations::HessianWRTCoefficientsFD)
+     @param[in] u The function \f$u\f$
+     @param[in] x The location \f$x\f$
+     @param[in] coeff The coefficients \f$c\f$ that define the location function 
+     @param[in] wieghts The weights for the sum
+     \return The operator Hessian \f$\sum_{i=1}^{m} w_i \nabla_{c}^2 \mathcal{L}_i(u(x; c), x)\f$
+   */
+  virtual Eigen::MatrixXd HessianWRTCoefficients(std::shared_ptr<LocalFunction> const& u, Eigen::VectorXd const& x, Eigen::VectorXd const& coeff, Eigen::VectorXd const& weights) const;
+
+  /// Compute the weighted sum of the Hessian using finite difference of each output of the operator with respect to the cofficients \f$c\f$, \f$\sum_{i=1}^{m} w_i \nabla_{c}^2 \mathcal{L}_i(u(x; c), x)\f$ given the function \f$u\f$ and at the location \f$x\f$.
+  /**
+     @param[in] u The function \f$u\f$
+     @param[in] x The location \f$x\f$
+     @param[in] coeff The coefficients \f$c\f$ that define the location function 
+     @param[in] wieghts The weights for the sum
+     \return The operator Hessian \f$\sum_{i=1}^{m} w_i \nabla_{c}^2 \mathcal{L}_i(u(x; c), x)\f$
+   */
+  Eigen::MatrixXd HessianWRTCoefficientsFD(std::shared_ptr<LocalFunction> const& u, Eigen::VectorXd const& x, Eigen::VectorXd const& coef, Eigen::VectorXd const& weightsf) const;
 
   /// The input dimension \f$d\f$
   const std::size_t indim;

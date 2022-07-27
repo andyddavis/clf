@@ -15,23 +15,19 @@ Eigen::VectorXd IdentityModel::Operator(std::shared_ptr<LocalFunction> const& u,
 }
 
 Eigen::MatrixXd IdentityModel::JacobianWRTCoefficients(std::shared_ptr<LocalFunction> const& u, Eigen::VectorXd const& x, Eigen::VectorXd const& coeff) const {
+  Eigen::MatrixXd jac = Eigen::MatrixXd::Zero(outdim, coeff.size());
+
   std::size_t start = 0;
   std::size_t row = 0;
-  Eigen::MatrixXd jac = Eigen::MatrixXd::Zero(outdim, coeff.size());
   for( auto it=u->featureMatrix->Begin(); it!=u->featureMatrix->End(); ++it ) {
     const Eigen::VectorXd phi = it->first->Evaluate(x);
     for( std::size_t i=0; i<it->second; ++i ) {
-      jac.row(row).segment(start, phi.size()) = phi;
-      ++row; 
+      jac.row(row++).segment(start, phi.size()) = phi;
       start += phi.size();
     }
   }
-  /*for( std::size_t i=0; i<outdim; ++i ) {
-    auto vec = u->featureMatrix->GetFeatureVector(i);
-    const std::size_t num = vec->NumBasisFunctions();
-    jac.row(i).segment(start, num) = vec->Evaluate(x).transpose();
-    start += num;
-    }*/
 
   return jac;
 }
+
+Eigen::MatrixXd IdentityModel::HessianWRTCoefficients(std::shared_ptr<LocalFunction> const& u, Eigen::VectorXd const& x, Eigen::VectorXd const& coeff, Eigen::VectorXd const& weights) const { return Eigen::MatrixXd::Zero(coeff.size(), coeff.size()); }

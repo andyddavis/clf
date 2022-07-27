@@ -39,9 +39,17 @@ LocalResidual(std::shared_ptr<LocalFunction> const& func, std::shared_ptr<System
   /// Evaluate the Jacobian
   /**
      @param[in] beta The coefficients for the local function
-     \return The the Jacobian evaluated at each local point
+     \return The Jacobian evaluated at each local point
    */
   virtual Eigen::MatrixXd Jacobian(Eigen::VectorXd const& beta) final override;
+
+  /// Evaluate the weighted sum of the Hessians
+  /**
+     @param[in] beta The coefficients for the local function
+     @param[in] weights The weights for the weighted sum
+     \return The weighted sum of the Hessian evaluated at each local point
+   */
+  virtual Eigen::MatrixXd Hessian(Eigen::VectorXd const& beta, Eigen::VectorXd const& weights) final override;
 
   /// The number of local points \f$m\f$ 
   /**

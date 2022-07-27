@@ -12,16 +12,20 @@ TEST(FeatureVectorTests, EvaluateTest) {
 
   auto basis = std::make_shared<LegendrePolynomials>();
 
-  FeatureVector vec(set, basis);
+  const double delta = 0.5;
+  const Eigen::VectorXd xbar = Eigen::VectorXd::Random(dim);
+
+  FeatureVector vec(set, basis, delta, xbar);
   EXPECT_EQ(vec.InputDimension(), set->Dimension());
   EXPECT_EQ(vec.NumBasisFunctions(), set->NumIndices());
 
   const Eigen::VectorXd x = Eigen::VectorXd::Random(dim);
+  const Eigen::VectorXd y = vec.Transformation(x);
   const Eigen::VectorXd eval = vec.Evaluate(x);
 
   Eigen::VectorXd expected = Eigen::VectorXd::Ones(set->NumIndices());
   for( std::size_t i=0; i<set->NumIndices(); ++i ) {
-    for( std::size_t d=0; d<dim; ++d ) { expected(i) *= basis->Evaluate(set->indices[i]->alpha[d], x(d)); }
+    for( std::size_t d=0; d<dim; ++d ) { expected(i) *= basis->Evaluate(set->indices[i]->alpha[d], y(d)); }
   }
 
   EXPECT_EQ(eval.size(), expected.size());

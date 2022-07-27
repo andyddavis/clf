@@ -83,7 +83,7 @@ set(CLF_SOURCE
 
     src/SystemOfEquations.cpp
     src/IdentityModel.cpp
-    src/LinearSystem.cpp
+    src/LinearModel.cpp
 
     src/LevenbergMarquardt.cpp
 
@@ -199,7 +199,7 @@ if( NOT CLF_BUILD_FROM_PIP )
 	tests/LocalFunctionTests.cpp
 
 	tests/IdentityModelTests.cpp
-	tests/LinearSystemTests.cpp
+	tests/LinearModelTests.cpp
 
 	tests/PenaltyFunctionTests.cpp
 	tests/CostFunctionTests.cpp
