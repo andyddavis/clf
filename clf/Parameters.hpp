@@ -41,7 +41,10 @@ public:
     auto it = map.find(name);
     if( it==map.end() ) { std::cerr << std::endl << "ERROR: Parameter '" << name << "' not found in clf::Parameters object." << std::endl << std::endl; }
     assert(it!=map.end());
-    return std::any_cast<TYPE>(it->second);
+    if( it->second.type()==typeid(TYPE) ) { return std::any_cast<TYPE>(it->second); }
+    
+    assert(false);
+    return TYPE();
   }
 
   /// Get a parameter with a default value 
@@ -55,7 +58,11 @@ public:
     auto it = map.find(name);
     if( it==map.end() ) { return value; }
     assert(it!=map.end());
-    return std::any_cast<TYPE>(it->second);
+    //it->second.get();
+    if( it->second.type()==typeid(TYPE) ) { return std::any_cast<TYPE>(it->second); }
+    
+    assert(false);
+    return TYPE();
   }
 
 private:

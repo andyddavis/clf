@@ -17,8 +17,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-w -g -pthread -fopenmp -O3 -ldl -fPIC")
 
 # check if this is a python build or not
-if( NOT CLF_BUILD_FROM_PIP )
-    set(CLF_BUILD_FROM_PIP 0)
+if( NOT CLF_USE_PYTHON )
+    set(CLF_USE_PYTHON 1)
 
     # if not a python build, check to see where to be third party installs---if not set by the user, put it into the install directory
     if( NOT CLF_EXTERNAL_INSTALL_DIR )
@@ -50,9 +50,9 @@ message(STATUS "")
 
 include_directories(${CLF_EXTERNAL_INCLUDE_DIRS} .)
 
-#if( CLF_BUILD_FROM_PIP )
-#    add_subdirectory(${CMAKE_SOURCE_DIR}/external/pybind11)
-#endif()
+if( CLF_USE_PYTHON )
+    add_subdirectory(${CMAKE_SOURCE_DIR}/external/pybind11)
+endif()
 
 ###############################################
 # The source code
@@ -92,71 +92,14 @@ set(CLF_SOURCE
     src/Point.cpp	
 
     src/PointCloud.cpp
-
-    #src/CLFException.cpp
-
-    #src/UtilityFunctions.cpp
-
-    #src/BasisFunctionsExceptions.cpp
-    #src/BasisFunctions.cpp
-    #src/SinCosBasis.cpp
-    #src/PolynomialBasis.cpp
-    #src/SupportPointBasis.cpp
-
-    #src/ModelExceptions.cpp
-    #src/Model.cpp
-    #src/LinearModel.cpp
-    #src/LaplaceOperator.cpp
-
-    #src/DOFIndices.cpp
-
-    #src/DenseCostFunction.cpp
-    #src/SparseCostFunction.cpp
-    #src/DenseQuadraticCostFunction.cpp
-    #src/SparseQuadraticCostFunction.cpp
-    #src/UncoupledCost.cpp
-    #src/CoupledCost.cpp
-    #src/CollocationCost.cpp
-    #src/GlobalCost.cpp
-
-    #src/LevenbergMarquardt.cpp
-    #src/NLoptOptimizer.cpp
-
-    #src/PointSampler.cpp
-    #src/SupportPointSampler.cpp
-    #src/CollocationPointSampler.cpp
-
-    #src/Point.cpp
-    #src/SupportPointExceptions.cpp
-    #src/SupportPoint.cpp
-    #src/CoupledSupportPoint.cpp
-    #src/CollocationPoint.cpp
-
-    #src/PointCloud.cpp
-    #src/SupportPointCloud.cpp
-    #src/SupportPointCloudExceptions.cpp
-    #src/CollocationPointCloud.cpp
-
-    #src/LocalFunctions.cpp
 )
 
 # if we are building for python, include the pybind11
-if( CLF_BUILD_FROM_PIP )
-    set(CLF_SOURCE
-        ${CLF_SOURCE}
+if( CLF_USE_PYTHON )
+    set(CLF_SOURCE_PYTHON
+	python/Module.cpp
 
-        #python/Module.cpp
-
-        #python/BasisFunctions.cpp
-
-        #python/Model.cpp
-
-        #python/SupportPoint.cpp
-        #python/CoupledSupportPoint.cpp
-
-        #python/SupportPointCloud.cpp
-
-        #python/LocalFunctions.cpp
+	python/Parameters.cpp
     )
 endif()
 
@@ -165,96 +108,70 @@ endif()
 ###############################################
 
 set(CLF_LIBNAME CoupledLocalFunctions)
+set(CLF_PYTHON_LIBNAME PyCoupledLocalFunctions)
 
-if( CLF_BUILD_FROM_PIP )
-    pybind11_add_module(${CLF_LIBNAME} SHARED NO_EXTRAS ${CLF_SOURCE})
-else()
-    add_library(${CLF_LIBNAME} SHARED ${CLF_SOURCE})
-endif()
+add_library(${CLF_LIBNAME} SHARED ${CLF_SOURCE})
 target_link_libraries(${CLF_LIBNAME} PUBLIC ${CLF_EXTERNAL_LIBRARIES})
 if( CLF_BUILT_DEPENDENCIES ) 
     add_dependencies(${CLF_LIBNAME} ${CLF_DEPENDENCIES})
+endif()
+if( CLF_USE_PYTHON )
+  pybind11_add_module(${CLF_PYTHON_LIBNAME} SHARED NO_EXTRAS ${CLF_SOURCE_PYTHON})
+  target_link_libraries(${CLF_PYTHON_LIBNAME} PUBLIC ${CLF_LIBNAME} ${CLF_EXTERNAL_LIBRARIES})
+  add_dependencies(${CLF_PYTHON_LIBNAME} ${CLF_LIBNAME})
+  if( CLF_BUILT_DEPENDENCIES ) 
+    add_dependencies(${CLF_PYTHON_LIBNAME} ${CLF_DEPENDENCIES})
+  endif()
+  #set_target_properties(${CLF_PYTHON_LIBNAME}
+  #  PROPERTIES 
+  #  CXX_STANDARD 17
+  #  CXX_STANDARD_REQUIRED ON
+  #  SUFFIX ".cpython-310-x86_64-linux-gnu"
+  #  )
 endif()
 
 ###############################################
 # Build gtests (if not a python install)
 ###############################################
 
-if( NOT CLF_BUILD_FROM_PIP )
-    set(TEST_SOURCE
-        tests/_run-tests.cpp
+set(TEST_SOURCE
+    tests/_run-tests.cpp
 
-        tests/ParametersTests.cpp
+    tests/ParametersTests.cpp
 
-        tests/LinearSolverTests.cpp
+    tests/LinearSolverTests.cpp
 
-	tests/OrthogonalPolynomialsTests.cpp
+    tests/OrthogonalPolynomialsTests.cpp
 
-	tests/MultiIndexTests.cpp
-	tests/MultiIndexSetTests.cpp
+    tests/MultiIndexTests.cpp
+    tests/MultiIndexSetTests.cpp
 
-	tests/FeatureVectorTests.cpp
-	tests/FeatureMatrixTests.cpp
+    tests/FeatureVectorTests.cpp
+    tests/FeatureMatrixTests.cpp
 
-	tests/LocalFunctionTests.cpp
+    tests/LocalFunctionTests.cpp
 
-	tests/IdentityModelTests.cpp
-	tests/LinearModelTests.cpp
+    tests/IdentityModelTests.cpp
+    tests/LinearModelTests.cpp
 
-	tests/PenaltyFunctionTests.cpp
-	tests/CostFunctionTests.cpp
-	tests/LevenbergMarquardtTests.cpp
+    tests/PenaltyFunctionTests.cpp
+    tests/CostFunctionTests.cpp
+    tests/LevenbergMarquardtTests.cpp
 
-	tests/LocalResidualTests.cpp
+    tests/LocalResidualTests.cpp
 
-	tests/PointTests.cpp
+    tests/PointTests.cpp
 
-	tests/PointCloudTests.cpp
-
-	#tests/LinearSolverTests.cpp
-
-        #tests/BasisFunctionsTests.cpp
-        #tests/SinCosBasisTests.cpp
-        #tests/PolynomialBasisTests.cpp
-        #tests/SupportPointBasisTests.cpp
-
-        #tests/ModelTests.cpp
-        #tests/LinearModelTests.cpp
-        #tests/LaplaceOperatorTests.cpp
-
-	#tests/OptimizerTests.cpp
-        #tests/LevenbergMarquardtTests.cpp
-        #tests/NLoptOptimizerTests.cpp
-        #tests/QuadraticCostOptimizerTests.cpp
-
-        #tests/CostFunctionTests.cpp
-        #tests/QuadraticCostFunctionTests.cpp
-        #tests/UncoupledCostTests.cpp
-        #tests/CoupledCostTests.cpp
-        #tests/CollocationCostTests.cpp
-        #tests/GlobalCostTests.cpp
-
-        #tests/SupportPointSamplerTests.cpp
-        #tests/CollocationPointSamplerTests.cpp
-
-        #tests/SupportPointTests.cpp
-        #tests/CoupledSupportPointTests.cpp
-        #tests/CollocationPointTests.cpp
-
-        #tests/SupportPointCloudTests.cpp
-        #tests/CollocationPointCloudTests.cpp
-
-        #tests/LocalFunctionsTests.cpp
+    tests/PointCloudTests.cpp
     )
 
-    include_directories(tests/ ${GTEST_INCLUDE_DIR})
+include_directories(tests/ ${GTEST_INCLUDE_DIR})
 
-    add_executable(run-tests ${TEST_SOURCE})
-    target_link_libraries(run-tests ${CLF_LIBNAME} ${CLF_EXTERNAL_LIBRARIES} ${GTEST_LIBRARIES})
-    add_dependencies(run-tests ${CLF_LIBNAME})
-    if( CLF_BUILT_GTEST )
-        add_dependencies(run-tests GTEST)
-    endif()
+add_executable(run-tests ${TEST_SOURCE})
+target_link_libraries(run-tests ${CLF_LIBNAME} ${CLF_EXTERNAL_LIBRARIES} ${GTEST_LIBRARIES})
+add_dependencies(run-tests ${CLF_LIBNAME})
+if( CLF_BUILT_GTEST )
+    add_dependencies(run-tests GTEST)
 endif()
 
 ###############################################
@@ -273,27 +190,32 @@ endif()
 # Install step (if not a python install)
 ###############################################
 
-if( NOT CLF_BUILD_FROM_PIP )
-    # install all the CLF headers
-    install(DIRECTORY clf
-        DESTINATION "${CMAKE_INSTALL_PREFIX}/include"
-	      FILES_MATCHING PATTERN "*.hpp")
+# install all the CLF headers
+install(DIRECTORY clf
+  DESTINATION "${CMAKE_INSTALL_PREFIX}/include"
+  FILES_MATCHING PATTERN "*.hpp")
 
-    # install the library
-    install(TARGETS ${CLF_LIBNAME}
+# install the library
+install(TARGETS ${CLF_LIBNAME}
+  EXPORT ${CMAKE_PROJECT_NAME}Depends
+  LIBRARY DESTINATION "${CMAKE_INSTALL_PREFIX}/lib"
+  ARCHIVE DESTINATION "${CMAKE_INSTALL_PREFIX}/lib")
+
+if( CLF_USE_PYTHON )
+    install(TARGETS ${CLF_PYTHON_LIBNAME}
         EXPORT ${CMAKE_PROJECT_NAME}Depends
         LIBRARY DESTINATION "${CMAKE_INSTALL_PREFIX}/lib"
         ARCHIVE DESTINATION "${CMAKE_INSTALL_PREFIX}/lib")
-
-    # Install the config file
-    configure_file(cmake/CLFConfig.cmake.in "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${CMAKE_PROJECT_NAME}Config.cmake" @ONLY)
-    install(FILES "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${CMAKE_PROJECT_NAME}Config.cmake"
-        DESTINATION "${CMAKE_INSTALL_PREFIX}"
-	      COMPONENT dev)
-
-    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${INSTALL_LIB_DIR})
-    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${INSTALL_LIB_DIR})
 endif()
+
+# Install the config file
+configure_file(cmake/CLFConfig.cmake.in "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${CMAKE_PROJECT_NAME}Config.cmake" @ONLY)
+install(FILES "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${CMAKE_PROJECT_NAME}Config.cmake"
+  DESTINATION "${CMAKE_INSTALL_PREFIX}"
+  COMPONENT dev)
+
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${INSTALL_LIB_DIR})
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${INSTALL_LIB_DIR})
 
 ###############################################
 # Build the documentation (doxygen)
