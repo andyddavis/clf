@@ -103,6 +103,8 @@ if( CLF_USE_PYTHON )
 
 	python/MultiIndex.cpp
 	python/MultiIndexSet.cpp
+
+	python/OrthogonalPolynomials.cpp
     )
 endif()
 

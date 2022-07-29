@@ -24,6 +24,12 @@ void MultiIndexWrapper(pybind11::module& mod);
  */
 void MultiIndexSetWrapper(pybind11::module& mod);
 
+/// Python wrapper for clf::OrthogonalPolynomials and its children
+/**
+   @param[in] mod The python module
+ */
+void OrthogonalPolynomialsWrapper(pybind11::module& mod);
+
 } // namespace python 
 } // namespace clf
 
