@@ -100,6 +100,9 @@ if( CLF_USE_PYTHON )
 	python/Module.cpp
 
 	python/Parameters.cpp
+
+	python/MultiIndex.cpp
+	python/MultiIndexSet.cpp
     )
 endif()
 

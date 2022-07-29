@@ -3,7 +3,7 @@ import unittest
 import PyCoupledLocalFunctions as clf
 
 class TestParameters(unittest.TestCase):
-    def test_basic_test(self):
+    def test_basic(self):
         para = clf.Parameters()
         self.assertEqual(para.NumParameters(), 0)
 

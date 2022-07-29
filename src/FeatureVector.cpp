@@ -24,7 +24,7 @@ Eigen::VectorXd FeatureVector::Evaluate(Eigen::VectorXd const& x) const {
 
   Eigen::VectorXd output = Eigen::VectorXd::Ones(set->NumIndices());
   for( std::size_t i=0; i<set->NumIndices(); ++i ) {
-    for( std::size_t d=0; d<set->Dimension(); ++d ) { output(i) *= basisEval[d](set->indices[i]->alpha[d]); }
+    for( std::size_t d=0; d<set->Dimension(); ++d ) { output(i) *= basisEval[d](set->indices[i].alpha[d]); }
   }
 
   return output;

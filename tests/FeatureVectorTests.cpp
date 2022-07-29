@@ -25,7 +25,7 @@ TEST(FeatureVectorTests, EvaluateTest) {
 
   Eigen::VectorXd expected = Eigen::VectorXd::Ones(set->NumIndices());
   for( std::size_t i=0; i<set->NumIndices(); ++i ) {
-    for( std::size_t d=0; d<dim; ++d ) { expected(i) *= basis->Evaluate(set->indices[i]->alpha[d], y(d)); }
+    for( std::size_t d=0; d<dim; ++d ) { expected(i) *= basis->Evaluate(set->indices[i].alpha[d], y(d)); }
   }
 
   EXPECT_EQ(eval.size(), expected.size());
