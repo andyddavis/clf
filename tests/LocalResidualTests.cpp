@@ -22,8 +22,8 @@ protected:
     const Point point(Eigen::VectorXd::Random(indim));
     
     auto para = std::make_shared<Parameters>();
-    para->Add<std::size_t>("NumPoints", numPoints);
-    para->Add<double>("Radius", radius);
+    para->Add("NumPoints", numPoints);
+    para->Add("Radius", radius);
     
     const double delta = 0.75;
     const Eigen::VectorXd xbar = Eigen::VectorXd::Random(indim);
