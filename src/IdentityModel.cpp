@@ -6,6 +6,10 @@ IdentityModel::IdentityModel(std::size_t const indim, std::size_t const outdim, 
   SystemOfEquations(indim, outdim, para)
 {}
 
+IdentityModel::IdentityModel(std::shared_ptr<const Parameters> const& para) :
+  SystemOfEquations(para) 
+{}
+
 Eigen::VectorXd IdentityModel::Operator(std::shared_ptr<LocalFunction> const& u, Eigen::VectorXd const& x, Eigen::VectorXd const& coeff) const { 
   assert(u->InputDimension()==indim);
   assert(u->OutputDimension()==outdim);

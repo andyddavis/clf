@@ -54,6 +54,24 @@ void FeatureMatrixWrapper(pybind11::module& mod);
  */
 void LocalFunctionWrapper(pybind11::module& mod);
 
+/// Python wrapper for clf::SystemOfEquations
+/**
+   @param[in] mod The python module
+ */
+void SystemOfEquationsWrapper(pybind11::module& mod);
+
+/// Python wrapper for clf::IdentityModel
+/**
+   @param[in] mod The python module
+ */
+void IdentityModelWrapper(pybind11::module& mod);
+
+/// Python wrapper for clf::LinearModel
+/**
+   @param[in] mod The python module
+ */
+void LinearModelWrapper(pybind11::module& mod);
+
 } // namespace python 
 } // namespace clf
 

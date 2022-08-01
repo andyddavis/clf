@@ -25,6 +25,16 @@ public:
      @param[in] para The parameters for this system of equations
    */
   SystemOfEquations(std::size_t const indim, std::size_t const outdim, std::shared_ptr<const Parameters> const& para = std::make_shared<Parameters>());
+
+  /**
+   <B>Configuration Parameters:</B>
+   Parameter Key | Type | Default Value | Description |
+   ------------- | ------------- | ------------- | ------------- |
+   "InputDimension"   | <tt>std::size_t</tt> | --- | The input dimension \f$d\f$ of the local function. This is a required parameter. |
+   "OutputDimension"   | <tt>std::size_t</tt> | --- | The output dimension \f$m\f$ of the local function. This is a required parameter. |
+     @param[in] para The parameters for this system of equations
+   */
+  SystemOfEquations(std::shared_ptr<const Parameters> const& para);
   
   virtual ~SystemOfEquations() = default;
 

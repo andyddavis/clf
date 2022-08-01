@@ -18,21 +18,45 @@ public:
      Set \f$\hat{m} = m\f$.
      @param[in] indim The input dimension \f$d\f$
      @param[in] outdim The output dimension \f$m\f$
+     @param[in] para The parameters for this system of equations
    */
-  LinearModel(std::size_t const indim, std::size_t const outdim);
+  LinearModel(std::size_t const indim, std::size_t const outdim, std::shared_ptr<const Parameters> const& para = std::make_shared<Parameters>());
+
+  /**
+   <B>Configuration Parameters:</B>
+   Parameter Key | Type | Default Value | Description |
+   ------------- | ------------- | ------------- | ------------- |
+   "InputDimension"   | <tt>std::size_t</tt> | --- | The input dimension \f$d\f$ of the local function. This is a required parameter. |
+   "OutputDimension"   | <tt>std::size_t</tt> | --- | The output dimension \f$m\f$ of the local function. This is a required parameter. |
+   "LocalFunctionOutputDimension"   | <tt>std::size_t</tt> | <tt>output dimension</tt> |  The number of columns \f$\hat{m}\f$ in \f$A(x)\f$. Defaults to the output dimension. |
+     @param[in] para The parameters for this system of equations
+   */
+  LinearModel(std::shared_ptr<const Parameters> const& para);
 
   /**
      @param[in] indim The input dimension \f$d\f$
      @param[in] outdim The output dimension \f$m\f$
      @param[in] matdim The number of columns \f$\hat{m}\f$ in \f$A(x)\f$
+     @param[in] para The parameters for this system of equations
    */
-  LinearModel(std::size_t const indim, std::size_t const outdim, std::size_t const matdim);
+  LinearModel(std::size_t const indim, std::size_t const outdim, std::size_t const matdim, std::shared_ptr<const Parameters> const& para = std::make_shared<const Parameters>());
+
+  /**
+   <B>Configuration Parameters:</B>
+   Parameter Key | Type | Default Value | Description |
+   ------------- | ------------- | ------------- | ------------- |
+   "InputDimension"   | <tt>std::size_t</tt> | --- | The input dimension \f$d\f$ of the local function. This is a required parameter. |
+     @param[in] A The matrix \f$A \in \mathbb{R}^{m \times \hat{m}}\f$
+     @param[in] para The parameters for this system of equations
+   */
+  LinearModel(Eigen::MatrixXd const& A, std::shared_ptr<const Parameters> const& para);
 
   /**
      @param[in] indim The input dimension \f$d\f$
      @param[in] A The matrix \f$A \in \mathbb{R}^{m \times \hat{m}}\f$
+     @param[in] para The parameters for this system of equations
    */
-  LinearModel(std::size_t const indim, Eigen::MatrixXd const A);
+  LinearModel(std::size_t const indim, Eigen::MatrixXd const& A, std::shared_ptr<const Parameters> const& para = std::make_shared<const Parameters>());
 
   virtual ~LinearModel() = default;
 

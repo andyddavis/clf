@@ -44,11 +44,11 @@ TEST(IdentityModel, BasicTest) {
   EXPECT_EQ(jacFD.rows(), outdim);
   EXPECT_EQ(jacFD.cols(), func->NumCoefficients());
   std::size_t start = 0;
+  const Eigen::VectorXd phi = vec->Evaluate(x);
   for( std::size_t i=0; i<outdim; ++i ) {
     EXPECT_NEAR(jac.row(i).segment(0, start).norm(), 0.0, 1.0e-12);
     EXPECT_NEAR(jacFD.row(i).segment(0, start).norm(), 0.0, 1.0e-10);
 
-    const Eigen::VectorXd phi = vec->Evaluate(x);
     EXPECT_NEAR((jac.row(i).segment(start, phi.size()).transpose()-phi).norm(), 0.0, 1.0e-12);
     EXPECT_NEAR((jacFD.row(i).segment(start, phi.size()).transpose()-phi).norm(), 0.0, 1.0e-10);
     start += phi.size();

@@ -17,6 +17,9 @@ from FeatureMatrixTests import *
 
 from LocalFunctionTests import *
 
+from IdentityModelTests import *
+from LinearModelTests import *
+
 class TestCLFInstall(unittest.TestCase):
     def test_load_clf(self):
         import PyCoupledLocalFunctions as clf

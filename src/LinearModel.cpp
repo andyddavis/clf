@@ -2,18 +2,29 @@
 
 using namespace clf;
 
-LinearModel::LinearModel(std::size_t const indim, std::size_t const outdim) : 
-  SystemOfEquations(indim, outdim), 
+LinearModel::LinearModel(std::size_t const indim, std::size_t const outdim, std::shared_ptr<const Parameters> const& para) : 
+  SystemOfEquations(indim, outdim, para), 
   matdim(outdim)
 {}
 
-LinearModel::LinearModel(std::size_t const indim, std::size_t const outdim, std::size_t const matdim) :
+LinearModel::LinearModel(std::shared_ptr<const Parameters> const& para) : 
+  SystemOfEquations(para), 
+  matdim(para->Get<std::size_t>("LocalFunctionOutputDimension", para->Get<std::size_t>("OutputDimension")))
+{}
+
+LinearModel::LinearModel(std::size_t const indim, std::size_t const outdim, std::size_t const matdim, std::shared_ptr<const Parameters> const& para) :
   SystemOfEquations(indim, outdim), 
   matdim(matdim)
 {}
 
-LinearModel::LinearModel(std::size_t const indim, Eigen::MatrixXd const A) :
-  SystemOfEquations(indim, A.rows()), 
+LinearModel::LinearModel(std::size_t const indim, Eigen::MatrixXd const& A, std::shared_ptr<const Parameters> const& para) :
+  SystemOfEquations(indim, A.rows(), para), 
+  matdim(A.cols()),
+  A(A)
+{}
+
+LinearModel::LinearModel(Eigen::MatrixXd const& A, std::shared_ptr<const Parameters> const& para) :
+  SystemOfEquations(para->Get<std::size_t>("InputDimension"), A.rows()), 
   matdim(A.cols()),
   A(A)
 {}

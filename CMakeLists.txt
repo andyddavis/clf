@@ -111,6 +111,10 @@ if( CLF_USE_PYTHON )
 	python/FeatureMatrix.cpp
 
 	python/LocalFunction.cpp
+
+	python/SystemOfEquations.cpp
+	python/IdentityModel.cpp
+	python/LinearModel.cpp
     )
 endif()
 

@@ -15,4 +15,8 @@ PYBIND11_MODULE(PyCoupledLocalFunctions, module) {
   clf::python::FeatureMatrixWrapper(module);
 
   clf::python::LocalFunctionWrapper(module);
+
+  clf::python::SystemOfEquationsWrapper(module);
+  clf::python::IdentityModelWrapper(module);
+  clf::python::LinearModelWrapper(module);
 }

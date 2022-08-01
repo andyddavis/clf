@@ -11,6 +11,11 @@ SystemOfEquations::SystemOfEquations(std::size_t const indim, std::size_t const 
   para(para)
 {}
 
+SystemOfEquations::SystemOfEquations(std::shared_ptr<const Parameters> const& para) :
+  indim(para->Get<std::size_t>("InputDimension")), outdim(para->Get<std::size_t>("OutputDimension")),
+  para(para)
+{}
+
 Eigen::VectorXd SystemOfEquations::RightHandSide(Eigen::VectorXd const& x) const { return Eigen::VectorXd::Zero(outdim); }
 
 Eigen::MatrixXd SystemOfEquations::JacobianWRTCoefficients(std::shared_ptr<LocalFunction> const& u, Eigen::VectorXd const& x, Eigen::VectorXd const& coeff) const { return JacobianWRTCoefficients(u, x, coeff); }
