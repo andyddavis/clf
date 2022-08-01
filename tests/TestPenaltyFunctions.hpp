@@ -121,7 +121,7 @@ public:
     output(0) = 1.0-beta(1);
     output(1) = 1.0-beta(1)+beta(2);
     output(2) = beta(2);
-    output(3) = beta(2)*(1-beta(1));
+    output(3) = beta(2)*(1.0-beta(1));
     output(4) = beta(0)*beta(2);
     output(5) = beta(0)*beta(0)*beta(1);
 

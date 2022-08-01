@@ -115,6 +115,8 @@ if( CLF_USE_PYTHON )
 	python/SystemOfEquations.cpp
 	python/IdentityModel.cpp
 	python/LinearModel.cpp
+
+	python/PenaltyFunction.cpp
     )
 endif()
 

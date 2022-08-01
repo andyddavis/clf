@@ -72,6 +72,12 @@ void IdentityModelWrapper(pybind11::module& mod);
  */
 void LinearModelWrapper(pybind11::module& mod);
 
+/// Python wrapper for clf::PenaltyFunction and its children
+/**
+   @param[in] mod The python module
+ */
+void PenaltyFunctionWrapper(pybind11::module& mod);
+
 } // namespace python 
 } // namespace clf
 

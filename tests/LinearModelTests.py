@@ -61,7 +61,7 @@ class TestLinearModel(unittest.TestCase):
         hessFD = self.linsys.HessianWRTCoefficientsFD(func, x, coeff, weights)
         self.assertEqual(np.shape(hess) [0], len(coeff))
         self.assertEqual(np.shape(hess) [1], len(coeff))
-        self.assertAlmostEqual(np.linalg.norm(hessFD), 0.0)
+        self.assertAlmostEqual(np.linalg.norm(hessFD, ord=np.inf), 0.0, 6)
 
     def test_square_identity(self):
         self.matdim = self.outdim
