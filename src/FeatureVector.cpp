@@ -2,8 +2,14 @@
 
 using namespace clf;
 
-FeatureVector::FeatureVector(std::shared_ptr<const MultiIndexSet> const& set, std::shared_ptr<BasisFunctions> const& basis, double const delta, Eigen::VectorXd const& xbar) :
-  set(set), basis(basis), delta(delta), xbar(xbar)
+FeatureVector::FeatureVector(std::shared_ptr<const MultiIndexSet> const& set, std::shared_ptr<BasisFunctions> const& basis, Eigen::VectorXd const& xbar, double const delta) :
+  set(set), basis(basis), xbar(xbar), delta(delta)
+{
+  assert(xbar.size()==set->Dimension());
+}
+
+FeatureVector::FeatureVector(std::shared_ptr<const MultiIndexSet> const& set, std::shared_ptr<BasisFunctions> const& basis, Eigen::VectorXd const& xbar, std::shared_ptr<Parameters> const& para) :
+  set(set), basis(basis), xbar(xbar), delta(para->Get<double>("LocalRadius"))
 {
   assert(xbar.size()==set->Dimension());
 }

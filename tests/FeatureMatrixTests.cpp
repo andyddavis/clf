@@ -16,7 +16,7 @@ TEST(FeatureMatrixTests, SingleFeatureVectorTest) {
   const double delta = 0.1;
   const Eigen::VectorXd xbar = Eigen::VectorXd::Random(indim);
   
-  auto vec = std::make_shared<FeatureVector>(set, basis, delta, xbar);
+  auto vec = std::make_shared<FeatureVector>(set, basis, xbar, delta);
 
   FeatureMatrix mat(vec, outdim);
   EXPECT_EQ(mat.numBasisFunctions, outdim*set->NumIndices());
@@ -24,15 +24,15 @@ TEST(FeatureMatrixTests, SingleFeatureVectorTest) {
   EXPECT_EQ(mat.numFeatureVectors, outdim);
 
   const Eigen::VectorXd x = Eigen::VectorXd::Random(indim);
+  const Eigen::VectorXd eval = vec->Evaluate(x);
 
-  for( std::size_t i=0; i<outdim; ++i ) { EXPECT_NEAR((mat.GetFeatureVector(i)->Evaluate(x)-vec->Evaluate(x)).norm(), 0.0, 1.0e-14); }
+  for( std::size_t i=0; i<outdim; ++i ) { EXPECT_NEAR((mat.GetFeatureVector(i)->Evaluate(x)-eval).norm(), 0.0, 1.0e-14); }
 
   const Eigen::VectorXd coeff = Eigen::VectorXd::Random(mat.numBasisFunctions);
   const Eigen::VectorXd output = mat.ApplyTranspose(x, coeff);
   EXPECT_EQ(output.size(), outdim);
 
   Eigen::VectorXd expected(outdim);
-  const Eigen::VectorXd eval = vec->Evaluate(x);
   for( std::size_t i=0; i<outdim; ++i ) { expected(i) = eval.dot(coeff.segment(i*set->NumIndices(), set->NumIndices())); }
   EXPECT_NEAR((output-expected).norm(), 0.0, 1.0e-14);
 }
@@ -50,8 +50,8 @@ TEST(FeatureMatrixTests, MultiFeatureVectorTest) {
   const double delta = 0.1;
   const Eigen::VectorXd xbar = Eigen::VectorXd::Random(indim);
   
-  auto vec1 = std::make_shared<FeatureVector>(set1, basis, delta, xbar);
-  auto vec2 = std::make_shared<FeatureVector>(set2, basis, delta, xbar);
+  auto vec1 = std::make_shared<FeatureVector>(set1, basis, xbar, delta);
+  auto vec2 = std::make_shared<FeatureVector>(set2, basis, xbar, delta);
 
   FeatureMatrix mat({vec1, vec2});
   EXPECT_EQ(mat.numBasisFunctions, set1->NumIndices() + set2->NumIndices());
@@ -86,8 +86,8 @@ TEST(FeatureMatrixTests, RepeatedFeatureVectorsTest) {
   const double delta = 0.1;
   const Eigen::VectorXd xbar = Eigen::VectorXd::Random(indim);
   
-  const FeatureMatrix::VectorPair vec1 = FeatureMatrix::VectorPair(std::make_shared<FeatureVector>(set1, basis, delta, xbar), 1);
-  const FeatureMatrix::VectorPair vec2 = FeatureMatrix::VectorPair(std::make_shared<FeatureVector>(set2, basis, delta, xbar), outdim-1);
+  const FeatureMatrix::VectorPair vec1 = FeatureMatrix::VectorPair(std::make_shared<FeatureVector>(set1, basis, xbar, delta), 1);
+  const FeatureMatrix::VectorPair vec2 = FeatureMatrix::VectorPair(std::make_shared<FeatureVector>(set2, basis, xbar, delta), outdim-1);
 
   FeatureMatrix mat({vec1, vec2});
   EXPECT_EQ(mat.numBasisFunctions, set1->NumIndices() + (outdim-1)*set2->NumIndices());

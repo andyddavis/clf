@@ -12,6 +12,11 @@ from MultiIndexSetTests import *
 
 from OrthogonalPolynomialsTests import *
 
+from FeatureVectorTests import *
+from FeatureMatrixTests import *
+
+from LocalFunctionTests import *
+
 class TestCLFInstall(unittest.TestCase):
     def test_load_clf(self):
         import PyCoupledLocalFunctions as clf

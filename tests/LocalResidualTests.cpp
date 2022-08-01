@@ -31,7 +31,7 @@ protected:
     const std::size_t maxOrder = 4;
     std::shared_ptr<MultiIndexSet> set = MultiIndexSet::CreateTotalOrder(indim, maxOrder);
     auto basis = std::make_shared<LegendrePolynomials>();
-    auto func = std::make_shared<LocalFunction>(set, basis, delta, xbar, outdim);
+    auto func = std::make_shared<LocalFunction>(set, basis, xbar, delta, outdim);
     
     LocalResidual resid(func, system, point, para);
     EXPECT_EQ(resid.indim, func->NumCoefficients());

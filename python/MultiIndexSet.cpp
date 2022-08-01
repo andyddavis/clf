@@ -11,6 +11,7 @@ void clf::python::MultiIndexSetWrapper(py::module& mod) {
   py::class_<MultiIndexSet, std::shared_ptr<MultiIndexSet> > set(mod, "MultiIndexSet");
   
   set.def(py::init(static_cast<std::unique_ptr<MultiIndexSet> (*)(std::shared_ptr<Parameters> const&)>(&clf::MultiIndexSet::CreateTotalOrder)));
+  set.def("Dimension", &MultiIndexSet::Dimension);
   set.def("NumIndices", &MultiIndexSet::NumIndices);
   set.def("MaxIndex", &MultiIndexSet::MaxIndex);
   set.def_readonly("indices", &MultiIndexSet::indices);

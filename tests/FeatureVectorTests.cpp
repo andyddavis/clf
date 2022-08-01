@@ -15,7 +15,7 @@ TEST(FeatureVectorTests, EvaluateTest) {
   const double delta = 0.5;
   const Eigen::VectorXd xbar = Eigen::VectorXd::Random(dim);
 
-  FeatureVector vec(set, basis, delta, xbar);
+  FeatureVector vec(set, basis, xbar, delta);
   EXPECT_EQ(vec.InputDimension(), set->Dimension());
   EXPECT_EQ(vec.NumBasisFunctions(), set->NumIndices());
 

@@ -25,10 +25,23 @@ public:
   /**
      @param[in] set The multi-index set that defines this feature vector
      @param[in] basis The basis functions used to define this feature vector
-     @param[in] delta The parameter \f$\delta\f$ that defines the linear transformation \f$F\f$
      @param[in] xbar The parameter \f$\bar{x}\f$ that defines the linear transformation \f$F\f$
+     @param[in] delta The parameter \f$\delta\f$ that defines the linear transformation \f$F\f$
   */
-  FeatureVector(std::shared_ptr<const MultiIndexSet> const& set, std::shared_ptr<BasisFunctions> const& basis, double const delta, Eigen::VectorXd const& xbar);
+  FeatureVector(std::shared_ptr<const MultiIndexSet> const& set, std::shared_ptr<BasisFunctions> const& basis, Eigen::VectorXd const& xbar, double const delta);
+
+  /**
+     <B>Configuration Parameters:</B>
+     Parameter Key | Type | Default Value | Description |
+     ------------- | ------------- | ------------- | ------------- |
+     "LocalRadius"   | <tt>double</tt> | --- | The radius that defines the local function (the parameter \f$\delta\f$). This is a required parameter. |
+
+     @param[in] set The multi-index set that defines this feature vector
+     @param[in] basis The basis functions used to define this feature vector
+     @param[in] xbar The parameter \f$\bar{x}\f$ that defines the linear transformation \f$F\f$
+     @param[in] para The parameters for this feature vector
+  */
+  FeatureVector(std::shared_ptr<const MultiIndexSet> const& set, std::shared_ptr<BasisFunctions> const& basis, Eigen::VectorXd const& xbar, std::shared_ptr<Parameters> const& para);
 
   virtual ~FeatureVector() = default;
 
@@ -66,11 +79,11 @@ private:
   /// The basis functions used to define this feature vector
   std::shared_ptr<const BasisFunctions> basis;
 
-  /// The radius parameter \f$\delta\f$ 
-  const double delta; 
-
   /// The center vector \f$\bar{x}\f$
   const Eigen::VectorXd xbar;
+
+  /// The radius parameter \f$\delta\f$ 
+  const double delta; 
 };
 
 };

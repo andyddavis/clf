@@ -15,7 +15,7 @@ TEST(LocalFunctionTests, Construction) {
   const Eigen::VectorXd xbar = Eigen::VectorXd::Random(indim);
   
   auto basis = std::make_shared<LegendrePolynomials>();
-  auto vec = std::make_shared<FeatureVector>(set, basis, delta, xbar);
+  auto vec = std::make_shared<FeatureVector>(set, basis, xbar, delta);
   auto mat = std::make_shared<FeatureMatrix>(vec, outdim);
 
   LocalFunction func(mat);

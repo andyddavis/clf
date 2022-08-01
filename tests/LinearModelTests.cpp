@@ -30,7 +30,7 @@ TEST(LinearModelTests, SquareIdentity) {
   const Eigen::VectorXd xbar = Eigen::VectorXd::Random(indim);
   
   auto basis = std::make_shared<LegendrePolynomials>();
-  auto vec = std::make_shared<FeatureVector>(set, basis, delta, xbar);
+  auto vec = std::make_shared<FeatureVector>(set, basis, xbar, delta);
   auto mat = std::make_shared<FeatureMatrix>(vec, outdim);
   auto func = std::make_shared<LocalFunction>(mat);
 
@@ -86,7 +86,7 @@ TEST(LinearModelTests, NonSquareIdentity) {
   const Eigen::VectorXd xbar = Eigen::VectorXd::Random(indim);
   
   auto basis = std::make_shared<LegendrePolynomials>();
-  auto vec = std::make_shared<FeatureVector>(set, basis, delta, xbar);
+  auto vec = std::make_shared<FeatureVector>(set, basis, xbar, delta);
   auto mat = std::make_shared<FeatureMatrix>(vec, matdim);
   auto func = std::make_shared<LocalFunction>(mat);
 
@@ -142,7 +142,7 @@ TEST(LinearModelTests, RandomMatrix) {
   const Eigen::VectorXd xbar = Eigen::VectorXd::Random(indim);
   
   auto basis = std::make_shared<LegendrePolynomials>();
-  auto vec = std::make_shared<FeatureVector>(set, basis, delta, xbar);
+  auto vec = std::make_shared<FeatureVector>(set, basis, xbar, delta);
   auto mat = std::make_shared<FeatureMatrix>(vec, matdim);
   auto func = std::make_shared<LocalFunction>(mat);
 

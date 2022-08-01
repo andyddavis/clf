@@ -104,7 +104,13 @@ if( CLF_USE_PYTHON )
 	python/MultiIndex.cpp
 	python/MultiIndexSet.cpp
 
+	python/BasisFunctions.cpp
 	python/OrthogonalPolynomials.cpp
+
+	python/FeatureVector.cpp
+	python/FeatureMatrix.cpp
+
+	python/LocalFunction.cpp
     )
 endif()
 

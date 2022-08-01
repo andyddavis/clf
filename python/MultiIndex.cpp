@@ -13,5 +13,6 @@ void clf::python::MultiIndexWrapper(py::module& mod) {
   ind.def(py::init<std::vector<std::size_t> const&>());
   ind.def("Dimension", &MultiIndex::Dimension);
   ind.def("Order", &MultiIndex::Order);
+  ind.def_readonly("alpha", &MultiIndex::alpha);
 }
 
