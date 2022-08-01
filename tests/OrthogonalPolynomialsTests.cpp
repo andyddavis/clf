@@ -25,9 +25,9 @@ TEST(OrthogonalPolynomialsTests, LegendrePolynomials) {
   const Eigen::VectorXd eval = len.EvaluateAll(5, 0.325);
   EXPECT_EQ(eval.size(), 6);
   EXPECT_DOUBLE_EQ(0.3375579333496094, len.Evaluate(5, 0.325));
-  EXPECT_DOUBLE_EQ(1.0, eval(0));
-  EXPECT_DOUBLE_EQ(0.325, eval(1));
-  EXPECT_DOUBLE_EQ(0.3375579333496094, eval(5));
+  EXPECT_DOUBLE_EQ(eval(0), 1.0);
+  EXPECT_DOUBLE_EQ(eval(1), 0.325);
+  EXPECT_DOUBLE_EQ(eval(5), 0.3375579333496094);
 
   EXPECT_NEAR(-0.05346106275520913, len.Evaluate(20, -0.845), 1.0e-14);
   EXPECT_NEAR(-0.1119514835092105, len.Evaluate(50, 0.1264), 1e-14);
