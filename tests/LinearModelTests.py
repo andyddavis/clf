@@ -9,13 +9,13 @@ class TestLinearModel(unittest.TestCase):
     def setUp(self):
         self.indim = 4
         self.outdim = 3
-
+        
     def tearDown(self):
         self.assertEqual(self.linsys.indim, self.indim)
         self.assertEqual(self.linsys.outdim, self.outdim)
-
+        
         x = np.array([random.uniform(-1.0, 1.0) for i in range(self.indim)])
-
+    
         rhs = self.linsys.RightHandSide(x)
         self.assertEqual(len(rhs), self.outdim)
         self.assertEqual(np.linalg.norm(rhs), 0.0)
@@ -24,7 +24,7 @@ class TestLinearModel(unittest.TestCase):
         self.assertEqual(np.shape(A) [0], self.outdim)
         self.assertEqual(np.shape(A) [1], self.matdim)
         self.assertAlmostEqual(np.linalg.norm(A-self.mat), 0.0)
-
+        
         para = clf.Parameters()
         para.Add('InputDimension', self.indim)
         para.Add('OutputDimension', self.matdim)
@@ -34,11 +34,11 @@ class TestLinearModel(unittest.TestCase):
         multiSet = clf.MultiIndexSet(para)
         leg = clf.LegendrePolynomials()
         center = np.array([random.uniform(-1.0, 1.0) for i in range(self.indim)])
-
+        
         func = clf.LocalFunction(multiSet, leg, center, para)
-
+        
         coeff = np.array([random.uniform(-1.0, 1.0) for i in range(func.NumCoefficients())])
-
+        
         fx = func.Evaluate(x, coeff);
         op = self.linsys.Operator(func, x, coeff);
         self.assertEqual(len(op), self.outdim)
