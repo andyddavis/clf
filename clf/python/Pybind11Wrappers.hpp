@@ -90,6 +90,12 @@ void CostFunctionWrapper(pybind11::module& mod);
  */
 void PointWrapper(pybind11::module& mod);
 
+/// Python wrapper for clf::LocalResidual
+/**
+   @param[in] mod The python module
+ */
+void LocalResidualWrapper(pybind11::module& mod);
+
 } // namespace python 
 } // namespace clf
 

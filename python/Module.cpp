@@ -5,7 +5,7 @@
 namespace py = pybind11;
               
 PYBIND11_MODULE(PyCoupledLocalFunctions, module) {
-  // a helper type for the sparse interface
+  // a helper type for the sparse matrix interface
   py::class_<Eigen::Triplet<double> > triplet(module, "SparseEntry");
   triplet.def(py::init<std::size_t const, std::size_t const, double const>());
 
@@ -30,4 +30,6 @@ PYBIND11_MODULE(PyCoupledLocalFunctions, module) {
   clf::python::CostFunctionWrapper(module);
 
   clf::python::PointWrapper(module);
+
+  clf::python::LocalResidualWrapper(module);
 }

@@ -28,6 +28,8 @@ from CostFunctionTests import *
 
 from PointTests import *
 
+from LocalResidualTests import *
+
 class TestCLFInstall(unittest.TestCase):
     """! Test the python installation
     """
