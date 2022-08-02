@@ -173,32 +173,32 @@ public:
   /// Compute the terms of the sparse Jacobian of the penalty function \f$\nabla_{\beta} c \in \mathbb{R}^{n \times d}\f$ using
   /**
      @param[in] beta The input parameters \f$\beta\f$
-     @param[out] entries The entries of the Jacobian matrix
+     \return The entries of the Jacobian matrix
    */
-  virtual void JacobianEntries(Eigen::VectorXd const& beta, std::vector<Eigen::Triplet<double> >& entries);
+  virtual std::vector<Eigen::Triplet<double> > JacobianEntries(Eigen::VectorXd const& beta);
 
   /// Compute the terms of the sparse Jacobian of the penalty function \f$\nabla_{\beta} c \in \mathbb{R}^{n \times d}\f$ using finite difference
   /**
      @param[in] beta The input parameters \f$\beta\f$
-     @param[out] entries The entries of the Jacobian matrix
+     \return The entries of the Jacobian matrix
    */
-  void JacobianEntriesFD(Eigen::VectorXd const& beta, std::vector<Eigen::Triplet<double> >& entries);
+  std::vector<Eigen::Triplet<double> > JacobianEntriesFD(Eigen::VectorXd const& beta);
 
-  /// Compute entries of the weighted sum of the Hessian of each the penalty function \f$\sum_{i=1}^{n} w_i \nabla_{\beta}^2 c_i \in \mathbb{R}^{d \times d}\f$
+  /// Compute entries of the weighted sum of the Hessian of each the penalty function \f$\sum_{i=1}^{n} w_i \nabla_{\beta}^2 c_i \in \mathbb{R}^{d \times d}\f$ 
   /**
      @param[in] beta The input parameters \f$\beta\f$
      @param[in] weights The weights for the weighted sum
-     @param[out] entries The entries of the Hessian matrix
+     \return The entries of the Hessian matrix
    */
-  virtual void HessianEntries(Eigen::VectorXd const& beta, Eigen::VectorXd const& weights, std::vector<Eigen::Triplet<double> >& entries);
+  virtual std::vector<Eigen::Triplet<double> > HessianEntries(Eigen::VectorXd const& beta, Eigen::VectorXd const& weights);
 
   /// Compute entries of the weighted sum of the Hessian of each the penalty function \f$\sum_{i=1}^{n} w_i \nabla_{\beta}^2 c_i \in \mathbb{R}^{d \times d}\f$ using finite difference
   /**
      @param[in] beta The input parameters \f$\beta\f$
      @param[in] weights The weights for the weighted sum
-     @param[out] entries The entries of the Hessian matrix
+     \return The entries of the Hessian matrix
    */
-  void HessianEntriesFD(Eigen::VectorXd const& beta, Eigen::VectorXd const& weights, std::vector<Eigen::Triplet<double> >& entries);
+  std::vector<Eigen::Triplet<double> > HessianEntriesFD(Eigen::VectorXd const& beta, Eigen::VectorXd const& weights);
 
   /// Compute weighted the sum of the Hessian of each the penalty function \f$\sum_{i=1}^{n} w_i \nabla_{\beta}^2 c_i \in \mathbb{R}^{d \times d}\f$
   /**

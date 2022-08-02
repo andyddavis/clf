@@ -79,7 +79,7 @@ public:
      @param[in] jac The Jacobian (output of CostFunction::Jacobian)
      \return The gradient of the cost function 
    */
-  inline virtual Eigen::VectorXd Gradient(Eigen::VectorXd const& cost, MatrixType const& jac) const { return 2.0*jac.adjoint()*cost; }
+  inline Eigen::VectorXd Gradient(Eigen::VectorXd const& cost, MatrixType const& jac) const { return 2.0*jac.adjoint()*cost; }
 
   /// Compute the gradient of the cost function \f$2 \sum_{i=1}^{m} \sum_{j=1}^{n_i} c_{i,j}(\beta) \nabla_{\beta} c_{i,j}(\beta)\f$
   /**
@@ -87,7 +87,7 @@ public:
      @param[in] beta The input parameters \f$\beta\f$
      \return The gradient of the cost function 
    */
-  inline virtual Eigen::VectorXd Gradient(Eigen::VectorXd const& beta) const { return Gradient(Evaluate(beta), Jacobian(beta)); }
+  inline Eigen::VectorXd Gradient(Eigen::VectorXd const& beta) const { return Gradient(Evaluate(beta), Jacobian(beta)); }
 
   /// Compute the Hessian of the cost function 
   /**

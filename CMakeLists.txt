@@ -58,7 +58,7 @@ endif()
 # The source code
 ###############################################
 
-# the source code (no pybind11)
+# the source code 
 set(CLF_SOURCE
     src/CLFExceptions.cpp
 
@@ -117,6 +117,7 @@ if( CLF_USE_PYTHON )
 	python/LinearModel.cpp
 
 	python/PenaltyFunction.cpp
+	python/CostFunction.cpp
     )
 endif()
 

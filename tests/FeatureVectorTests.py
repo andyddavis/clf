@@ -1,3 +1,5 @@
+"""! @brief Test the feature vector (clf::FeatureVector) python interface"""
+
 import unittest
 
 import numpy as np
@@ -6,7 +8,10 @@ import random
 import PyCoupledLocalFunctions as clf
 
 class TestFeatureVector(unittest.TestCase):
+    """! Test the feature vector (clf::FeatureVector) python interface"""
     def test_evaluate(self):
+        """! Test the feature vector evaluation"""
+        
         indim = int(5)
         outdim = int(3)
         maxOrder = int(4)

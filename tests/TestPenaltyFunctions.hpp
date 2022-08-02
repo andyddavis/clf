@@ -264,13 +264,15 @@ public:
      @param[in] beta The input parameters \f$\beta\f$
      @param[out] entries The entries of the Jacobian matrix
   */
-  inline virtual void JacobianEntries(Eigen::VectorXd const& beta, std::vector<Eigen::Triplet<double> >& entries) override { 
+  inline virtual std::vector<Eigen::Triplet<double> > JacobianEntries(Eigen::VectorXd const& beta) override { 
     assert(beta.size()==3);
 
-    entries.resize(3);
+    std::vector<Eigen::Triplet<double> > entries(3);
     entries[0] = Eigen::Triplet<double>(0, 0, 1.0);
     entries[1] = Eigen::Triplet<double>(1, 0, 1.0-beta(2));
     entries[2] = Eigen::Triplet<double>(1, 2, -beta(0));
+
+    return entries;
   }
 
   /// Compute the sum of the Hessian of each the penalty function \f$\sum_{i=1}^{n} \nabla_{\beta}^2 c_i \in \mathbb{R}^{d \times d}\f$
@@ -296,13 +298,14 @@ public:
      @param[in] weights The weights for the weighted sum
      @param[out] entries The entries of the Hessian matrix
   */
-  inline virtual void HessianEntries(Eigen::VectorXd const& beta, Eigen::VectorXd const& weights, std::vector<Eigen::Triplet<double> >& entries) override { 
+  inline virtual std::vector<Eigen::Triplet<double> > HessianEntries(Eigen::VectorXd const& beta, Eigen::VectorXd const& weights) override { 
     assert(beta.size()==3);
     assert(weights.size()==2);
 
-    entries.resize(2);
+    std::vector<Eigen::Triplet<double> > entries(2);
     entries[0] = Eigen::Triplet<double>(0, 2, -weights(1));
     entries[1] = Eigen::Triplet<double>(2, 0, -weights(1));
+    return entries;
   }
 
 private:
@@ -364,10 +367,10 @@ public:
      @param[in] beta The input parameters \f$\beta\f$
      @param[out] entries The entries of the Jacobian matrix
   */
-  inline virtual void JacobianEntries(Eigen::VectorXd const& beta, std::vector<Eigen::Triplet<double> >& entries) override { 
+  inline virtual std::vector<Eigen::Triplet<double> > JacobianEntries(Eigen::VectorXd const& beta) override { 
     assert(beta.size()==3);
 
-    entries.resize(10);
+    std::vector<Eigen::Triplet<double> > entries(10);
     entries[0] = Eigen::Triplet<double>(0, 1, -1.0);
     entries[1] = Eigen::Triplet<double>(1, 1, -1.0);
     entries[2] = Eigen::Triplet<double>(1, 2, 1.0);
@@ -378,6 +381,8 @@ public:
     entries[7] = Eigen::Triplet<double>(4, 2, beta(0));
     entries[8] = Eigen::Triplet<double>(5, 0, 2.0*beta(0)*beta(1));
     entries[9] = Eigen::Triplet<double>(5, 1, beta(0)*beta(0));
+
+    return entries;
   }
 
   /// Compute the sum of the Hessian of each the penalty function \f$\sum_{i=1}^{n} \nabla_{\beta}^2 c_i \in \mathbb{R}^{d \times d}\f$
@@ -435,10 +440,10 @@ public:
      @param[in] weights The weights for the weighted sum
      @param[out] entries The entries of the Hessian matrix
   */
-  inline virtual void HessianEntries(Eigen::VectorXd const& beta, Eigen::VectorXd const& weights, std::vector<Eigen::Triplet<double> >& entries) override { 
+  inline virtual std::vector<Eigen::Triplet<double> > HessianEntries(Eigen::VectorXd const& beta, Eigen::VectorXd const& weights) override { 
     assert(beta.size()==3);
 
-    entries.resize(7);
+    std::vector<Eigen::Triplet<double> > entries(7);
     entries[0] = Eigen::Triplet<double>(1, 2, -weights(3));
     entries[1] = Eigen::Triplet<double>(2, 1, -weights(3));
     entries[2] = Eigen::Triplet<double>(0, 2, weights(4));
@@ -446,6 +451,8 @@ public:
     entries[4] = Eigen::Triplet<double>(0, 0, 2.0*weights(5)*beta(1));
     entries[5] = Eigen::Triplet<double>(0, 1, 2.0*weights(5)*beta(0));
     entries[6] = Eigen::Triplet<double>(1, 0, 2.0*weights(5)*beta(0));
+
+    return entries;
   }
 
 private:

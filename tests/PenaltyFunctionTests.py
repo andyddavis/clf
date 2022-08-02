@@ -1,3 +1,5 @@
+"""! @brief Test the penalty function (clf::PenaltyFunction) python interface"""
+
 import unittest
 
 import numpy as np
@@ -9,7 +11,10 @@ from TestPenaltyFunctions import *
 import PyCoupledLocalFunctions as clf
 
 class TestDensePenaltyFunction(unittest.TestCase):
+    """! Test the dense penalty function (clf::DensePenaltyFunction) python interface"""
     def tearDown(self):
+        """! Compare the derivative information to finite difference approximations"""
+        
         self.assertEqual(self.func.indim, 3)
         self.assertEqual(self.func.outdim, self.outdim)
 
@@ -33,7 +38,11 @@ class TestDensePenaltyFunction(unittest.TestCase):
         self.assertAlmostEqual(np.linalg.norm(hess-hessFD), 0.0)
     
     def test_dense_test0(self):
+        """! Check TestPenaltyFunctions.DensePenaltyFunctionTest0"""
+
+        ## The output dimension
         self.outdim = 2
+        ## The penalty function
         self.func = DensePenaltyFunctionTest0()
         
         # evaluate the cost function 
@@ -44,7 +53,11 @@ class TestDensePenaltyFunction(unittest.TestCase):
         self.assertAlmostEqual(fx[1], beta[0]*(1.0-beta[2]))
 
     def test_dense_test1(self):
+        """! Check TestPenaltyFunctions.DensePenaltyFunctionTest1"""
+        
+        ## The output dimension
         self.outdim = 6
+        ## The penalty function
         self.func = DensePenaltyFunctionTest1()
         
         # evaluate the cost function 
@@ -59,7 +72,10 @@ class TestDensePenaltyFunction(unittest.TestCase):
         self.assertAlmostEqual(fx[5], beta[0]*beta[0]*beta[1])
 
 class TestSparsePenaltyFunction(unittest.TestCase):
+    """! Test the sparse penalty function (clf::SparsePenaltyFunction) python interface"""
     def tearDown(self):
+        """! Compare the derivative information to finite difference approximations"""
+                
         self.assertEqual(self.func.indim, 3)
         self.assertEqual(self.func.outdim, self.outdim)
 
@@ -83,7 +99,11 @@ class TestSparsePenaltyFunction(unittest.TestCase):
         self.assertAlmostEqual(scipy.sparse.linalg.norm(hess-hessFD), 0.0)
 
     def test_sparse_test0(self):
+        """! Check TestPenaltyFunctions.SparsePenaltyFunctionTest0"""
+
+        ## The output dimension
         self.outdim = 2
+        ## The penalty function
         self.func = SparsePenaltyFunctionTest0()
         
         # evaluate the cost function 
@@ -94,7 +114,11 @@ class TestSparsePenaltyFunction(unittest.TestCase):
         self.assertAlmostEqual(fx[1], beta[0]*(1.0-beta[2]))
 
     def test_sparse_test1(self):
+        """! Check TestPenaltyFunctions.SparsePenaltyFunctionTest0"""
+
+        ## The output dimension
         self.outdim = 6
+        ## The penalty function
         self.func = SparsePenaltyFunctionTest1()
         
         # evaluate the cost function 

@@ -1,3 +1,5 @@
+"""! @brief Test the local function (clf::LocalFunction) python interface"""
+
 import unittest
 
 import random
@@ -7,7 +9,11 @@ import numpy as np
 import PyCoupledLocalFunctions as clf
 
 class TestLocalFunction(unittest.TestCase):
-    def test_basic(self):
+    """! Test the local function (clf::LocalFunction) python interface"""
+    
+    def test_evaluation(self):
+        """! Test the evaluation of a local function"""
+        
         indim = int(5)
         outdim = int(3)
         maxOrder = int(4)

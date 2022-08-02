@@ -1,3 +1,5 @@
+"""! @brief Test the feature matrix (clf::FeatureMatrix) python interface"""
+
 import unittest
 
 import numpy as np
@@ -6,7 +8,10 @@ import random
 import PyCoupledLocalFunctions as clf
 
 class TestFeatureMatrix(unittest.TestCase):
+    """! Test the feature matrix (clf::FeatureMatrix) python interface"""
     def test_single_feature_vector(self):
+        """! Test a feature matrix with only one (repeated) feature vector"""
+
         indim = int(5)
         outdim = int(3)
         maxOrder = int(4)
@@ -42,6 +47,8 @@ class TestFeatureMatrix(unittest.TestCase):
         self.assertAlmostEqual(np.linalg.norm(output-expected), 0.0)
 
     def test_multi_feature_vector(self):
+        """! Test a feature matrix with multiple (not repeated) feature vectors"""
+
         indim = int(5)
         outdim = int(2)
         maxOrder1 = int(4)
@@ -84,6 +91,8 @@ class TestFeatureMatrix(unittest.TestCase):
         self.assertAlmostEqual(np.linalg.norm(output-expected), 0.0)
 
     def test_repeated_feature_vector(self):
+        """! Test a feature matrix with multiple repeated feature vectors"""
+
         indim = int(5)
         outdim = int(3)
         maxOrder1 = int(4)

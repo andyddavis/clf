@@ -1,3 +1,5 @@
+"""! @brief Test the linear model (clf::LinearModel) python interface"""
+
 import unittest
 
 import numpy as np
@@ -6,11 +8,19 @@ import random
 import PyCoupledLocalFunctions as clf
 
 class TestLinearModel(unittest.TestCase):
+    """! Test the linear model (clf::LinearModel) python interface"""
+    
     def setUp(self):
+        """! Set the input/output dimensions to set up the tests"""
+
+        ## The input dimension
         self.indim = 4
+
+        ## The output dimension
         self.outdim = 3
         
     def tearDown(self):
+        """! Check evaluations and compare the derivatives to finite difference approximations"""
         self.assertEqual(self.linsys.indim, self.indim)
         self.assertEqual(self.linsys.outdim, self.outdim)
         
@@ -64,22 +74,38 @@ class TestLinearModel(unittest.TestCase):
         self.assertAlmostEqual(np.linalg.norm(hessFD, ord=np.inf), 0.0, 6)
 
     def test_square_identity(self):
+        """! Check the square identity model 
+
+        Note: clf::IdentityModel implements this model more efficiently
+        """
+
+        ## The number of columns of the matrix 
         self.matdim = self.outdim
+        ## The matrix that defines this model
         self.mat = np.identity(self.outdim)
+        ## The linear model
         self.linsys = clf.LinearModel(self.indim, self.outdim)
 
     def test_non_square_identity(self):
+        """! Check the non-square identity model"""
+        ## The number of columns of the matrix 
         self.matdim = 8
+        ## The matrix that defines this model
         self.mat = np.zeros((self.outdim, self.matdim))
         for i in range(min(self.outdim, self.matdim)):
             self.mat[i, i] = 1.0
+        ## The linear model
         self.linsys = clf.LinearModel(self.indim, self.outdim, self.matdim)
 
     def test_random_matrix(self):
+        """! Check the linear model with a random matrix"""
+        ## The number of columns of the matrix 
         self.matdim = 8
+        ## The matrix that defines this model
         self.mat = np.zeros((self.outdim, self.matdim))
         for i in range(self.outdim):
             for j in range(self.matdim):
                 self.mat[i, j] = np.random.uniform(-1.0, 1.0)
+        ## The linear model
         self.linsys = clf.LinearModel(self.indim, self.mat)
 

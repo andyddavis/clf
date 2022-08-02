@@ -1,3 +1,5 @@
+"""! @brief Test the identity model (clf::IdentityModel) python interface"""
+
 import unittest
 
 import numpy as np
@@ -6,7 +8,11 @@ import random
 import PyCoupledLocalFunctions as clf
 
 class TestIdentityModel(unittest.TestCase):
-    def test_basic(self):
+    """! Test the identity model (clf::IdentityModel) python interface"""
+    
+    def test_evaluation_derivatives(self):
+        """! Test the evaluation and derivatives of the identity model"""
+        
         indim = 4
         outdim = 8
 

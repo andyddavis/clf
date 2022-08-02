@@ -1,10 +1,14 @@
+"""! @brief Test the multi-index (clf::MultiIndex) python interface"""
+
 import unittest
 
 import PyCoupledLocalFunctions as clf
 import random
 
 class TestMultIndex(unittest.TestCase):
-    def test_basic(self):
+    """! Test the multi-index (clf::MultiIndex) python interface"""
+    def test_construction(self):
+        """! Test the multi-index construction"""
         dim = int(5)
         alpha = [None]*dim
         order = 0

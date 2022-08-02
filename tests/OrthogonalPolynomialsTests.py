@@ -1,10 +1,15 @@
+"""! @brief Test the orthogonal polynomials (clf::OrthogonalPolynomials) python interface"""
+
 import unittest
 
 import PyCoupledLocalFunctions as clf
 import random
 
 class TestOrthogonalPolynomials(unittest.TestCase):
+    """! Test the orthogonal polynomials (clf::OrthogonalPolynomials) python interface"""
+    
     def test_Legendre(self):
+        """! Test the Legendre polynomials"""
         leg = clf.LegendrePolynomials() 
 
         x = random.uniform(-1, 1)

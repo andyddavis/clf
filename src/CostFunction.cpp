@@ -29,10 +29,9 @@ Eigen::SparseMatrix<double> SparseCostFunction::Jacobian(Eigen::VectorXd const& 
   std::vector<Eigen::Triplet<double> > entries;
   std::size_t start = 0;
   for( const auto& it : penaltyFunctions ) {
-    std::vector<Eigen::Triplet<double> > entriesLocal;
     auto ptr = std::dynamic_pointer_cast<SparsePenaltyFunction>(it);
     assert(ptr);
-    ptr->JacobianEntries(beta, entriesLocal);
+    std::vector<Eigen::Triplet<double> > entriesLocal = ptr->JacobianEntries(beta);
     for( auto& jt : entriesLocal ) { entries.emplace_back(start+jt.row(), jt.col(), jt.value()); }
     start += it->outdim;
   }

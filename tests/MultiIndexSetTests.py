@@ -1,10 +1,14 @@
+"""! @brief Test the multi index set (clf::MultiIndexSet) python interface"""
+
 import unittest
 
 import PyCoupledLocalFunctions as clf
 import scipy
 
 class TestMultIndexSet(unittest.TestCase):
+    """! Test the multi index set (clf::MultiIndexSet) python interface"""
     def test_total_order(self):
+        """! Test the total order construction of a multi index set"""
         dim = int(3)
         maxOrder = int(4)
     

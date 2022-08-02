@@ -78,6 +78,12 @@ void LinearModelWrapper(pybind11::module& mod);
  */
 void PenaltyFunctionWrapper(pybind11::module& mod);
 
+/// Python wrapper for clf::CostFunction and its children
+/**
+   @param[in] mod The python module
+ */
+void CostFunctionWrapper(pybind11::module& mod);
+
 } // namespace python 
 } // namespace clf
 
