@@ -118,6 +118,8 @@ if( CLF_USE_PYTHON )
 
 	python/PenaltyFunction.cpp
 	python/CostFunction.cpp
+
+	python/Point.cpp	
     )
 endif()
 

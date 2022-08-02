@@ -26,6 +26,8 @@ from LinearModelTests import *
 from PenaltyFunctionTests import *
 from CostFunctionTests import *
 
+from PointTests import *
+
 class TestCLFInstall(unittest.TestCase):
     """! Test the python installation
     """
