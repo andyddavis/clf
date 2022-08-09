@@ -119,6 +119,8 @@ if( CLF_USE_PYTHON )
 	python/PenaltyFunction.cpp
 	python/CostFunction.cpp
 
+	python/LevenbergMarquardt.cpp
+
 	python/Point.cpp
 	
 	python/LocalResidual.cpp

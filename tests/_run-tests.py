@@ -26,6 +26,8 @@ from LinearModelTests import *
 from PenaltyFunctionTests import *
 from CostFunctionTests import *
 
+from LevenbergMarquardtTests import *
+
 from PointTests import *
 
 from LocalResidualTests import *

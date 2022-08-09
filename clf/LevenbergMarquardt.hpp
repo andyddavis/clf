@@ -87,10 +87,24 @@ public:
 
   /// Minimize the cost function using the Levenberg Marquardt algorithm
   /**
-     @param[in, out] beta In: The initial guess for the Levenberg Marquardt algorithm; Out: The
-     paramter values that minimizes the cost function
+     Minimize without passing by reference for the sake of the python interface
+     @param[in] beta The initial guess for the Levenberg Marquardt algorithm
+     \return First: Information about convergence or failure Second: The current cost, Third: The parameter values that minimizes the cost function Fouth: The evaluation of the cost function at the optimal point
+  */
+  inline std::tuple<Optimization::Convergence, double, Eigen::VectorXd, Eigen::VectorXd> Minimize(Eigen::VectorXd const& beta) {
+    std::tuple<Optimization::Convergence, double, Eigen::VectorXd, Eigen::VectorXd> result;
+    std::get<2>(result) = beta;
+    
+    std::tie(std::get<0>(result), std::get<1>(result)) = Minimize(std::get<2>(result), std::get<3>(result));
+
+    return result;
+  }
+
+  /// Minimize the cost function using the Levenberg Marquardt algorithm
+  /**
+     @param[in, out] beta In: The initial guess for the Levenberg Marquardt algorithm; Out: The parameter values that minimizes the cost function
      @param[out] costVec The evaluation of the cost function at the optimal point
-     \return First: Information about convergence or failure  Second: The current cost
+     \return First: Information about convergence or failure Second: The current cost
   */
   inline std::pair<Optimization::Convergence, double> Minimize(Eigen::VectorXd& beta, Eigen::VectorXd& costVec) {
     assert(beta.size()==NumParameters());

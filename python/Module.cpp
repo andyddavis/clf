@@ -29,6 +29,8 @@ PYBIND11_MODULE(PyCoupledLocalFunctions, module) {
   clf::python::PenaltyFunctionWrapper(module);
   clf::python::CostFunctionWrapper(module);
 
+  clf::python::LevenbergMarquardtWrapper(module);
+
   clf::python::PointWrapper(module);
 
   clf::python::LocalResidualWrapper(module);

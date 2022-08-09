@@ -83,7 +83,13 @@ void PenaltyFunctionWrapper(pybind11::module& mod);
    @param[in] mod The python module
  */
 void CostFunctionWrapper(pybind11::module& mod);
-  
+
+/// Python wrapper for clf::LevenbergMarquardt and its children
+/**
+   @param[in] mod The python module
+ */
+void LevenbergMarquardtWrapper(pybind11::module& mod);
+
 /// Python wrapper for clf::Point
 /**
    @param[in] mod The python module
