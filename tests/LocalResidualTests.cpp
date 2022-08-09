@@ -23,7 +23,7 @@ protected:
     
     auto para = std::make_shared<Parameters>();
     para->Add("NumPoints", numPoints);
-    para->Add("Radius", radius);
+    para->Add("LocalRadius", radius);
     
     const double delta = 0.75;
     const Eigen::VectorXd xbar = Eigen::VectorXd::Random(indim);

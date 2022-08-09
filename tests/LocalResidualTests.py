@@ -18,8 +18,52 @@ class TestLocalResidual(unittest.TestCase):
 
     def tearDown(self):
         """! Test the local residual python interface"""
+        radius = 0.1
+        numPoints = 100
+        point = clf.Point([random.uniform(-1.0, 1.0) for i in range(self.indim)])
 
-        self.assertTrue(False)
+        para = clf.Parameters()
+        para.Add('InputDimension', self.indim)
+        para.Add('OutputDimension', self.outdim)
+        para.Add("NumPoints", numPoints)
+        para.Add("LocalRadius", radius)
+
+        maxOrder = 4
+        multiSet = clf.MultiIndexSet(self.indim, maxOrder)
+        leg = clf.LegendrePolynomials()
+        func = clf.LocalFunction(multiSet, leg, point, para)
+
+        resid = clf.LocalResidual(func, self.system, point, para);
+        self.assertEqual(resid.indim, func.NumCoefficients())
+        self.assertEqual(resid.outdim, self.outdim*numPoints)
+        self.assertEqual(resid.NumLocalPoints(), numPoints)
+
+        coeff = [random.uniform(-1.0, 1.0) for i in range(resid.indim)]
+
+        fx = resid.Evaluate(coeff)
+        self.assertEqual(len(fx), resid.outdim)
+        start = 0
+        for i in range(numPoints):
+            self.assertAlmostEqual(np.linalg.norm(fx[start:start+self.outdim]-self.mat@func.Evaluate(resid.GetPoint(i).x, coeff)), 0.0)
+            start += self.outdim
+
+        jac = resid.Jacobian(coeff)
+        self.assertEqual(np.shape(jac) [0], self.outdim*numPoints)
+        self.assertEqual(np.shape(jac) [1], func.NumCoefficients())
+        jacFD = resid.JacobianFD(coeff)
+        self.assertEqual(np.shape(jacFD) [0], self.outdim*numPoints)
+        self.assertEqual(np.shape(jacFD) [1], func.NumCoefficients())
+        self.assertAlmostEqual(np.linalg.norm(jac-jacFD)/np.linalg.norm(jac), 0.0)
+
+        weights = [random.uniform(-1.0, 1.0) for i in range(resid.outdim)]
+        hess = resid.Hessian(coeff, weights)
+        self.assertEqual(np.shape(hess) [0], func.NumCoefficients())
+        self.assertEqual(np.shape(hess) [1], func.NumCoefficients())
+        self.assertAlmostEqual(np.linalg.norm(hess), 0.0)
+        hessFD = resid.HessianFD(coeff, weights)
+        self.assertEqual(np.shape(hessFD) [0], func.NumCoefficients())
+        self.assertEqual(np.shape(hessFD) [1], func.NumCoefficients())
+        self.assertAlmostEqual(np.linalg.norm(hessFD), 0.0)
 
     def test_identity_model(self):
         """! Test using and identity model"""

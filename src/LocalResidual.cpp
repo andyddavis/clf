@@ -6,7 +6,7 @@ using namespace clf;
 
 LocalResidual::LocalResidual(std::shared_ptr<LocalFunction> const& func, std::shared_ptr<SystemOfEquations> const& system, Point const& point, std::shared_ptr<const Parameters> const& para) :
   DensePenaltyFunction(func->NumCoefficients(), system->outdim*para->Get<std::size_t>("NumPoints"), para),
-  points(GeneratePoints(point, para->Get<std::size_t>("NumPoints"), para->Get<double>("Radius"))),
+  points(GeneratePoints(point, para->Get<std::size_t>("NumPoints"), para->Get<double>("LocalRadius"))),
   function(func),
   system(system)
 {}

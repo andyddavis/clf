@@ -5,26 +5,39 @@ import unittest
 import PyCoupledLocalFunctions as clf
 import scipy
 
-class TestMultIndexSet(unittest.TestCase):
+class TestTotalOrderMultIndexSet(unittest.TestCase):
     """! Test the multi index set (clf::MultiIndexSet) python interface"""
-    def test_total_order(self):
-        """! Test the total order construction of a multi index set"""
-        dim = int(3)
-        maxOrder = int(4)
-    
-        para = clf.Parameters()
-        para.Add('InputDimension', dim)
-        para.Add('MaximumOrder', maxOrder)
-    
-        multiSet = clf.MultiIndexSet(para)
-    
+    def setUp(self):
+        """! Set up the dimension and maximum order"""
+        ## The input dimension
+        self.dim = int(3)
+        ## The output dimension
+        self.maxOrder = int(4)
+
+    def tearDown(self):
+        """! Test the multi-index set"""
         expectedNumIndices = 0;
-        for i in range(maxOrder+1):
-            expectedNumIndices += scipy.special.comb(dim+i-1, i);
-        self.assertEqual(multiSet.NumIndices(), expectedNumIndices)
+        for i in range(self.maxOrder+1):
+            expectedNumIndices += scipy.special.comb(self.dim+i-1, i);
+        self.assertEqual(self.multiSet.NumIndices(), expectedNumIndices)
 
-        for ind in multiSet.indices:
-            self.assertLessEqual(ind.Order(), maxOrder)
+        for ind in self.multiSet.indices:
+            self.assertLessEqual(ind.Order(), self.maxOrder)
 
-        for i in range(dim):
-            self.assertEqual(multiSet.MaxIndex(i), maxOrder)
+        for i in range(self.dim):
+            self.assertEqual(self.multiSet.MaxIndex(i), self.maxOrder)
+        
+    def test_direct_construction(self):
+        """! Test the total order construction of a multi index set using direction constructors"""
+        ## The multi-index set
+        self.multiSet = clf.MultiIndexSet(self.dim, self.maxOrder)
+
+    def test_parameter_construction(self):
+        """! Test the total order construction of a multi index set using a parameter type"""
+        para = clf.Parameters()
+        para.Add('InputDimension', self.dim)
+        para.Add('MaximumOrder', self.maxOrder)
+
+        ## The multi-index set
+        self.multiSet = clf.MultiIndexSet(para)
+

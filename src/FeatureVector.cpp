@@ -2,23 +2,35 @@
 
 using namespace clf;
 
-FeatureVector::FeatureVector(std::shared_ptr<const MultiIndexSet> const& set, std::shared_ptr<BasisFunctions> const& basis, Eigen::VectorXd const& xbar, double const delta) :
-  set(set), basis(basis), xbar(xbar), delta(delta)
+FeatureVector::FeatureVector(std::shared_ptr<const MultiIndexSet> const& set, std::shared_ptr<BasisFunctions> const& basis, Eigen::VectorXd const& xpoint, double const delta) :
+  set(set), basis(basis), xbar(std::make_shared<Point>(xpoint)), delta(delta)
 {
-  assert(xbar.size()==set->Dimension());
+  assert(xbar->x.size()==set->Dimension());
 }
 
-FeatureVector::FeatureVector(std::shared_ptr<const MultiIndexSet> const& set, std::shared_ptr<BasisFunctions> const& basis, Eigen::VectorXd const& xbar, std::shared_ptr<Parameters> const& para) :
+FeatureVector::FeatureVector(std::shared_ptr<const MultiIndexSet> const& set, std::shared_ptr<BasisFunctions> const& basis, Eigen::VectorXd const& xpoint, std::shared_ptr<Parameters> const& para) :
+  set(set), basis(basis), xbar(std::make_shared<Point>(xpoint)), delta(para->Get<double>("LocalRadius"))
+{
+  assert(xbar->x.size()==set->Dimension());
+}
+
+FeatureVector::FeatureVector(std::shared_ptr<const MultiIndexSet> const& set, std::shared_ptr<BasisFunctions> const& basis, std::shared_ptr<const Point> const& xbar, double const delta) :
+  set(set), basis(basis), xbar(xbar), delta(delta)
+{
+  assert(xbar->x.size()==set->Dimension());
+}
+
+FeatureVector::FeatureVector(std::shared_ptr<const MultiIndexSet> const& set, std::shared_ptr<BasisFunctions> const& basis, std::shared_ptr<const Point> const& xbar, std::shared_ptr<Parameters> const& para) :
   set(set), basis(basis), xbar(xbar), delta(para->Get<double>("LocalRadius"))
 {
-  assert(xbar.size()==set->Dimension());
+  assert(xbar->x.size()==set->Dimension());
 }
 
 std::size_t FeatureVector::InputDimension() const { return set->Dimension(); }
 
 std::size_t FeatureVector::NumBasisFunctions() const { return set->NumIndices(); }
 
-Eigen::VectorXd FeatureVector::Transformation(Eigen::VectorXd const& x) const { return (x-xbar)/delta; }
+Eigen::VectorXd FeatureVector::Transformation(Eigen::VectorXd const& x) const { return (x-xbar->x)/delta; }
 
 Eigen::VectorXd FeatureVector::Evaluate(Eigen::VectorXd const& x) const {
   assert(x.size()==set->Dimension());

@@ -12,6 +12,9 @@ void clf::python::FeatureVectorWrapper(py::module& mod) {
   vec.def(py::init<std::shared_ptr<MultiIndexSet> const&, std::shared_ptr<BasisFunctions> const&, Eigen::VectorXd const&, double const>());
   vec.def(py::init<std::shared_ptr<MultiIndexSet> const&, std::shared_ptr<BasisFunctions> const&, Eigen::VectorXd const&, std::shared_ptr<Parameters> const&>());
 
+  vec.def(py::init<std::shared_ptr<MultiIndexSet> const&, std::shared_ptr<BasisFunctions> const&, std::shared_ptr<const Point> const&, double const>());
+  vec.def(py::init<std::shared_ptr<MultiIndexSet> const&, std::shared_ptr<BasisFunctions> const&, std::shared_ptr<const Point> const&, std::shared_ptr<Parameters> const&>());
+
   vec.def("InputDimension", &FeatureVector::InputDimension);
   vec.def("Transformation", &FeatureVector::Transformation);
   vec.def("NumBasisFunctions", &FeatureVector::NumBasisFunctions);

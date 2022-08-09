@@ -52,6 +52,29 @@ public:
    */
   LocalFunction(std::shared_ptr<MultiIndexSet> const& set, std::shared_ptr<BasisFunctions> const& basis, Eigen::VectorXd const& xbar, std::shared_ptr<Parameters> const& para);
 
+  /**
+     @param[in] set The set multi-indices that determines the order of each basis function 
+     @param[in] basis The basis functions 
+     @param[in] xbar The parameter \f$\bar{x}\f$ that defines the center of the local domain
+     @param[in] delta The parameter \f$\delta\f$ that defines the radius of the local domain
+     @param[in] outdim The output dimension of this local function
+   */
+  LocalFunction(std::shared_ptr<MultiIndexSet> const& set, std::shared_ptr<BasisFunctions> const& basis, std::shared_ptr<const Point> const& xbar, double const delta, std::size_t const outdim);
+
+  /**
+     <B>Configuration Parameters:</B>
+     Parameter Key | Type | Default Value | Description |
+     ------------- | ------------- | ------------- | ------------- |
+     "LocalRadius"   | <tt>double</tt> | --- | The radius that defines the local function (the parameter \f$\delta\f$). This is a required parameter. |
+     "OutputDimension"   | <tt>std::size_t</tt> | --- | The output dimension of the local function. This is a required parameter. |
+
+     @param[in] set The set multi-indices that determines the order of each basis function 
+     @param[in] basis The basis functions 
+     @param[in] xbar The parameter \f$\bar{x}\f$ that defines the center of the local domain
+     @param[in] para The parameters for this local function
+   */
+  LocalFunction(std::shared_ptr<MultiIndexSet> const& set, std::shared_ptr<BasisFunctions> const& basis, std::shared_ptr<const Point> const& xbar, std::shared_ptr<Parameters> const& para);
+
   virtual ~LocalFunction() = default;
 
   /// The input dimension \f$d\f$ 

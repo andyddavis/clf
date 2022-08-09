@@ -13,7 +13,6 @@ class TestLocalFunction(unittest.TestCase):
     
     def test_evaluation(self):
         """! Test the evaluation of a local function"""
-        
         indim = int(5)
         outdim = int(3)
         maxOrder = int(4)

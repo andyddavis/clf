@@ -10,6 +10,7 @@ using namespace clf;
 void clf::python::LocalFunctionWrapper(py::module& mod) {
   py::class_<LocalFunction, std::shared_ptr<LocalFunction> > func(mod, "LocalFunction");
   func.def(py::init<std::shared_ptr<MultiIndexSet> const&, std::shared_ptr<BasisFunctions> const&, Eigen::VectorXd const&, std::shared_ptr<Parameters> const&>());
+  func.def(py::init<std::shared_ptr<MultiIndexSet> const&, std::shared_ptr<BasisFunctions> const&, std::shared_ptr<const Point> const&, std::shared_ptr<Parameters> const&>());
 
   func.def("InputDimension", &LocalFunction::InputDimension);
   func.def("OutputDimension", &LocalFunction::OutputDimension);

@@ -14,7 +14,7 @@ namespace clf {
    <B>Configuration Parameters:</B>
    Parameter Key | Type | Default Value | Description |
    ------------- | ------------- | ------------- | ------------- |
-   "Radius"   | <tt>double</tt> | <tt>---</tt> | The radius of the local ball \f$\delta\f$. This is a required parameter. |
+   "LocalRadius"   | <tt>double</tt> | <tt>---</tt> | The radius of the local ball \f$\delta\f$. This is a required parameter. |
    "NumPoints"   | <tt>std::size_t</tt> | <tt>---</tt> | The number of local points \f$m\f$. This is a required parameter. |
 */
 class LocalResidual : public DensePenaltyFunction {
