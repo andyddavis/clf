@@ -96,6 +96,12 @@ void LevenbergMarquardtWrapper(pybind11::module& mod);
  */
 void PointWrapper(pybind11::module& mod);
 
+/// Python wrapper for clf::PointCloud
+/**
+   @param[in] mod The python module
+ */
+void PointCloudWrapper(pybind11::module& mod);
+
 /// Python wrapper for clf::LocalResidual
 /**
    @param[in] mod The python module

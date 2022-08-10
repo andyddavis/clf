@@ -32,6 +32,7 @@ PYBIND11_MODULE(PyCoupledLocalFunctions, module) {
   clf::python::LevenbergMarquardtWrapper(module);
 
   clf::python::PointWrapper(module);
+  clf::python::PointCloudWrapper(module);
 
   clf::python::LocalResidualWrapper(module);
 }

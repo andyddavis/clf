@@ -4,7 +4,7 @@
 
 using namespace clf;
 
-TEST(PointCloudTests, DefaultConstruction) {
+TEST(PointCloudTests, AddPoints) {
   std::size_t dim = 3;
 
   PointCloud cloud; // create an empty point cloud

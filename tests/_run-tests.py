@@ -30,6 +30,7 @@ from CostFunctionTests import *
 from LevenbergMarquardtTests import *
 
 from PointTests import *
+from PointCloudTests import *
 
 from LocalResidualTests import *
 
