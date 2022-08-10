@@ -32,7 +32,7 @@ void clf::python::LevenbergMarquardtWrapper(pybind11::module& mod) {
   py::enum_<Optimization::Convergence> conv(mod, "OptimizationConvergence");
   conv.value("FAILED_MAX_HESSIAN_EVALUATIONS", Optimization::Convergence::FAILED_MAX_HESSIAN_EVALUATIONS);
   conv.value("FAILED_MAX_JACOBIAN_EVALUATIONS", Optimization::Convergence::FAILED_MAX_JACOBIAN_EVALUATIONS);
-  conv.value("FAILED_MAX_COST_EVALUATIONS", Optimization::Convergence::FAILED_MAX_COST_EVALUATIONS);
+  conv.value("FAILED_MAX_COST_EVALgUATIONS", Optimization::Convergence::FAILED_MAX_COST_EVALUATIONS);
   conv.value("FAILED_MAX_ITERATIONS", Optimization::Convergence::FAILED_MAX_ITERATIONS);
   conv.value("FAILED", Optimization::Convergence::FAILED);
   conv.value("CONTINUE_RUNNING", Optimization::Convergence::CONTINUE_RUNNING);
@@ -48,5 +48,4 @@ void clf::python::LevenbergMarquardtWrapper(pybind11::module& mod) {
 
   py::class_<SparseLevenbergMarquardt, std::shared_ptr<SparseLevenbergMarquardt>, LevenbergMarquardt<Eigen::SparseMatrix<double> > > sparse(mod, "SparseLevenbergMarquardt");
   sparse.def(py::init<std::shared_ptr<const SparseCostFunction> const&, std::shared_ptr<Parameters> const&>());
-
 }

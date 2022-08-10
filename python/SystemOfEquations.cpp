@@ -1,6 +1,5 @@
 #include "clf/python/Pybind11Wrappers.hpp"
-
-#include <pybind11/eigen.h>
+#include "clf/python/PySystemOfEquations.hpp"
 
 #include "clf/SystemOfEquations.hpp"
 
@@ -8,7 +7,10 @@ namespace py = pybind11;
 using namespace clf;
 
 void clf::python::SystemOfEquationsWrapper(py::module& mod) {
-  py::class_<SystemOfEquations, std::shared_ptr<SystemOfEquations> > sys(mod, "SystemOfEquations");
+  py::class_<SystemOfEquations, std::shared_ptr<SystemOfEquations>, python::PySystemOfEquations<SystemOfEquations> > sys(mod, "SystemOfEquations");
+  sys.def(py::init<std::size_t const, std::size_t const>());
+  sys.def(py::init<std::size_t const, std::size_t const, std::shared_ptr<const Parameters> const&>());
+  sys.def(py::init<std::shared_ptr<const Parameters> const&>());
 
   sys.def("RightHandSide", &SystemOfEquations::RightHandSide);
   sys.def("Operator", &SystemOfEquations::Operator);

@@ -14,6 +14,7 @@ class TestLevenbergMarquardt(unittest.TestCase):
     """! Test the Levenberg Marquardt (clf::LevenbergMarquardt) python interface"""
 
     def test_dense(self):
+        """! Test the Levenberg Marquardt (clf::LevenbergMarquardt) python interface with dense matrices"""
         para = clf.Parameters()
 
         func0 = DensePenaltyFunctionTest0()
@@ -35,6 +36,7 @@ class TestLevenbergMarquardt(unittest.TestCase):
         self.assertAlmostEqual(np.linalg.norm(result[3]), 0.0)
 
     def test_sparse(self):
+        """! Test the Levenberg Marquardt (clf::LevenbergMarquardt) python interface with sparse matrices"""
         para = clf.Parameters()
 
         func0 = SparsePenaltyFunctionTest0()

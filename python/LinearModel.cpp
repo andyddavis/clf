@@ -1,6 +1,5 @@
 #include "clf/python/Pybind11Wrappers.hpp"
-
-#include <pybind11/eigen.h>
+#include "clf/python/PySystemOfEquations.hpp"
 
 #include "clf/LinearModel.hpp"
 
@@ -8,7 +7,7 @@ namespace py = pybind11;
 using namespace clf;
 
 void clf::python::LinearModelWrapper(py::module& mod) {
-  py::class_<LinearModel, std::shared_ptr<LinearModel>, SystemOfEquations> sys(mod, "LinearModel");
+  py::class_<LinearModel, std::shared_ptr<LinearModel>, SystemOfEquations, python::PySystemOfEquations<LinearModel> > sys(mod, "LinearModel");
   sys.def(py::init<std::size_t const, std::size_t const>());
   sys.def(py::init<std::size_t const, std::size_t const, std::shared_ptr<const Parameters> const&>());
   sys.def(py::init<std::shared_ptr<const Parameters> const&>());

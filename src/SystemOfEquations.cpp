@@ -18,6 +18,11 @@ SystemOfEquations::SystemOfEquations(std::shared_ptr<const Parameters> const& pa
 
 Eigen::VectorXd SystemOfEquations::RightHandSide(Eigen::VectorXd const& x) const { return Eigen::VectorXd::Zero(outdim); }
 
+Eigen::VectorXd SystemOfEquations::Operator(std::shared_ptr<LocalFunction> const& u, Eigen::VectorXd const& x, Eigen::VectorXd const& coeff) const {
+  throw exceptions::NotImplemented("SystemOfEquations::Operator");
+  return Eigen::VectorXd();
+}
+
 Eigen::MatrixXd SystemOfEquations::JacobianWRTCoefficients(std::shared_ptr<LocalFunction> const& u, Eigen::VectorXd const& x, Eigen::VectorXd const& coeff) const { return JacobianWRTCoefficients(u, x, coeff); }
 
 Eigen::MatrixXd SystemOfEquations::JacobianWRTCoefficientsFD(std::shared_ptr<LocalFunction> const& u, Eigen::VectorXd const& x, Eigen::VectorXd const& coeff) const {

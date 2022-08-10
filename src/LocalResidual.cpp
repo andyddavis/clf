@@ -1,7 +1,5 @@
 #include "clf/LocalResidual.hpp"
 
-#include <random>
-
 using namespace clf;
 
 LocalResidual::LocalResidual(std::shared_ptr<LocalFunction> const& func, std::shared_ptr<SystemOfEquations> const& system, Point const& point, std::shared_ptr<const Parameters> const& para) :
@@ -13,20 +11,10 @@ LocalResidual::LocalResidual(std::shared_ptr<LocalFunction> const& func, std::sh
 
 PointCloud LocalResidual::GeneratePoints(Point const& point, std::size_t const num, double const delta) {
   PointCloud points;
-  std::normal_distribution gauss;
-  std::default_random_engine generator;
+
   for( std::size_t i=0; i<num; ++i ) {
-    // generate a point form a uniform distribution in the ball
-    Eigen::VectorXd p(point.x.size());
-    for( std::size_t j=0; j<point.x.size(); ++j ) { p(j) = gauss(generator); }
-    const double u = rand()/(double)RAND_MAX;
-    p *= delta*u/p.norm();
-
-    // add the center point
-    p += point.x;
-
-    // add the point to the cloud
-    points.AddPoint(p);
+    // generate a point form a uniform distribution in [x-delta, x+delta] for each coefficient and add it the point to the cloud
+    points.AddPoint(delta*Eigen::VectorXd::Random(point.x.size()) + point.x);
   }
 
   return points;

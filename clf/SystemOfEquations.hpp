@@ -48,13 +48,13 @@ public:
 
   /// Evaluate the operator \f$\mathcal{L}(u(x), x)\f$. given the function \f$u\f$ and at the location \f$x\f$.
   /**
-     Defaults to \f$\mathcal{L}(u(x), x) = u(x)\f$.
+     This must be implemented, the default implementation throws and exception.
      @param[in] u The function \f$u\f$
      @param[in] x The location \f$x\f$
      @param[in] coeff The coefficients \f$c\f$ that define the location function 
      \return The operator evaluation  \f$\mathcal{L}(u(x), x)\f$
    */
-  virtual Eigen::VectorXd Operator(std::shared_ptr<LocalFunction> const& u, Eigen::VectorXd const& x, Eigen::VectorXd const& coeff) const = 0;
+  virtual Eigen::VectorXd Operator(std::shared_ptr<LocalFunction> const& u, Eigen::VectorXd const& x, Eigen::VectorXd const& coeff) const;
 
   /// Compute the Jacobian of the operator with respect to the cofficients \f$c\f$, \f$\nabla_{c} \mathcal{L}(u(x; c), x)\f$ given the function \f$u\f$ and at the location \f$x\f$.
   /**

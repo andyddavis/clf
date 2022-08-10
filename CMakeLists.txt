@@ -175,6 +175,7 @@ set(TEST_SOURCE
 
     tests/LocalFunctionTests.cpp
 
+    tests/SystemOfEquationsTests.cpp	
     tests/IdentityModelTests.cpp
     tests/LinearModelTests.cpp
 

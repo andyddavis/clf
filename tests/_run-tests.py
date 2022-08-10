@@ -20,6 +20,7 @@ from FeatureMatrixTests import *
 
 from LocalFunctionTests import *
 
+from SystemOfEquationsTests import *
 from IdentityModelTests import *
 from LinearModelTests import *
 

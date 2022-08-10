@@ -25,6 +25,13 @@ plt.rcParams['xtick.labelsize'] = 14
 plt.rcParams['ytick.labelsize'] = 14
 plt.rcParams['legend.fontsize'] = 14
 
+class Model(clf.IdentityModel):
+    def __init__(self, para):
+        super().__init__(para)
+
+    def RightHandSide(self, x):
+        return [np.sin(2.0*np.pi*x[1])]
+        
 indim = 2 # the input dimension
 outdim = 1 # the output dimension
 
@@ -33,7 +40,7 @@ para.Add("InputDimension", indim)
 para.Add("OutputDimension", outdim)
 para.Add("MaximumOrder", 5)
 para.Add("LocalRadius", 1.0)
-para.Add("NumPoints", 250)
+para.Add("NumPoints", 500)
 
 # create a total order multi-index set and the Legendre basis function
 multiSet = clf.MultiIndexSet(para)
@@ -46,7 +53,7 @@ center = clf.Point(np.zeros(2))
 func = clf.LocalFunction(multiSet, leg, center, para)
 
 # create the identity model 
-model = clf.IdentityModel(para)
+model = Model(para)
 
 # create the local residual
 resid = clf.LocalResidual(func, model, center, para);
@@ -60,28 +67,42 @@ assert(status==clf.OptimizationConvergence.CONVERGED or
        status==clf.OptimizationConvergence.CONVERGED_FUNCTION_SMALL or
        status==clf.OptimizationConvergence.CONVERGED_GRADIENT_SMALL)
 
-###############################################
-
 n = int(250)
 xvec = np.linspace(-1.0, 1.0, n)
 fx = np.zeros((n, n))
+expected = np.zeros((n, n))
 for i in range(n):
     for j in range(n):
         fx[i, j] = func.Evaluate([xvec[i], xvec[j]], coeff) [0]
+        expected[i, j] = model.RightHandSide([xvec[i], xvec[j]]) [0]
 
 X, Y = np.meshgrid(xvec, xvec)
 
 fig = plt.figure()
 ax = fig.add_subplot(111)
-pc = ax.pcolor(X, Y, fx.T, cmap='plasma_r')
+pc = ax.pcolor(X, Y, fx.T, cmap='plasma_r', vmin=-1.0, vmax=1.0)
 ax.plot(center.x[0], center.x[1], 'o', color='#252525')
 cbar = plt.colorbar(pc)
 ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
 ax.yaxis.set_ticks_position('left')
 ax.xaxis.set_ticks_position('bottom')
-#ax.set_xlabel(r'$x_0$')
-#ax.set_ylabel(r'$x_1$')
+ax.set_xlabel(r'$x_0$')
+ax.set_ylabel(r'$x_1$')
 plt.savefig('figures/fig_result.png', format='png')
 plt.close(fig)
-        
+
+fig = plt.figure()
+ax = fig.add_subplot(111)
+pc = ax.pcolor(X, Y, expected.T, cmap='plasma_r', vmin=-1.0, vmax=1.0)
+ax.plot(center.x[0], center.x[1], 'o', color='#252525')
+cbar = plt.colorbar(pc)
+ax.spines['right'].set_visible(False)
+ax.spines['top'].set_visible(False)
+ax.yaxis.set_ticks_position('left')
+ax.xaxis.set_ticks_position('bottom')
+ax.set_xlabel(r'$x_0$')
+ax.set_ylabel(r'$x_1$')
+plt.savefig('figures/fig_expected.png', format='png')
+plt.close(fig)
+
