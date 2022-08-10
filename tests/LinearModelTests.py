@@ -44,8 +44,9 @@ class TestLinearModel(unittest.TestCase):
         multiSet = clf.MultiIndexSet(para)
         leg = clf.LegendrePolynomials()
         center = np.array([random.uniform(-1.0, 1.0) for i in range(self.indim)])
+        domain = clf.Hypercube(center-np.array([0.1]*self.indim), center+np.array([0.1]*self.indim))
         
-        func = clf.LocalFunction(multiSet, leg, center, para)
+        func = clf.LocalFunction(multiSet, leg, domain, para)
         
         coeff = np.array([random.uniform(-1.0, 1.0) for i in range(func.NumCoefficients())])
         

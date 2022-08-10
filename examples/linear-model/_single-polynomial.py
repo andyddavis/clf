@@ -30,7 +30,7 @@ class Model(clf.IdentityModel):
         super().__init__(para)
 
     def RightHandSide(self, x):
-        return [np.sin(2.0*np.pi*x[1])]
+        return [np.sin(3.0*np.pi*x[1])]
         
 indim = 2 # the input dimension
 outdim = 1 # the output dimension
@@ -38,25 +38,25 @@ outdim = 1 # the output dimension
 para = clf.Parameters()
 para.Add("InputDimension", indim)
 para.Add("OutputDimension", outdim)
-para.Add("MaximumOrder", 5)
-para.Add("LocalRadius", 1.0)
+para.Add("MaximumOrder", 8)
 para.Add("NumPoints", 500)
 
 # create a total order multi-index set and the Legendre basis function
 multiSet = clf.MultiIndexSet(para)
 leg = clf.LegendrePolynomials()
 
-# the center of the domain for the polynomial 
-center = clf.Point(np.zeros(2))
+# the center of the domain for the polynomial and the domain
+center = np.zeros(2)
+domain = clf.Hypercube(center-np.array([1.0]*indim), center+np.array([1.0]*indim))
 
 # create the polynomial 
-func = clf.LocalFunction(multiSet, leg, center, para)
+func = clf.LocalFunction(multiSet, leg, domain, para)
 
 # create the identity model 
 model = Model(para)
 
 # create the local residual
-resid = clf.LocalResidual(func, model, center, para);
+resid = clf.LocalResidual(func, model, para);
 
 # create the optimizer
 lm = clf.DenseLevenbergMarquardt(clf.DenseCostFunction([resid]), para)
@@ -81,7 +81,7 @@ X, Y = np.meshgrid(xvec, xvec)
 fig = plt.figure()
 ax = fig.add_subplot(111)
 pc = ax.pcolor(X, Y, fx.T, cmap='plasma_r', vmin=-1.0, vmax=1.0)
-ax.plot(center.x[0], center.x[1], 'o', color='#252525')
+ax.plot(center[0], center[1], 'o', color='#252525')
 cbar = plt.colorbar(pc)
 ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
@@ -95,7 +95,7 @@ plt.close(fig)
 fig = plt.figure()
 ax = fig.add_subplot(111)
 pc = ax.pcolor(X, Y, expected.T, cmap='plasma_r', vmin=-1.0, vmax=1.0)
-ax.plot(center.x[0], center.x[1], 'o', color='#252525')
+ax.plot(center[0], center[1], 'o', color='#252525')
 cbar = plt.colorbar(pc)
 ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)

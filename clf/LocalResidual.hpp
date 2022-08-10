@@ -14,18 +14,17 @@ namespace clf {
    <B>Configuration Parameters:</B>
    Parameter Key | Type | Default Value | Description |
    ------------- | ------------- | ------------- | ------------- |
-   "LocalRadius"   | <tt>double</tt> | <tt>---</tt> | The radius of the local ball \f$\delta\f$. This is a required parameter. |
    "NumPoints"   | <tt>std::size_t</tt> | <tt>---</tt> | The number of local points \f$m\f$. This is a required parameter. |
 */
 class LocalResidual : public DensePenaltyFunction {
 public:
 
   /**
+     @param[in] func The local function defined in this domain
      @param[in] system The system of equations that we want to locally satisfy
-     @param[in] point The center point for the ball \f$\mathcal{B}_{\delta}(x)\f$
      @param[in] para Parameters for the residual computation
    */
-LocalResidual(std::shared_ptr<LocalFunction> const& func, std::shared_ptr<SystemOfEquations> const& system, Point const& point, std::shared_ptr<const Parameters> const& para = std::make_shared<Parameters>());
+LocalResidual(std::shared_ptr<LocalFunction> const& func, std::shared_ptr<SystemOfEquations> const& system, std::shared_ptr<const Parameters> const& para);
 
   virtual ~LocalResidual() = default;
 
@@ -68,12 +67,13 @@ private:
 
   /// Generate the local points
   /**
+     @param[in] domain 
      @param[in] point The center point for the ball \f$\mathcal{B}_{\delta}(x)\f$
      @param[in] num The number points \f$m\f$
      @param[in] delta The radius of the local ball \f$\delta\f$
      \return The points \f$\{ x_i \in \mathcal{B}_{\delta}(x) \}_{i=1}^{m}\f$
    */
-  static PointCloud GeneratePoints(Point const& point, std::size_t const num, double const delta);
+  static PointCloud GeneratePoints(std::shared_ptr<LocalFunction> const& func, std::size_t const num);
 
   /// The points \f$\{ x_i \in \mathcal{B}_{\delta}(x) \}_{i=1}^{m}\f$
   const PointCloud points;

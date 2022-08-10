@@ -19,18 +19,18 @@ class TestFeatureVector(unittest.TestCase):
         para = clf.Parameters()
         para.Add('InputDimension', indim)
         para.Add('MaximumOrder', maxOrder)
-        para.Add('LocalRadius', 1.0)
 
         multiSet = clf.MultiIndexSet(para)
         leg = clf.LegendrePolynomials()
         center = np.array([random.uniform(-1.0, 1.0) for i in range(indim)])
+        domain = clf.Hypercube(center-np.array([0.1]*indim), center+np.array([0.1]*indim))
 
-        vec = clf.FeatureVector(multiSet, leg, center, para)
+        vec = clf.FeatureVector(multiSet, leg, domain)
         self.assertEqual(vec.InputDimension(), multiSet.Dimension())
         self.assertEqual(vec.NumBasisFunctions(), multiSet.NumIndices())
 
         x = np.array([random.uniform(-1.0, 1.0) for i in range(indim)])
-        y = vec.Transformation(x)
+        y = domain.MapToHypercube(x)
         fx = vec.Evaluate(x)
 
         expected = np.array([1.0]*multiSet.NumIndices())

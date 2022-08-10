@@ -53,8 +53,9 @@ Eigen::MatrixXd LinearModel::JacobianWRTCoefficients(std::shared_ptr<LocalFuncti
 
   std::size_t start = 0;
   std::size_t basis = 0;
+  const std::optional<Eigen::VectorXd> y = u->featureMatrix->LocalCoordinate(x);
   for( auto it=u->featureMatrix->Begin(); it!=u->featureMatrix->End(); ++it ) {
-    const Eigen::RowVectorXd phi = it->first->Evaluate(x).transpose();
+    const Eigen::RowVectorXd phi = it->first->Evaluate((y? *y : x)).transpose();
 
     for( std::size_t i=0; i<it->second; ++i ) {
       jac.block(0, start, outdim, phi.size()) = A.col(basis++)*phi;

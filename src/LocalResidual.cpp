@@ -2,21 +2,16 @@
 
 using namespace clf;
 
-LocalResidual::LocalResidual(std::shared_ptr<LocalFunction> const& func, std::shared_ptr<SystemOfEquations> const& system, Point const& point, std::shared_ptr<const Parameters> const& para) :
+LocalResidual::LocalResidual(std::shared_ptr<LocalFunction> const& func, std::shared_ptr<SystemOfEquations> const& system, std::shared_ptr<const Parameters> const& para) :
   DensePenaltyFunction(func->NumCoefficients(), system->outdim*para->Get<std::size_t>("NumPoints"), para),
-  points(GeneratePoints(point, para->Get<std::size_t>("NumPoints"), para->Get<double>("LocalRadius"))),
+  points(GeneratePoints(func, para->Get<std::size_t>("NumPoints"))),
   function(func),
   system(system)
 {}
 
-PointCloud LocalResidual::GeneratePoints(Point const& point, std::size_t const num, double const delta) {
+PointCloud LocalResidual::GeneratePoints(std::shared_ptr<LocalFunction> const& func, std::size_t const num) {
   PointCloud points;
-
-  for( std::size_t i=0; i<num; ++i ) {
-    // generate a point form a uniform distribution in [x-delta, x+delta] for each coefficient and add it the point to the cloud
-    points.AddPoint(delta*Eigen::VectorXd::Random(point.x.size()) + point.x);
-  }
-
+  for( std::size_t i=0; i<num; ++i ) { points.AddPoint(func->SampleDomain()); }
   return points;
 }
 

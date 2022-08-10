@@ -19,23 +19,24 @@ class TestFeatureMatrix(unittest.TestCase):
         para = clf.Parameters()
         para.Add('InputDimension', indim)
         para.Add('MaximumOrder', maxOrder)
-        para.Add('LocalRadius', 1.0)
 
         multiSet = clf.MultiIndexSet(para)
         leg = clf.LegendrePolynomials()
         center = np.array([random.uniform(-1.0, 1.0) for i in range(indim)])
+        domain = clf.Hypercube(center-np.array([0.1]*indim), center+np.array([0.1]*indim))
 
-        vec = clf.FeatureVector(multiSet, leg, center, para)
-        mat = clf.FeatureMatrix(vec, outdim)
+        vec = clf.FeatureVector(multiSet, leg)
+        mat = clf.FeatureMatrix(vec, outdim, domain)
         self.assertEqual(mat.numBasisFunctions, outdim*multiSet.NumIndices())
         self.assertEqual(mat.InputDimension(), indim)
         self.assertEqual(mat.numFeatureVectors, outdim)
 
-        x = np.array([random.uniform(-1.0, 1.0) for i in range(indim)])
-        fx = vec.Evaluate(x)
+        x = center + np.array([random.uniform(-0.1, 0.1) for i in range(indim)])
+        y = domain.MapToHypercube(x)
+        fx = vec.Evaluate(y)
 
         for i in range(outdim):
-            self.assertAlmostEqual(np.linalg.norm(mat.GetFeatureVector(i).Evaluate(x)-fx), 0.0)
+            self.assertAlmostEqual(np.linalg.norm(mat.GetFeatureVector(i).Evaluate(y)-fx), 0.0)
 
         coeff = np.array([random.uniform(-1.0, 1.0) for i in range(mat.numBasisFunctions)])
         output = mat.ApplyTranspose(x, coeff);
@@ -57,7 +58,6 @@ class TestFeatureMatrix(unittest.TestCase):
         para = clf.Parameters()
         para.Add('InputDimension', indim)
         para.Add('MaximumOrder', maxOrder1)
-        para.Add('LocalRadius', 1.0)
 
         multiSet1 = clf.MultiIndexSet(para)
 
@@ -66,20 +66,22 @@ class TestFeatureMatrix(unittest.TestCase):
 
         leg = clf.LegendrePolynomials()
         center = np.array([random.uniform(-1.0, 1.0) for i in range(indim)])
+        domain = clf.Hypercube(center-np.array([0.1]*indim), center+np.array([0.1]*indim))
 
-        vec1 = clf.FeatureVector(multiSet1, leg, center, para)
-        vec2 = clf.FeatureVector(multiSet2, leg, center, para)
-        mat = clf.FeatureMatrix([vec1, vec2])
+        vec1 = clf.FeatureVector(multiSet1, leg)
+        vec2 = clf.FeatureVector(multiSet2, leg)
+        mat = clf.FeatureMatrix([vec1, vec2], domain)
         self.assertEqual(mat.numBasisFunctions, multiSet1.NumIndices()+multiSet2.NumIndices())
         self.assertEqual(mat.InputDimension(), indim)
         self.assertEqual(mat.numFeatureVectors, outdim)
 
-        x = np.array([random.uniform(-1.0, 1.0) for i in range(indim)])
-        fx1 = vec1.Evaluate(x)
-        fx2 = vec2.Evaluate(x)
+        x = center + np.array([random.uniform(-0.1, 0.1) for i in range(indim)])
+        y = domain.MapToHypercube(x)
+        fx1 = vec1.Evaluate(y)
+        fx2 = vec2.Evaluate(y)
 
-        self.assertAlmostEqual(np.linalg.norm(mat.GetFeatureVector(0).Evaluate(x)-fx1), 0.0)
-        self.assertAlmostEqual(np.linalg.norm(mat.GetFeatureVector(1).Evaluate(x)-fx2), 0.0)
+        self.assertAlmostEqual(np.linalg.norm(mat.GetFeatureVector(0).Evaluate(y)-fx1), 0.0)
+        self.assertAlmostEqual(np.linalg.norm(mat.GetFeatureVector(1).Evaluate(y)-fx2), 0.0)
 
         coeff = np.array([random.uniform(-1.0, 1.0) for i in range(mat.numBasisFunctions)])
         output = mat.ApplyTranspose(x, coeff);
@@ -101,7 +103,6 @@ class TestFeatureMatrix(unittest.TestCase):
         para = clf.Parameters()
         para.Add('InputDimension', indim)
         para.Add('MaximumOrder', maxOrder1)
-        para.Add('LocalRadius', 1.0)
 
         multiSet1 = clf.MultiIndexSet(para)
 
@@ -110,21 +111,23 @@ class TestFeatureMatrix(unittest.TestCase):
 
         leg = clf.LegendrePolynomials()
         center = np.array([random.uniform(-1.0, 1.0) for i in range(indim)])
+        domain = clf.Hypercube(center-np.array([0.1]*indim), center+np.array([0.1]*indim))
 
-        vec1 = (clf.FeatureVector(multiSet1, leg, center, para), 1)
-        vec2 = (clf.FeatureVector(multiSet2, leg, center, para), outdim-1)
-        mat = clf.FeatureMatrix([vec1, vec2])
+        vec1 = (clf.FeatureVector(multiSet1, leg), 1)
+        vec2 = (clf.FeatureVector(multiSet2, leg), outdim-1)
+        mat = clf.FeatureMatrix([vec1, vec2], domain)
         self.assertEqual(mat.numBasisFunctions, multiSet1.NumIndices()+(outdim-1)*multiSet2.NumIndices())
         self.assertEqual(mat.InputDimension(), indim)
         self.assertEqual(mat.numFeatureVectors, outdim)
 
-        x = np.array([random.uniform(-1.0, 1.0) for i in range(indim)])
-        fx1 = vec1[0].Evaluate(x)
-        fx2 = vec2[0].Evaluate(x)
+        x = center + np.array([random.uniform(-0.1, 0.1) for i in range(indim)])
+        y = domain.MapToHypercube(x)
+        fx1 = vec1[0].Evaluate(y)
+        fx2 = vec2[0].Evaluate(y)
 
-        self.assertAlmostEqual(np.linalg.norm(mat.GetFeatureVector(0).Evaluate(x)-fx1), 0.0)
+        self.assertAlmostEqual(np.linalg.norm(mat.GetFeatureVector(0).Evaluate(y)-fx1), 0.0)
         for i in range(1, outdim):
-            self.assertAlmostEqual(np.linalg.norm(mat.GetFeatureVector(i).Evaluate(x)-fx2), 0.0)
+            self.assertAlmostEqual(np.linalg.norm(mat.GetFeatureVector(i).Evaluate(y)-fx2), 0.0)
 
         coeff = np.array([random.uniform(-1.0, 1.0) for i in range(mat.numBasisFunctions)])
         output = mat.ApplyTranspose(x, coeff);

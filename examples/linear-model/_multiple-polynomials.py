@@ -53,10 +53,14 @@ para.Add("NumPoints", 500)
 multiSet = clf.MultiIndexSet(para)
 leg = clf.LegendrePolynomials()
 
+# create the point cloud
 cloud = clf.PointCloud()
 for i in range(nx):
     for j in range(ny):
         cloud.AddPoint([dx/2.0+i*dx, dy/2.0+j*dy])
+
+# create the coupled local function
+func = clf.CoupledLocalFunction(cloud)
 
 # the center of the domain for the polynomial
 #centers = [clf.Point(np.array([-0.5, 0.5])), clf.Point(np.array([0.5, 0.5])), clf.Point(np.array([0.5, -0.5])), clf.Point(np.array([-0.5, -0.5]))]           

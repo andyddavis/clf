@@ -2,26 +2,29 @@
 
 using namespace clf;
 
-FeatureMatrix::FeatureMatrix(std::shared_ptr<const FeatureVector> const& vec, std::size_t const numFeatureVectors) :
+FeatureMatrix::FeatureMatrix(std::shared_ptr<const FeatureVector> const& vec, std::size_t const numFeatureVectors, std::shared_ptr<Domain> const& domain) :
   numBasisFunctions(numFeatureVectors*vec->NumBasisFunctions()),
   numFeatureVectors(numFeatureVectors),
-  featureVectors(std::vector<VectorPair>(1, VectorPair(vec, numFeatureVectors)))
+  featureVectors(std::vector<VectorPair>(1, VectorPair(vec, numFeatureVectors))),
+  domain(domain)
 {}
 
-FeatureMatrix::FeatureMatrix(std::vector<VectorPair> const& featureVectors) :
+FeatureMatrix::FeatureMatrix(std::vector<VectorPair> const& featureVectors, std::shared_ptr<Domain> const& domain) :
   numBasisFunctions(ComputeNumBasisFunctions(featureVectors)),
   numFeatureVectors(ComputeNumFeatureVectors(featureVectors)),
-  featureVectors(featureVectors)
+  featureVectors(featureVectors),
+  domain(domain)
 {
   // make sure the feature vectors have the same input dimension
   assert(featureVectors.size()>0);
   for( auto it=featureVectors.begin()+1; it!=featureVectors.end(); ++it ) { assert(featureVectors[0].first->InputDimension()==it->first->InputDimension()); }
 }
 
-FeatureMatrix::FeatureMatrix(std::vector<std::shared_ptr<const FeatureVector> > const& vecs) :
+FeatureMatrix::FeatureMatrix(std::vector<std::shared_ptr<const FeatureVector> > const& vecs, std::shared_ptr<Domain> const& domain) :
   numBasisFunctions(ComputeNumBasisFunctions(vecs)),
   numFeatureVectors(vecs.size()),
-  featureVectors(CreateVectorPairs(vecs))
+  featureVectors(CreateVectorPairs(vecs)),
+  domain(domain)
 {
   // make sure the feature vectors have the same input dimension
   assert(featureVectors.size()>0);
@@ -60,8 +63,9 @@ Eigen::VectorXd FeatureMatrix::ApplyTranspose(Eigen::VectorXd const& x, Eigen::V
 
   std::size_t count = 0;
   std::size_t start = 0;
+  const std::optional<Eigen::VectorXd> y = LocalCoordinate(x);
   for( const auto& it : featureVectors ) {
-    const Eigen::VectorXd phi = it.first->Evaluate(x);
+    const Eigen::VectorXd phi = it.first->Evaluate((y? *y : x));
     for( std::size_t i=0; i<it.second; ++i ) {
       output(count) = phi.dot(coeff.segment(start, phi.size()));
 
@@ -73,6 +77,11 @@ Eigen::VectorXd FeatureMatrix::ApplyTranspose(Eigen::VectorXd const& x, Eigen::V
   assert(start==numBasisFunctions);
 
   return output;
+}
+
+std::optional<Eigen::VectorXd> FeatureMatrix::LocalCoordinate(Eigen::VectorXd const& x) const {
+  if( domain ) { return domain->MapToHypercube(x); }
+  return std::nullopt;
 }
 
 std::shared_ptr<const FeatureVector> FeatureMatrix::GetFeatureVector(std::size_t const ind) const {

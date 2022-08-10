@@ -20,13 +20,18 @@ class TestIdentityModel(unittest.TestCase):
         para.Add("InputDimension", indim)
         para.Add("OutputDimension", outdim)
         para.Add("MaximumOrder", 5)
-        para.Add("LocalRadius", 1.0)
 
         mod = clf.IdentityModel(para)
         self.assertEqual(mod.indim, indim)
         self.assertEqual(mod.outdim, outdim)
 
-        x = np.array([random.uniform(-1.0, 1.0) for i in range(indim)])
+        # create the domain
+        radius = 0.1
+        center = np.array([random.uniform(-1.0, 1.0) for i in range(indim)])
+        domain = clf.Hypercube(center-np.array([radius]*indim), center+np.array([radius]*indim))
+
+        x = center + np.array([random.uniform(-radius, radius) for i in range(indim)])
+        y = domain.MapToHypercube(x)
         
         self.assertEqual(np.linalg.norm(mod.RightHandSide(x)), 0.0)
 
@@ -34,9 +39,8 @@ class TestIdentityModel(unittest.TestCase):
         multiSet = clf.MultiIndexSet(para)
         leg = clf.LegendrePolynomials()
 
-        # create the local function
-        center = np.array([random.uniform(-1.0, 1.0) for i in range(indim)])
-        func = clf.LocalFunction(multiSet, leg, center, para)
+        # create the local function        
+        func = clf.LocalFunction(multiSet, leg, domain, para)
         
         coeff = np.array([random.uniform(-1.0, 1.0) for i in range(func.NumCoefficients())])
 
@@ -54,7 +58,7 @@ class TestIdentityModel(unittest.TestCase):
         self.assertEqual(np.shape(jacFD) [1], func.NumCoefficients())
         start = 0;
         for i in range(outdim):
-            phi = func.featureMatrix.GetFeatureVector(i).Evaluate(x)
+            phi = func.featureMatrix.GetFeatureVector(i).Evaluate(y)
 
             self.assertAlmostEqual(np.linalg.norm(jac[i, 0:start]), 0.0)
             self.assertAlmostEqual(np.linalg.norm(jacFD[i, 0:start]), 0.0)

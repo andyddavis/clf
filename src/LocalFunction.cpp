@@ -6,20 +6,14 @@ LocalFunction::LocalFunction(std::shared_ptr<const FeatureMatrix> const& feature
   featureMatrix(featureMatrix)
 {}
 
-LocalFunction::LocalFunction(std::shared_ptr<MultiIndexSet> const& set, std::shared_ptr<BasisFunctions> const& basis, Eigen::VectorXd const& xbar, double const delta, std::size_t const outdim) :
-  featureMatrix(std::make_shared<FeatureMatrix>(std::make_shared<FeatureVector>(set, basis, xbar, delta), outdim))
-{}
+LocalFunction::LocalFunction(std::shared_ptr<MultiIndexSet> const& set, std::shared_ptr<BasisFunctions> const& basis, std::shared_ptr<Domain> const& domain, std::size_t const outdim) :
+  featureMatrix(std::make_shared<FeatureMatrix>(std::make_shared<FeatureVector>(set, basis), outdim, domain))
+{
+  assert(featureMatrix->domain);
+}
 
-LocalFunction::LocalFunction(std::shared_ptr<MultiIndexSet> const& set, std::shared_ptr<BasisFunctions> const& basis, Eigen::VectorXd const& xbar, std::shared_ptr<Parameters> const& para) :
-  featureMatrix(std::make_shared<FeatureMatrix>(std::make_shared<FeatureVector>(set, basis, xbar, para->Get<double>("LocalRadius")), para->Get<std::size_t>("OutputDimension")))
-{}
-
-LocalFunction::LocalFunction(std::shared_ptr<MultiIndexSet> const& set, std::shared_ptr<BasisFunctions> const& basis, std::shared_ptr<const Point> const& xbar, double const delta, std::size_t const outdim) :
-  featureMatrix(std::make_shared<FeatureMatrix>(std::make_shared<FeatureVector>(set, basis, xbar, delta), outdim))
-{}
-
-LocalFunction::LocalFunction(std::shared_ptr<MultiIndexSet> const& set, std::shared_ptr<BasisFunctions> const& basis, std::shared_ptr<const Point> const& xbar, std::shared_ptr<Parameters> const& para) :
-  featureMatrix(std::make_shared<FeatureMatrix>(std::make_shared<FeatureVector>(set, basis, xbar, para->Get<double>("LocalRadius")), para->Get<std::size_t>("OutputDimension")))
+LocalFunction::LocalFunction(std::shared_ptr<MultiIndexSet> const& set, std::shared_ptr<BasisFunctions> const& basis, std::shared_ptr<Domain> const& domain, std::shared_ptr<Parameters> const& para) :
+  featureMatrix(std::make_shared<FeatureMatrix>(std::make_shared<FeatureVector>(set, basis), para->Get<std::size_t>("OutputDimension"), domain))
 {}
 
 std::size_t LocalFunction::InputDimension() const { return featureMatrix->InputDimension(); }
@@ -27,6 +21,8 @@ std::size_t LocalFunction::InputDimension() const { return featureMatrix->InputD
 std::size_t LocalFunction::OutputDimension() const { return featureMatrix->numFeatureVectors; }
 
 std::size_t LocalFunction::NumCoefficients() const { return featureMatrix->numBasisFunctions; }
+
+Eigen::VectorXd LocalFunction::SampleDomain() const { return featureMatrix->domain->Sample(); }
 
 Eigen::VectorXd LocalFunction::Evaluate(Point const& x, Eigen::VectorXd const& coeff) const { return Evaluate(x.x, coeff); }
 

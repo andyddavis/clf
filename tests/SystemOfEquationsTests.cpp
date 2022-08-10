@@ -2,6 +2,8 @@
 
 #include "clf/CLFExceptions.hpp"
 
+#include "clf/Hypercube.hpp"
+
 #include "clf/SystemOfEquations.hpp"
 
 #include "clf/LegendrePolynomials.hpp"
@@ -25,10 +27,11 @@ TEST(SystemOfEquationsTests, DefaultImplementation) {
 
   const double delta = 0.1;
   const Eigen::VectorXd xbar = Eigen::VectorXd::Random(indim);
+  auto domain = std::make_shared<Hypercube>(xbar-Eigen::VectorXd::Constant(indim, delta), xbar+Eigen::VectorXd::Constant(indim, delta));
   
   auto basis = std::make_shared<LegendrePolynomials>();
-  auto vec = std::make_shared<FeatureVector>(set, basis, xbar, delta);
-  auto mat = std::make_shared<FeatureMatrix>(vec, outdim);
+  auto vec = std::make_shared<FeatureVector>(set, basis);
+  auto mat = std::make_shared<FeatureMatrix>(vec, outdim, domain);
 
   auto func = std::make_shared<LocalFunction>(mat);
 
@@ -41,5 +44,4 @@ TEST(SystemOfEquationsTests, DefaultImplementation) {
     const std::string err = exc.what();
     EXPECT_TRUE(err==expected);
   }
-   
 }

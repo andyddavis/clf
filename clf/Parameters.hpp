@@ -42,6 +42,19 @@ public:
   template<typename TYPE>
   inline TYPE Get(std::string const& name) const { return Extract<TYPE>(Get<Parameter>(name)); }
 
+  /// Get a parameter optionally
+  /**
+     @param[in] name The name of the parameters 
+     \return The parameter's value, if the parameter is not in the map then return <tt>std::nullopt</tt>
+   */
+  template<typename TYPE>
+  inline std::optional<TYPE> OptionallyGet(std::string const& name) const {
+    const std::optional<Parameter> p = OptionallyGet<Parameter>(name);
+
+    if( p ) { return Extract<TYPE>(*p); }
+    return std::nullopt;
+  }
+
   /// Get a parameter with a default value 
   /**
      @param[in] name The name of the parameters 
@@ -100,6 +113,18 @@ inline clf::Parameters::Parameter clf::Parameters::Get<clf::Parameters::Paramete
   auto it = map.find(name);
   if( it==map.end() ) { std::cerr << std::endl << "ERROR: Parameter '" << name << "' not found in clf::Parameters object." << std::endl << std::endl; }
   assert(it!=map.end());
+  return it->second;
+}
+
+/// Get a parameter optionally
+/**
+   @param[in] name The name of the parameters 
+   \return The parameter's value
+*/
+template<>
+inline std::optional<clf::Parameters::Parameter> clf::Parameters::OptionallyGet<clf::Parameters::Parameter>(std::string const& name) const { 
+  auto it = map.find(name);
+  if( it==map.end() ) { return std::nullopt; }
   return it->second;
 }
 

@@ -20,20 +20,20 @@ class TestLocalResidual(unittest.TestCase):
         """! Test the local residual python interface"""
         radius = 0.1
         numPoints = 100
-        point = clf.Point([random.uniform(-1.0, 1.0) for i in range(self.indim)])
+        point = [random.uniform(-1.0, 1.0) for i in range(self.indim)]
+        domain = clf.Hypercube(point-np.array([radius]*self.indim), point+np.array([radius]*self.indim))
 
         para = clf.Parameters()
         para.Add('InputDimension', self.indim)
         para.Add('OutputDimension', self.outdim)
         para.Add("NumPoints", numPoints)
-        para.Add("LocalRadius", radius)
 
         maxOrder = 4
         multiSet = clf.MultiIndexSet(self.indim, maxOrder)
         leg = clf.LegendrePolynomials()
-        func = clf.LocalFunction(multiSet, leg, point, para)
+        func = clf.LocalFunction(multiSet, leg, domain, para)
 
-        resid = clf.LocalResidual(func, self.system, point, para);
+        resid = clf.LocalResidual(func, self.system, para);
         self.assertEqual(resid.indim, func.NumCoefficients())
         self.assertEqual(resid.outdim, self.outdim*numPoints)
         self.assertEqual(resid.NumLocalPoints(), numPoints)

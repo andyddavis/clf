@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 
+#include "clf/Hypercube.hpp"
+
 #include "clf/IdentityModel.hpp"
 #include "clf/LinearModel.hpp"
 
@@ -19,21 +21,20 @@ protected:
   virtual void TearDown() override {
     const double radius = 0.1;
     const std::size_t numPoints = 100;
-    const Point point(Eigen::VectorXd::Random(indim));
     
     auto para = std::make_shared<Parameters>();
     para->Add("NumPoints", numPoints);
-    para->Add("LocalRadius", radius);
     
     const double delta = 0.75;
     const Eigen::VectorXd xbar = Eigen::VectorXd::Random(indim);
+    auto domain = std::make_shared<Hypercube>(xbar-Eigen::VectorXd::Constant(indim, delta), xbar+Eigen::VectorXd::Constant(indim, delta));
     
     const std::size_t maxOrder = 4;
     std::shared_ptr<MultiIndexSet> set = MultiIndexSet::CreateTotalOrder(indim, maxOrder);
     auto basis = std::make_shared<LegendrePolynomials>();
-    auto func = std::make_shared<LocalFunction>(set, basis, xbar, delta, outdim);
+    auto func = std::make_shared<LocalFunction>(set, basis, domain, outdim);
     
-    LocalResidual resid(func, system, point, para);
+    LocalResidual resid(func, system, para);
     EXPECT_EQ(resid.indim, func->NumCoefficients());
     EXPECT_EQ(resid.outdim, outdim*numPoints);
     EXPECT_EQ(resid.NumLocalPoints(), numPoints);
@@ -45,7 +46,7 @@ protected:
     std::size_t start = 0;
     for( std::size_t i=0; i<numPoints; ++i ) {
       const Point& pnt = resid.GetPoint(i);
-      for( std::size_t j=0; j<indim; ++j ) { EXPECT_NEAR(pnt.x(j)-point.x(j), 0.0, delta+1.0e-14); }
+      for( std::size_t j=0; j<indim; ++j ) { EXPECT_NEAR(pnt.x(j)-xbar(j), 0.0, delta+1.0e-14); }
       
       EXPECT_NEAR((eval.segment(start, outdim)-mat*func->Evaluate(pnt, coeff)).norm(), 0.0, 1.0e-14);
       start += outdim;

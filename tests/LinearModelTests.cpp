@@ -1,7 +1,8 @@
 #include <gtest/gtest.h>
 
-#include "clf/LinearModel.hpp"
+#include "clf/Hypercube.hpp"
 #include "clf/LegendrePolynomials.hpp"
+#include "clf/LinearModel.hpp"
 
 using namespace clf;
 
@@ -33,10 +34,12 @@ protected:
     
     const double delta = 0.1;
     const Eigen::VectorXd xbar = Eigen::VectorXd::Random(indim);
+    auto domain = std::make_shared<Hypercube>(xbar-Eigen::VectorXd::Constant(indim, delta), xbar+Eigen::VectorXd::Constant(indim, delta));
+    const Eigen::VectorXd y = domain->MapToHypercube(x);
     
     auto basis = std::make_shared<LegendrePolynomials>();
-    auto vec = std::make_shared<FeatureVector>(set, basis, xbar, delta);
-    auto mat = std::make_shared<FeatureMatrix>(vec, matdim);
+    auto vec = std::make_shared<FeatureVector>(set, basis);
+    auto mat = std::make_shared<FeatureMatrix>(vec, matdim, domain);
     auto func = std::make_shared<LocalFunction>(mat);
     
     const Eigen::VectorXd coeff = Eigen::VectorXd::Random(func->NumCoefficients());
@@ -79,7 +82,6 @@ protected:
 
   /// The linear model 
   std::shared_ptr<LinearModel> linsys;
-
 };
 
 TEST_F(LinearModelTests, SquareIdentity) {

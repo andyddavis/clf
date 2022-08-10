@@ -73,6 +73,9 @@ set(CLF_SOURCE
     src/OrthogonalPolynomials.cpp
     src/LegendrePolynomials.cpp
 
+    src/Domain.cpp
+    src/Hypercube.cpp
+
     src/FeatureVector.cpp
     src/FeatureMatrix.cpp
 
@@ -80,6 +83,7 @@ set(CLF_SOURCE
     src/MultiIndexSet.cpp
 
     src/LocalFunction.cpp
+    src/CoupledLocalFunctions.cpp
 
     src/SystemOfEquations.cpp
     src/IdentityModel.cpp
@@ -107,10 +111,14 @@ if( CLF_USE_PYTHON )
 	python/BasisFunctions.cpp
 	python/OrthogonalPolynomials.cpp
 
+	python/Domain.cpp
+	python/Hypercube.cpp
+
 	python/FeatureVector.cpp
 	python/FeatureMatrix.cpp
 
 	python/LocalFunction.cpp
+	python/CoupledLocalFunctions.cpp
 
 	python/SystemOfEquations.cpp
 	python/IdentityModel.cpp
@@ -171,10 +179,14 @@ set(TEST_SOURCE
     tests/MultiIndexTests.cpp
     tests/MultiIndexSetTests.cpp
 
+    tests/DomainTests.cpp
+    tests/HypercubeTests.cpp
+
     tests/FeatureVectorTests.cpp
     tests/FeatureMatrixTests.cpp
 
     tests/LocalFunctionTests.cpp
+    tests/CoupledLocalFunctionsTests.cpp
 
     tests/SystemOfEquationsTests.cpp	
     tests/IdentityModelTests.cpp

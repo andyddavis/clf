@@ -23,8 +23,9 @@ Eigen::MatrixXd IdentityModel::JacobianWRTCoefficients(std::shared_ptr<LocalFunc
 
   std::size_t start = 0;
   std::size_t row = 0;
+  const std::optional<Eigen::VectorXd> y = u->featureMatrix->LocalCoordinate(x);
   for( auto it=u->featureMatrix->Begin(); it!=u->featureMatrix->End(); ++it ) {
-    const Eigen::VectorXd phi = it->first->Evaluate(x);
+    const Eigen::VectorXd phi = it->first->Evaluate((y? *y : x));
     for( std::size_t i=0; i<it->second; ++i ) {
       jac.row(row++).segment(start, phi.size()) = phi;
       start += phi.size();

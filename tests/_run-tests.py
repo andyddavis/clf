@@ -15,10 +15,13 @@ from MultiIndexSetTests import *
 
 from OrthogonalPolynomialsTests import *
 
+from HypercubeTests import *
+
 from FeatureVectorTests import *
 from FeatureMatrixTests import *
 
 from LocalFunctionTests import *
+from CoupledLocalFunctionsTests import *
 
 from SystemOfEquationsTests import *
 from IdentityModelTests import *

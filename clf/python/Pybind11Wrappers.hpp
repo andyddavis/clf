@@ -36,6 +36,18 @@ void BasisFunctionsWrapper(pybind11::module& mod);
  */
 void OrthogonalPolynomialsWrapper(pybind11::module& mod);
 
+/// Python wrapper for clf::Domain
+/**
+   @param[in] mod The python module
+ */
+void DomainWrapper(pybind11::module& mod);
+
+/// Python wrapper for clf::Hypercube
+/**
+   @param[in] mod The python module
+ */
+void HypercubeWrapper(pybind11::module& mod);
+
 /// Python wrapper for clf::FeatureVector
 /**
    @param[in] mod The python module
@@ -53,6 +65,12 @@ void FeatureMatrixWrapper(pybind11::module& mod);
    @param[in] mod The python module
  */
 void LocalFunctionWrapper(pybind11::module& mod);
+
+/// Python wrapper for clf::CoupledLocalFunctions
+/**
+   @param[in] mod The python module
+ */
+void CoupledLocalFunctionsWrapper(pybind11::module& mod);
 
 /// Python wrapper for clf::SystemOfEquations
 /**

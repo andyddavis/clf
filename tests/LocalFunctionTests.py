@@ -21,20 +21,21 @@ class TestLocalFunction(unittest.TestCase):
         para.Add('InputDimension', indim)
         para.Add('OutputDimension', outdim)
         para.Add('MaximumOrder', maxOrder)
-        para.Add('LocalRadius', 1.0)
 
         multiSet = clf.MultiIndexSet(para)
         leg = clf.LegendrePolynomials()
         center = np.array([random.uniform(-1.0, 1.0) for i in range(indim)])
+        domain = clf.Hypercube(center-np.array([0.1]*indim), center+np.array([0.1]*indim))
 
-        func = clf.LocalFunction(multiSet, leg, center, para)
+        func = clf.LocalFunction(multiSet, leg, domain, para)
         self.assertEqual(func.InputDimension(), indim)
         self.assertEqual(func.OutputDimension(), outdim)
         self.assertEqual(func.NumCoefficients(), 378)
 
-        x = np.array([random.uniform(-1.0, 1.0) for i in range(indim)])
+        x = center + np.array([random.uniform(-1.0, 1.0) for i in range(indim)])
         coeff = np.array([random.uniform(-1.0, 1.0) for i in range(func.NumCoefficients())])
         fx = func.Evaluate(x, coeff)
         self.assertAlmostEqual(np.linalg.norm(fx-func.featureMatrix.ApplyTranspose(x, coeff)), 0.0)
 
-
+        for i in range(10):
+            self.assertTrue(domain.Inside(func.SampleDomain()))
