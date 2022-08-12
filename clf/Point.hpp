@@ -19,7 +19,12 @@ public:
   /// The point location \f$x \in \Omega\f$
   const Eigen::VectorXd x;
 
+  /// The (unique) ID of this point
+  const std::size_t id;
+
 private:
+  /// The ID of this next constructed point
+  static std::atomic<std::size_t> nextID;
 };
 
 } // namespace clf 

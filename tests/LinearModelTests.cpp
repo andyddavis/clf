@@ -32,7 +32,7 @@ protected:
     const std::size_t maxOrder = 4;
     std::shared_ptr<MultiIndexSet> set = MultiIndexSet::CreateTotalOrder(indim, maxOrder);
     
-    const double delta = 0.1;
+    const double delta = 0.75;
     const Eigen::VectorXd xbar = Eigen::VectorXd::Random(indim);
     auto domain = std::make_shared<Hypercube>(xbar-Eigen::VectorXd::Constant(indim, delta), xbar+Eigen::VectorXd::Constant(indim, delta));
     const Eigen::VectorXd y = domain->MapToHypercube(x);

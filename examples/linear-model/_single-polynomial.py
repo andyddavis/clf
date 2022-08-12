@@ -38,7 +38,7 @@ outdim = 1 # the output dimension
 para = clf.Parameters()
 para.Add("InputDimension", indim)
 para.Add("OutputDimension", outdim)
-para.Add("MaximumOrder", 8)
+para.Add("MaximumOrder", 10)
 para.Add("NumPoints", 500)
 
 # create a total order multi-index set and the Legendre basis function
@@ -61,6 +61,7 @@ resid = clf.LocalResidual(func, model, para);
 # create the optimizer
 lm = clf.DenseLevenbergMarquardt(clf.DenseCostFunction([resid]), para)
 
+# compute the optimial coefficients
 coeff = np.array([random.uniform(-1.0, 1.0) for i in range(func.NumCoefficients())])
 status, cost, coeff, _ = lm.Minimize(coeff)
 assert(status==clf.OptimizationConvergence.CONVERGED or
@@ -73,8 +74,9 @@ fx = np.zeros((n, n))
 expected = np.zeros((n, n))
 for i in range(n):
     for j in range(n):
-        fx[i, j] = func.Evaluate([xvec[i], xvec[j]], coeff) [0]
-        expected[i, j] = model.RightHandSide([xvec[i], xvec[j]]) [0]
+        pnt = [xvec[i], xvec[j]]
+        fx[i, j] = func.Evaluate(pnt, coeff) [0]
+        expected[i, j] = model.RightHandSide(pnt) [0]
 
 X, Y = np.meshgrid(xvec, xvec)
 
@@ -89,7 +91,7 @@ ax.yaxis.set_ticks_position('left')
 ax.xaxis.set_ticks_position('bottom')
 ax.set_xlabel(r'$x_0$')
 ax.set_ylabel(r'$x_1$')
-plt.savefig('figures/fig_result.png', format='png')
+plt.savefig('figures/fig_single-polynomial-result.png', format='png')
 plt.close(fig)
 
 fig = plt.figure()
@@ -103,6 +105,6 @@ ax.yaxis.set_ticks_position('left')
 ax.xaxis.set_ticks_position('bottom')
 ax.set_xlabel(r'$x_0$')
 ax.set_ylabel(r'$x_1$')
-plt.savefig('figures/fig_expected.png', format='png')
+plt.savefig('figures/fig_sinple-polynomial-expected.png', format='png')
 plt.close(fig)
 

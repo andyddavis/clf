@@ -36,6 +36,15 @@ public:
    */
   virtual Eigen::VectorXd Sample();
 
+  /// Compute the distance between two points in the domain
+  /**
+     Defaults to the 2-norm.
+     @param[in] x1 The first point
+     @param[in] x2 The second point
+     \return The distance between the two points
+   */
+  virtual double Distance(Eigen::VectorXd const& x1, Eigen::VectorXd const& x2) const;
+
   /// The dimension of the domain \f$d\f$
   const std::size_t dim;
 

@@ -70,6 +70,12 @@ public:
    */
   Eigen::VectorXd SampleDomain() const;
 
+  /// The domain associated with the local function
+  /**
+     \return The domain
+   */
+  std::shared_ptr<Domain> GetDomain() const;
+
   /// The number of coefficients \f$\bar{q}\f$
   /**
      \return The number of coefficients \f$\bar{q}\f$
@@ -90,7 +96,7 @@ public:
      @param[in] coeff The coefficients \f$c \in \mathbb{R}^{\bar{q}}\f$ that define this location function 
      \return The local function evaluation \f$u(x)\f$
    */
-  Eigen::VectorXd Evaluate(Point const& x, Eigen::VectorXd const& coeff) const;
+  Eigen::VectorXd Evaluate(std::shared_ptr<Point> const& x, Eigen::VectorXd const& coeff) const;
 
   /// The feature matrix \f$\Phi(x)\f$ that defines this local function
   std::shared_ptr<const FeatureMatrix> featureMatrix;

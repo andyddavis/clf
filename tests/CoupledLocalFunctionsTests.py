@@ -14,8 +14,8 @@ class TestCoupledLocalFunctions(unittest.TestCase):
         numPoints = 10
         
         cloud = clf.PointCloud()
-        for i in range(numPoints):
-            cloud.AddPoint(np.array([random.uniform(-1.0, 1.0) for i in range(dim)]))
+        #for i in range(numPoints):
+        #    cloud.AddPoint(np.array([random.uniform(-1.0, 1.0) for i in range(dim)]))
             
         func = clf.CoupledLocalFunctions(cloud)
         self.assertEqual(func.NumLocalFunctions(), numPoints)

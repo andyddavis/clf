@@ -12,4 +12,5 @@ void clf::python::PointWrapper(py::module& mod) {
   point.def(py::init<Eigen::VectorXd const&>());
 
   point.def_readonly("x", &Point::x);
+  point.def_readonly("id", &Point::id);
 }

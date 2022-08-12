@@ -10,8 +10,8 @@ LocalResidual::LocalResidual(std::shared_ptr<LocalFunction> const& func, std::sh
 {}
 
 PointCloud LocalResidual::GeneratePoints(std::shared_ptr<LocalFunction> const& func, std::size_t const num) {
-  PointCloud points;
-  for( std::size_t i=0; i<num; ++i ) { points.AddPoint(func->SampleDomain()); }
+  PointCloud points(func->GetDomain());
+  points.AddPoints(num);
   return points;
 }
 
@@ -21,7 +21,7 @@ Eigen::VectorXd LocalResidual::Evaluate(Eigen::VectorXd const& beta) {
   Eigen::VectorXd resid(outdim);
   std::size_t start = 0;
   for( std::size_t i=0; i<NumLocalPoints(); ++i ) {
-    const Eigen::VectorXd& x = points.Get(i).x;
+    const Eigen::VectorXd& x = points.Get(i)->x;
     resid.segment(start, system->outdim) = system->Operator(function, x, beta) - system->RightHandSide(x);
     start += system->outdim;
   }
@@ -29,13 +29,13 @@ Eigen::VectorXd LocalResidual::Evaluate(Eigen::VectorXd const& beta) {
   return resid;
 }
 
-Point LocalResidual::GetPoint(std::size_t const ind) const { return points.Get(ind); }
+std::shared_ptr<Point> LocalResidual::GetPoint(std::size_t const ind) const { return points.Get(ind); }
 
 Eigen::MatrixXd LocalResidual::Jacobian(Eigen::VectorXd const& beta) {
   Eigen::MatrixXd jac(outdim, indim);
   std::size_t start = 0;
   for( std::size_t i=0; i<NumLocalPoints(); ++i ) {
-    const Eigen::VectorXd& x = points.Get(i).x;
+    const Eigen::VectorXd& x = points.Get(i)->x;
     jac.block(start, 0, system->outdim, indim) = system->JacobianWRTCoefficients(function, x, beta);
     start += system->outdim;
   }
@@ -48,7 +48,7 @@ Eigen::MatrixXd LocalResidual::Hessian(Eigen::VectorXd const& beta, Eigen::Vecto
 
   std::size_t start = 0;
   for( std::size_t i=0; i<NumLocalPoints(); ++i ) {
-    hess += system->HessianWRTCoefficients(function, points.Get(i).x, beta, weights.segment(start, system->outdim));
+    hess += system->HessianWRTCoefficients(function, points.Get(i)->x, beta, weights.segment(start, system->outdim));
     start += system->outdim;
   }
 

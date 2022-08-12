@@ -22,3 +22,5 @@ Eigen::VectorXd Domain::Sample() {
   throw exceptions::NotImplemented("Domain::Sample");
   return Eigen::VectorXd();
 }
+
+double Domain::Distance(Eigen::VectorXd const& x1, Eigen::VectorXd const& x2) const { return (x1-x2).norm(); }

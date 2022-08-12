@@ -45,8 +45,8 @@ protected:
     EXPECT_EQ(eval.size(), resid.outdim);
     std::size_t start = 0;
     for( std::size_t i=0; i<numPoints; ++i ) {
-      const Point& pnt = resid.GetPoint(i);
-      for( std::size_t j=0; j<indim; ++j ) { EXPECT_NEAR(pnt.x(j)-xbar(j), 0.0, delta+1.0e-14); }
+      std::shared_ptr<Point> pnt = resid.GetPoint(i);
+      for( std::size_t j=0; j<indim; ++j ) { EXPECT_NEAR(pnt->x(j)-xbar(j), 0.0, delta+1.0e-14); }
       
       EXPECT_NEAR((eval.segment(start, outdim)-mat*func->Evaluate(pnt, coeff)).norm(), 0.0, 1.0e-14);
       start += outdim;

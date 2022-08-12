@@ -24,7 +24,9 @@ std::size_t LocalFunction::NumCoefficients() const { return featureMatrix->numBa
 
 Eigen::VectorXd LocalFunction::SampleDomain() const { return featureMatrix->domain->Sample(); }
 
-Eigen::VectorXd LocalFunction::Evaluate(Point const& x, Eigen::VectorXd const& coeff) const { return Evaluate(x.x, coeff); }
+std::shared_ptr<Domain> LocalFunction::GetDomain() const { return featureMatrix->domain; }
+
+Eigen::VectorXd LocalFunction::Evaluate(std::shared_ptr<Point> const& x, Eigen::VectorXd const& coeff) const { return Evaluate(x->x, coeff); }
 
 Eigen::VectorXd LocalFunction::Evaluate(Eigen::VectorXd const& x, Eigen::VectorXd const& coeff) const { 
   assert(x.size()==InputDimension());

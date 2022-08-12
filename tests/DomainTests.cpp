@@ -37,4 +37,8 @@ TEST(DomainTests, DefaultImplementations) {
     const std::string err = exc.what();
     EXPECT_TRUE(err==expected);
   }
+
+  const Eigen::VectorXd x1 = Eigen::VectorXd::Random(dim);
+  const Eigen::VectorXd x2 = Eigen::VectorXd::Random(dim);
+  EXPECT_NEAR(dom.Distance(x1, x2), (x1-x2).norm(), 1.0e-13);
 }

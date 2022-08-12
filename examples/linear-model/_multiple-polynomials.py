@@ -30,14 +30,14 @@ class Model(clf.IdentityModel):
         super().__init__(para)
 
     def RightHandSide(self, x):
-        return [np.sin(2.0*np.pi*x[1])]
+        return [np.cos(4.0*np.pi*x[0])*np.sin(3.0*np.pi*x[1])]
 
 indim = 2 # the input dimension
 outdim = 1 # the output dimension
 
 Lx = 2.0 # x direction domain length
-Ly = 1.0 # y direction domain length
-nx = 2 # number of points in the x direction
+Ly = 2.0 # y direction domain length
+nx = 10 # number of points in the x direction
 ny = 2 # number of points in the y direction
 dy = Ly/ny
 dx = Lx/nx
@@ -45,29 +45,62 @@ dx = Lx/nx
 para = clf.Parameters()
 para.Add("InputDimension", indim) 
 para.Add("OutputDimension", outdim)
-para.Add("MaximumOrder", 5)
-para.Add("LocalRadius", 0.5)
+para.Add("MaximumOrder", 10)
 para.Add("NumPoints", 500)
 
 # create a total order multi-index set and the Legendre basis function
 multiSet = clf.MultiIndexSet(para)
 leg = clf.LegendrePolynomials()
 
+# create the identity model 
+model = Model(para)
+
+# create the global domain
+globalDomain = clf.Hypercube(np.array([0.0, 0.0]), np.array([Lx, Ly]))
+
 # create the point cloud
-cloud = clf.PointCloud()
+cloud = clf.PointCloud(globalDomain)
 for i in range(nx):
     for j in range(ny):
-        cloud.AddPoint([dx/2.0+i*dx, dy/2.0+j*dy])
+        cloud.AddPoint(clf.Point([dx/2.0+i*dx, dy/2.0+j*dy]))
+assert(cloud.NumPoints()==nx*ny)
 
-# create the coupled local function
-func = clf.CoupledLocalFunction(cloud)
+domains = [None]*cloud.NumPoints()
+funcs = [None]*cloud.NumPoints()
+coeffs = [None]*cloud.NumPoints()
+delta = np.array([dx/2.0, dy/2.0])
+for ind in range(cloud.NumPoints()):
+    # create the local domain 
+    domains[ind] = clf.Hypercube(cloud.Get(ind).x-delta, cloud.Get(ind).x+delta)
 
-# the center of the domain for the polynomial
-#centers = [clf.Point(np.array([-0.5, 0.5])), clf.Point(np.array([0.5, 0.5])), clf.Point(np.array([0.5, -0.5])), clf.Point(np.array([-0.5, -0.5]))]           
+    # create the local polynomial
+    funcs[ind] = clf.LocalFunction(multiSet, leg, domains[ind], para)
+    
+    # create the local residual
+    resid = clf.LocalResidual(funcs[ind], model, para)
+    
+    # create the optimizer
+    lm = clf.DenseLevenbergMarquardt(clf.DenseCostFunction([resid]), para)
+    
+    # compute the optimial coefficients
+    coeffs[ind] = np.array([0.0]*funcs[ind].NumCoefficients())
+    status, cost, coeffs[ind], _ = lm.Minimize(coeffs[ind])
+    assert(status==clf.OptimizationConvergence.CONVERGED or
+           status==clf.OptimizationConvergence.CONVERGED_FUNCTION_SMALL or
+           status==clf.OptimizationConvergence.CONVERGED_GRADIENT_SMALL)
 
-# create the local polynomials
-#funcs = [clf.LocalFunction(multiSet, leg, center, para) for center in centers]
-
+n = int(250)
+xvec = np.linspace(0, Lx, n)
+yvec = np.linspace(0, Ly, n)
+fx = np.zeros((n, n))
+expected = np.zeros((n, n))
+for i in range(n):
+    for j in range(n):
+        pnt = [xvec[i], yvec[j]]
+        ind, _ = cloud.ClosestPoint(pnt)
+        fx[i, j] = funcs[ind].Evaluate(pnt, coeffs[ind]) [0]
+        expected[i, j] = model.RightHandSide(pnt) [0]
+        
 """
 # create the identity model 
 model = Model(para)
@@ -92,13 +125,14 @@ for i in range(n):
     for j in range(n):
         fx[i, j] = func.Evaluate([xvec[i], xvec[j]], coeff) [0]
         expected[i, j] = model.RightHandSide([xvec[i], xvec[j]]) [0]
-
-X, Y = np.meshgrid(xvec, xvec)
+"""
+X, Y = np.meshgrid(xvec, yvec)
 
 fig = plt.figure()
 ax = fig.add_subplot(111)
 pc = ax.pcolor(X, Y, fx.T, cmap='plasma_r', vmin=-1.0, vmax=1.0)
-ax.plot(center.x[0], center.x[1], 'o', color='#252525')
+for i in range(cloud.NumPoints()):
+    ax.plot(cloud.Get(i).x[0], cloud.Get(i).x[1], 'o', color='#252525')
 cbar = plt.colorbar(pc)
 ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
@@ -106,13 +140,14 @@ ax.yaxis.set_ticks_position('left')
 ax.xaxis.set_ticks_position('bottom')
 ax.set_xlabel(r'$x_0$')
 ax.set_ylabel(r'$x_1$')
-plt.savefig('figures/fig_result.png', format='png')
+plt.savefig('figures/fig_multiple-polynomials-result.png', format='png')
 plt.close(fig)
 
 fig = plt.figure()
 ax = fig.add_subplot(111)
 pc = ax.pcolor(X, Y, expected.T, cmap='plasma_r', vmin=-1.0, vmax=1.0)
-ax.plot(center.x[0], center.x[1], 'o', color='#252525')
+for i in range(cloud.NumPoints()):
+    ax.plot(cloud.Get(i).x[0], cloud.Get(i).x[1], 'o', color='#252525')
 cbar = plt.colorbar(pc)
 ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
@@ -120,7 +155,5 @@ ax.yaxis.set_ticks_position('left')
 ax.xaxis.set_ticks_position('bottom')
 ax.set_xlabel(r'$x_0$')
 ax.set_ylabel(r'$x_1$')
-plt.savefig('figures/fig_expected.png', format='png')
+plt.savefig('figures/fig_multiple-polynomials-expected.png', format='png')
 plt.close(fig)
-
-"""

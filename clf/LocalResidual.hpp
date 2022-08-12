@@ -61,7 +61,7 @@ LocalResidual(std::shared_ptr<LocalFunction> const& func, std::shared_ptr<System
      @param[in] ind The index of the point we want 
      \return The \$i^{\text{th}}\f$ local point 
    */
-  Point GetPoint(std::size_t const ind) const;
+  std::shared_ptr<Point> GetPoint(std::size_t const ind) const;
 
 private:
 
