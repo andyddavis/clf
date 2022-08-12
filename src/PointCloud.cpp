@@ -93,6 +93,7 @@ void PointCloud::UpdateNeighbors(std::size_t const id, std::size_t const neigh, 
 }
 
 std::vector<std::size_t> PointCloud::NearestNeighbors(std::size_t const ind, std::size_t const k) const {
+  if( k==0 ) { return std::vector<std::size_t>(); }
   assert(k<points.size());
   
   // find the neighbors of this key
@@ -102,7 +103,7 @@ std::vector<std::size_t> PointCloud::NearestNeighbors(std::size_t const ind, std
   if( it==neighbors.end() || it->second.size()!=NumPoints() ) {
     // compute the distance between this point and all of the other points---distance function updates neighbors
     for( std::size_t i=0; i<points.size(); ++i ) { Distance(ind, i); }
-  } 
+  }
 
   assert(it!=neighbors.end());
 

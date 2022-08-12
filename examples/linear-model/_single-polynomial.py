@@ -4,9 +4,8 @@ sys.path.insert(0, '/home/andy/Software/install/clf/lib/')
 
 import numpy as np
 
-import random
-
 import PyCoupledLocalFunctions as clf
+from Model import *
 
 # import plotting packages and set default figure options
 useserif = True # use a serif font with figures?
@@ -25,15 +24,10 @@ plt.rcParams['xtick.labelsize'] = 14
 plt.rcParams['ytick.labelsize'] = 14
 plt.rcParams['legend.fontsize'] = 14
 
-class Model(clf.IdentityModel):
-    def __init__(self, para):
-        super().__init__(para)
-
-    def RightHandSide(self, x):
-        return [np.sin(3.0*np.pi*x[1])]
-        
 indim = 2 # the input dimension
 outdim = 1 # the output dimension
+Lx = 1.0 # x direction domain length
+Ly = 1.0 # y direction domain length
 
 para = clf.Parameters()
 para.Add("InputDimension", indim)
@@ -46,8 +40,8 @@ multiSet = clf.MultiIndexSet(para)
 leg = clf.LegendrePolynomials()
 
 # the center of the domain for the polynomial and the domain
-center = np.zeros(2)
-domain = clf.Hypercube(center-np.array([1.0]*indim), center+np.array([1.0]*indim))
+center = [Lx/2.0, Ly/2.0]
+domain = clf.Hypercube(center-np.array([Lx/2.0, Ly/2.0]), center+np.array([Lx/2.0, Ly/2.0]))
 
 # create the polynomial 
 func = clf.LocalFunction(multiSet, leg, domain, para)
@@ -62,28 +56,31 @@ resid = clf.LocalResidual(func, model, para);
 lm = clf.DenseLevenbergMarquardt(clf.DenseCostFunction([resid]), para)
 
 # compute the optimial coefficients
-coeff = np.array([random.uniform(-1.0, 1.0) for i in range(func.NumCoefficients())])
+coeff = np.array([0.0]*func.NumCoefficients())
 status, cost, coeff, _ = lm.Minimize(coeff)
 assert(status==clf.OptimizationConvergence.CONVERGED or
        status==clf.OptimizationConvergence.CONVERGED_FUNCTION_SMALL or
        status==clf.OptimizationConvergence.CONVERGED_GRADIENT_SMALL)
 
 n = int(250)
-xvec = np.linspace(-1.0, 1.0, n)
+xvec = np.linspace(0.0, Lx, n)
+yvec = np.linspace(0.0, Ly, n)
 fx = np.zeros((n, n))
 expected = np.zeros((n, n))
 for i in range(n):
     for j in range(n):
-        pnt = [xvec[i], xvec[j]]
+        pnt = [xvec[i], yvec[j]]
         fx[i, j] = func.Evaluate(pnt, coeff) [0]
         expected[i, j] = model.RightHandSide(pnt) [0]
 
-X, Y = np.meshgrid(xvec, xvec)
+X, Y = np.meshgrid(xvec, yvec)
 
 fig = plt.figure()
 ax = fig.add_subplot(111)
 pc = ax.pcolor(X, Y, fx.T, cmap='plasma_r', vmin=-1.0, vmax=1.0)
-ax.plot(center[0], center[1], 'o', color='#252525')
+ax.plot(center[0], center[1], 'o', color='#252525', markersize=5)
+for j in range(resid.NumLocalPoints()):
+        ax.plot(resid.GetPoint(j).x[0], resid.GetPoint(j).x[1], 's', color='#252525', markersize=2)
 cbar = plt.colorbar(pc)
 ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
@@ -97,7 +94,6 @@ plt.close(fig)
 fig = plt.figure()
 ax = fig.add_subplot(111)
 pc = ax.pcolor(X, Y, expected.T, cmap='plasma_r', vmin=-1.0, vmax=1.0)
-ax.plot(center[0], center[1], 'o', color='#252525')
 cbar = plt.colorbar(pc)
 ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)

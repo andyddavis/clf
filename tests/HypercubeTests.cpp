@@ -161,3 +161,51 @@ TEST(HypercubeTests, RandomCube) {
     EXPECT_TRUE(dom.Inside(samp));
   }
 }
+
+TEST(HypercubeTests, Superset) {
+  const double left0 = -8.0;
+  const double right0 = 4.0;
+  const double left1 = -4.0;
+  const double right1 = 8.0;
+  const std::size_t dim = 4;
+
+  Hypercube dom(left0, right0, dim);
+  EXPECT_EQ(dom.dim, dim);
+
+  // make the super set
+  auto super = std::make_shared<Hypercube>(left1, right1, dim);
+  EXPECT_EQ(super->dim, dim);
+
+  // set the super set
+  dom.SetSuperset(super);
+
+  std::size_t check = rand()%(dim-1);
+
+  Eigen::VectorXd x = Eigen::VectorXd::Zero(dim);
+  x(check) = -5.0;
+  EXPECT_FALSE(super->Inside(x));
+  EXPECT_FALSE(dom.Inside(x));
+  x(check) = 0.0;
+  EXPECT_TRUE(super->Inside(x));
+  EXPECT_TRUE(dom.Inside(x));
+
+  for( std::size_t i=0; i<10; ++i ) {
+    x = dom.Sample();
+    EXPECT_TRUE(super->Inside(x));
+    EXPECT_TRUE(dom.Inside(x));
+  }
+
+  Hypercube badDomain(10.0, 20.0, dim);
+  EXPECT_EQ(badDomain.dim, dim);
+  badDomain.SetSuperset(super);
+
+  for( std::size_t i=0; i<10; ++i ) {
+    try {
+      x = badDomain.Sample();
+    } catch( Domain::SampleFailure const& exc ) {
+      const std::string expected = "CLF Error: Domain::Sample did not propose a valid sample in 10000 proposals.";
+      const std::string err = exc.what();
+      EXPECT_TRUE(err==expected);
+    }
+  }
+}

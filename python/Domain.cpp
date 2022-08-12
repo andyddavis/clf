@@ -15,4 +15,5 @@ void clf::python::DomainWrapper(py::module& mod) {
   dom.def("MapToHypercube", &Domain::MapToHypercube);
   dom.def("Sample", &Domain::Sample);
   dom.def("Distance", &Domain::Distance);
+  dom.def("SetSuperset", &Domain::SetSuperset);
 }

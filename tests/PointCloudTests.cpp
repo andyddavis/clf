@@ -80,7 +80,7 @@ TEST(PointCloudTests, DomainCheck) {
     }
   }
 
-  const std::size_t numNeighs = rand()%(n-1);
+  const std::size_t numNeighs = 1+rand()%(n-2);
 
   for( std::size_t i=0; i<cloud.NumPoints(); ++i ) {
     // find the nearest neighbors

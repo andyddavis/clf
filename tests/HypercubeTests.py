@@ -152,3 +152,31 @@ class TestHypercube(unittest.TestCase):
             samp = dom.Sample()
             self.assertEqual(len(samp), dim)
             self.assertTrue(dom.Inside(samp))
+
+    def test_superset(self):
+        """! Test a domain with a superset defined"""
+        left0 = -8.0
+        right0 = 4.0
+        left1 = -4.0
+        right1 = 8.0
+        dim = 4
+        
+        dom = clf.Hypercube(left0, right0, dim)
+        sup = clf.Hypercube(left1, right1, dim)
+        dom.SetSuperset(sup)
+
+        check = random.randint(0, dim)
+        x = np.array([0.0]*dim)
+        x[check] = -5.0
+        self.assertFalse(sup.Inside(x))
+        self.assertFalse(dom.Inside(x))
+        x[check] = 0.0
+        self.assertTrue(sup.Inside(x))
+        self.assertTrue(dom.Inside(x))
+
+        for i in range(10):
+            x = dom.Sample()
+            self.assertTrue(sup.Inside(x))
+            self.assertTrue(dom.Inside(x))
+
+

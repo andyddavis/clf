@@ -17,20 +17,22 @@ public:
   /// Create a unit hyper cube \f$[0, 1]^{d}\f$
   /**
      @param[in] dim The dimension \f$d\f$
+     @param[in] para The parameters for this hypercube and its parameter clf::Domain
    */
-  Hypercube(std::size_t const dim);
+  Hypercube(std::size_t const dim, std::shared_ptr<const Parameters> const& para = std::make_shared<Parameters>());
 
   /// Create a hypercube \f$[\ell, r]^{d}\f$
   /**
      @param[in] left The left boundary \f$\ell\f$
      @param[in] right The right boundary \f$r\f$
      @param[in] dim The dimension \f$d\f$ 
+     @param[in] para The parameters for this hypercube and its parameter clf::Domain
    */
-  Hypercube(double const left, double const right, std::size_t const dim);
+  Hypercube(double const left, double const right, std::size_t const dim, std::shared_ptr<const Parameters> const& para = std::make_shared<Parameters>());
 
   /// Create a hyper cube \f$[\ell, r]^{d}\f$
   /**
-     <B>Configuration Parameters:</B>
+     <B>Additional Configuration Parameters:</B>
      Parameter Key | Type | Default Value | Description |
      ------------- | ------------- | ------------- | ------------- |
      "InputDimension"   | <tt>std::size_t</tt> | --- | The input dimension \f$d\f$. This is a required parameter |
@@ -44,8 +46,9 @@ public:
   /**
      @param[in] left The left boundaries \f$\ell_i\f$
      @param[in] right The right boundaries \f$r_i\f$
+     @param[in] para The parameters for this hypercube and its parameter clf::Domain
    */
-  Hypercube(Eigen::VectorXd const& left, Eigen::VectorXd const& right);
+  Hypercube(Eigen::VectorXd const& left, Eigen::VectorXd const& right, std::shared_ptr<const Parameters> const& para = std::make_shared<Parameters>());
 
   virtual ~Hypercube() = default;
 
@@ -63,26 +66,27 @@ public:
    */
   double RightBoundary(std::size_t const ind) const;
 
-  /// Is a point inside the domain?
-  /**
-     @param[in] x The point
-     \return <tt>true</tt>: Then \f$x \in \Omega\f$, <tt>false</tt>: Then \f$x \notin \Omega\f$
-  */
-  virtual bool Inside(Eigen::VectorXd const& x) const override;
-
   /// Map to a hypercube \f$[-1, 1]^d\f$
   /**
      @param[in] x A point in the domain \f$x \in \Omega\f$
      \return A point in the unit hypercube \f$[-1, 1]^d\f$
    */
   virtual Eigen::VectorXd MapToHypercube(Eigen::VectorXd const& x) const override;
+
+protected:
+  
+  /// Is a point inside the domain?
+  /**
+     @param[in] x The point
+     \return <tt>true</tt>: Then \f$x \in \Omega\f$, <tt>false</tt>: Then \f$x \notin \Omega\f$
+  */
+  virtual bool CheckInside(Eigen::VectorXd const& x) const override;
   
   /// Generate a sample in the domain
   /**
      \return A point in the domain
    */
-  virtual Eigen::VectorXd Sample() override;
-  
+  virtual Eigen::VectorXd ProposeSample() override;
 
 private:
 
@@ -93,7 +97,7 @@ private:
   static std::mt19937_64 RandomNumberGenerator();
 
   /// The random number generator
-  std::mt19937_64 gen;
+  static std::mt19937_64 gen;
 
   /// The uniform distribution(s) that allows use generate random points in this domain
   std::vector<std::uniform_real_distribution<double> > sampler;

@@ -17,7 +17,7 @@ TEST(DomainTests, DefaultImplementations) {
   try { 
     dom.Inside(x);
   } catch( exceptions::NotImplemented const& exc ) {
-    const std::string expected = "CLF Error: Domain::Inside not yet implemented";
+    const std::string expected = "CLF Error: Domain::CheckInside not yet implemented";
     const std::string err = exc.what();
     EXPECT_TRUE(err==expected);
   }
@@ -33,7 +33,7 @@ TEST(DomainTests, DefaultImplementations) {
   try { 
     dom.Sample();
   } catch( exceptions::NotImplemented const& exc ) {
-    const std::string expected = "CLF Error: Domain::Sample not yet implemented";
+    const std::string expected = "CLF Error: Domain::ProposeSample not yet implemented";
     const std::string err = exc.what();
     EXPECT_TRUE(err==expected);
   }
