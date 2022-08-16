@@ -52,6 +52,8 @@ double OrthogonalPolynomials::EvaluateDerivative(int const p, double const x, st
 }
 
 Eigen::MatrixXd OrthogonalPolynomials::EvaluateAllDerivatives(int const p, double const x, std::size_t const k) const {
+  if( k==0 ) { return Eigen::MatrixXd(); }
+  
   Eigen::MatrixXd eval = Eigen::MatrixXd::Zero(p+1, k);
   if( p>0 ) { eval(1, 0) = 1.0; }
 

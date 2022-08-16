@@ -88,6 +88,9 @@ set(CLF_SOURCE
     src/SystemOfEquations.cpp
     src/IdentityModel.cpp
     src/LinearModel.cpp
+    src/ConservationLaw.cpp
+    src/AdvectionEquation.cpp
+    src/BurgersEquation.cpp
 
     src/LevenbergMarquardt.cpp
 
@@ -191,6 +194,8 @@ set(TEST_SOURCE
     tests/SystemOfEquationsTests.cpp	
     tests/IdentityModelTests.cpp
     tests/LinearModelTests.cpp
+    tests/AdvectionEquationTests.cpp
+    tests/BurgersEquationTests.cpp
 
     tests/PenaltyFunctionTests.cpp
     tests/CostFunctionTests.cpp

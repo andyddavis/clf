@@ -66,13 +66,6 @@ public:
    */
   double RightBoundary(std::size_t const ind) const;
 
-  /// Map to a hypercube \f$[-1, 1]^d\f$
-  /**
-     @param[in] x A point in the domain \f$x \in \Omega\f$
-     \return A point in the unit hypercube \f$[-1, 1]^d\f$
-   */
-  virtual Eigen::VectorXd MapToHypercube(Eigen::VectorXd const& x) const override;
-
 protected:
   
   /// Is a point inside the domain?
@@ -80,13 +73,13 @@ protected:
      @param[in] x The point
      \return <tt>true</tt>: Then \f$x \in \Omega\f$, <tt>false</tt>: Then \f$x \notin \Omega\f$
   */
-  virtual bool CheckInside(Eigen::VectorXd const& x) const override;
+  virtual bool CheckInside(Eigen::VectorXd const& x) const final override;
   
   /// Generate a sample in the domain
   /**
      \return A point in the domain
    */
-  virtual Eigen::VectorXd ProposeSample() override;
+  virtual Eigen::VectorXd ProposeSample() final override;
 
 private:
 
@@ -95,6 +88,8 @@ private:
      \return The random number generator
    */
   static std::mt19937_64 RandomNumberGenerator();
+
+  void ComputeMapToHypercube();
 
   /// The random number generator
   static std::mt19937_64 gen;

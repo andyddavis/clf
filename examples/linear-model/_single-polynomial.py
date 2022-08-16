@@ -53,7 +53,7 @@ model = Model(para)
 resid = clf.LocalResidual(func, model, para);
 
 # create the optimizer
-lm = clf.DenseLevenbergMarquardt(clf.DenseCostFunction([resid]), para)
+lm = clf.DenseLevenbergMarquardt(clf.DenseCostFunction(resid), para)
 
 # compute the optimial coefficients
 coeff = np.array([0.0]*func.NumCoefficients())

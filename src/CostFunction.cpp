@@ -4,6 +4,8 @@ using namespace clf;
 
 DenseCostFunction::DenseCostFunction(DensePenaltyFunctions const& penaltyFunctions) : CostFunction<Eigen::MatrixXd>(penaltyFunctions) {}
 
+DenseCostFunction::DenseCostFunction(std::shared_ptr<DensePenaltyFunction> const& penaltyFunction) : CostFunction<Eigen::MatrixXd>(penaltyFunction) {}
+
 Eigen::MatrixXd DenseCostFunction::Jacobian(Eigen::VectorXd const& beta) const {
   assert(beta.size()==InputDimension());
   
@@ -22,6 +24,8 @@ Eigen::MatrixXd DenseCostFunction::Jacobian(Eigen::VectorXd const& beta) const {
 }
 
 SparseCostFunction::SparseCostFunction(SparsePenaltyFunctions const& penaltyFunctions) : CostFunction<Eigen::SparseMatrix<double> >(penaltyFunctions) {}
+
+SparseCostFunction::SparseCostFunction(std::shared_ptr<SparsePenaltyFunction> const& penaltyFunction) : CostFunction<Eigen::SparseMatrix<double> >(penaltyFunction) {}
 
 Eigen::SparseMatrix<double> SparseCostFunction::Jacobian(Eigen::VectorXd const& beta) const { 
   assert(beta.size()==InputDimension());

@@ -15,6 +15,8 @@ namespace clf {
    Parameter Key | Type | Default Value | Description |
    ------------- | ------------- | ------------- | ------------- |
    "MaximumProposedSamples"   | <tt>std::size_t</tt> | <tt>10000</tt> | The maximum number of samples from the domain that clf::Domain::Sample() will propose before crashing. Proposed samples are rejected if they are not in the superset. See clf::Domain::maxProposedSamps_DEFAULT |
+   "DeltaFD"   | <tt>double</tt> | <tt>1.0e-2</tt> | The step size for the finite difference approximation (see Domain::deltaFD_DEFAULT). |
+   "OrderFD"   | <tt>std::size_t</tt> | <tt>8</tt> | The accuracy order for the finite difference approximation (see Domain::orderFD_DEFAULT). The options are \f$2\f$, \f$4\f$, \f$6\f$, and \f$8\f$. |
 */
 class Domain {
 public:
@@ -40,12 +42,22 @@ public:
   */
   bool Inside(Eigen::VectorXd const& x) const;
 
-  /// Map to a hypercube \f$[-1, 1]^d\f$
+  /// Diagonal, linear map to a subset of the hypercube \f$[-1, 1]^d\f$
   /**
+     Define a projection \f$F: \Omega \mapsto [-1,1]^d\f$ such that \f$F(\Omega) \subseteq [-1,1]^d\f$. We map to the hypercube \f$[-1, 1]^d\f$ because that is where the clf::LegendrePolynomials are defined. Note that \f$F(\Omega)\f$ is a <em>subset</em> of \f$[-1,1]^d\f$. This because we assume this map is linear; dealing with a nonlinear map in higher dimensions leads to very complicated formulas for the derivative.
+
+     This is defined by a diagonal matrix stored in clf::Domain::diagonalMap. If this is <tt>std::nullopt</tt> then this map is the identity.
      @param[in] x A point in the domain \f$x \in \Omega\f$
      \return A point in the hypercube \f$[-1, 1]^d\f$
    */
-  virtual Eigen::VectorXd MapToHypercube(Eigen::VectorXd const& x) const;
+  Eigen::VectorXd MapToHypercube(Eigen::VectorXd const& x) const;
+
+  /// The Jacobian of the map to a subset of the hypercube \f$[-1, 1]\f$
+  /**
+     The map is diagonal, so return a vector (the diagonal)
+     \return The Jacobian of the map to a subset of the hypercube \f$[-1, 1]\f$
+   */
+  Eigen::VectorXd MapToHypercubeJacobian() const;
 
   /// An exception to be thrown if none of the proposed samples are valid
   class SampleFailure : public std::logic_error {
@@ -95,6 +107,9 @@ protected:
 
   /// The parameters for this domain
   std::shared_ptr<const Parameters> para;
+
+  /// A linear map to a subset of the hypercube \f$[-1, 1]\f$ defined by a diagonal matrix
+  std::optional<std::pair<Eigen::VectorXd, Eigen::VectorXd> > map;
   
 private:
 
@@ -106,6 +121,12 @@ private:
 
   /// The maximum number of samples from the domain that clf::Domain::Sample() will propose before crashing. Proposed samples are rejected if they are not in the superset.
   inline static std::size_t maxProposedSamps_DEFAULT = 10000;
+
+  /// The default value for the finite diference delta
+  inline static double deltaFD_DEFAULT = 1.0e-2;
+
+  /// The default value for the finite diference order
+  inline static std::size_t orderFD_DEFAULT = 8;
   
 };
   

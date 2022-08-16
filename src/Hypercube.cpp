@@ -10,6 +10,7 @@ Hypercube::Hypercube(std::size_t const dim, std::shared_ptr<const Parameters> co
   Domain(dim, para)
 {
   sampler.emplace_back(0.0, 1.0);
+  ComputeMapToHypercube();
 }
 
 Hypercube::Hypercube(double const left, double const right, std::size_t const dim, std::shared_ptr<const Parameters> const& para) :
@@ -17,6 +18,7 @@ Hypercube::Hypercube(double const left, double const right, std::size_t const di
 {
   assert(left<right);
   sampler.emplace_back(left, right);
+  ComputeMapToHypercube();
 }
 
 Hypercube::Hypercube(std::shared_ptr<const Parameters> const& para) :
@@ -31,6 +33,8 @@ Hypercube::Hypercube(std::shared_ptr<const Parameters> const& para) :
   } else {
     sampler.emplace_back(0.0, 1.0);
   }
+  
+  ComputeMapToHypercube();
 }
 
 Hypercube::Hypercube(Eigen::VectorXd const& left, Eigen::VectorXd const& right, std::shared_ptr<const Parameters> const& para) :
@@ -42,6 +46,8 @@ Hypercube::Hypercube(Eigen::VectorXd const& left, Eigen::VectorXd const& right, 
     assert(left(i)<right(i));
     sampler.emplace_back(left(i), right(i));
   }
+
+  ComputeMapToHypercube();
 }
 
 std::mt19937_64 Hypercube::RandomNumberGenerator() {
@@ -67,20 +73,22 @@ bool Hypercube::CheckInside(Eigen::VectorXd const& x) const {
   return true;
 }
 
-Eigen::VectorXd Hypercube::MapToHypercube(Eigen::VectorXd const& x) const {
+void Hypercube::ComputeMapToHypercube() {
   if( sampler.size()==1 ) {
     const double a = LeftBoundary(0), b = RightBoundary(0);
     // we don't need to actually map since this is the domain we want
-     if( std::abs(a+1.0)<1.0e-14 && std::abs(b-1.0)<1.0e-14 ) { return x; }
-     return (x-Eigen::VectorXd::Constant(dim, (a+b)/2.0)).array()*Eigen::ArrayXd::Constant(dim, 2.0/(b-a));
+     if( std::abs(a+1.0)<1.0e-14 && std::abs(b-1.0)<1.0e-14 ) { return; }
+
+     map = std::pair<Eigen::VectorXd, Eigen::VectorXd>(Eigen::VectorXd::Constant(dim, 2.0/(b-a)), -Eigen::VectorXd::Constant(dim, (a+b)/(b-a)));
+     return;
   }
 
-  Eigen::VectorXd y(dim);
+  map = std::pair<Eigen::VectorXd, Eigen::VectorXd>(Eigen::VectorXd(dim), Eigen::VectorXd(dim));
   for( std::size_t i=0; i<dim; ++i ) {
     const double a = LeftBoundary(i), b = RightBoundary(i);
-    y(i) = (2.0*x(i)-a-b)/(b-a);
+    map->first(i) = 2.0/(b-a);
+    map->second(i) = -(a+b)/(b-a);
   }
-  return y;
 }
 
 Eigen::VectorXd Hypercube::ProposeSample() {

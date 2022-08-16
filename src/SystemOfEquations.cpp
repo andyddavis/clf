@@ -9,7 +9,9 @@ using namespace clf;
 SystemOfEquations::SystemOfEquations(std::size_t const indim, std::size_t const outdim, std::shared_ptr<const Parameters> const& para) :
   indim(indim), outdim(outdim),
   para(para)
-{}
+{
+  assert(para);
+}
 
 SystemOfEquations::SystemOfEquations(std::shared_ptr<const Parameters> const& para) :
   indim(para->Get<std::size_t>("InputDimension")), outdim(para->Get<std::size_t>("OutputDimension")),

@@ -38,7 +38,7 @@ para = clf.Parameters()
 para.Add("InputDimension", indim) 
 para.Add("OutputDimension", outdim)
 para.Add("MaximumOrder", 10)
-para.Add("NumPoints", 100)
+para.Add("NumPoints", 75)
 
 # create a total order multi-index set and the Legendre basis function
 multiSet = clf.MultiIndexSet(para)
@@ -73,7 +73,7 @@ for ind in range(cloud.NumPoints()):
     resids[ind] = clf.LocalResidual(funcs[ind], model, para)
     
     # create the optimizer
-    lm = clf.DenseLevenbergMarquardt(clf.DenseCostFunction([resids[ind]]), para)
+    lm = clf.DenseLevenbergMarquardt(clf.DenseCostFunction(resids[ind]), para)
     
     # compute the optimial coefficients
     coeffs[ind] = np.array([0.0]*funcs[ind].NumCoefficients())

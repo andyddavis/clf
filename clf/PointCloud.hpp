@@ -95,7 +95,7 @@ private:
   /// The <tt>std::unordered_map</tt> needs a hash to have a std::pair<std::size_t, std::size_t></tt> as a key
   struct PairHash {
     /// The hash for std::pair<std::size_t, std::size_t></tt>
-    std::size_t operator()(const std::pair<std::size_t, std::size_t> &p) const;
+    std::size_t operator()(std::pair<std::size_t, std::size_t> const& p) const;
   };
 
   /// The type for a map from a pair of points to the distance between them

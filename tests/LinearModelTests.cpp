@@ -4,8 +4,6 @@
 #include "clf/LegendrePolynomials.hpp"
 #include "clf/LinearModel.hpp"
 
-using namespace clf;
-
 namespace clf {
 namespace tests {
 

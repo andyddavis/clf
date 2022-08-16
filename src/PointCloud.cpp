@@ -37,7 +37,7 @@ std::shared_ptr<Point> PointCloud::Get(std::size_t const ind) const {
   return points[ind];
 }
 
-std::size_t PointCloud::PairHash::operator()(const std::pair<std::size_t, std::size_t> &p) const {
+std::size_t PointCloud::PairHash::operator()(std::pair<std::size_t, std::size_t> const& p) const {
   auto h1 = std::hash<std::size_t>{}(p.first);
   auto h2 = std::hash<std::size_t>{}(p.second);
   

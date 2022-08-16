@@ -13,9 +13,7 @@ Eigen::VectorXd BasisFunctions::EvaluateAll(int const p, double const x) const {
 
 Eigen::MatrixXd BasisFunctions::EvaluateAllDerivatives(int const p, double const x, std::size_t const k) const {
   Eigen::MatrixXd eval(p+1, k);
-  for( int i=0; i<=p; ++i ) {
-    for( std::size_t d=1; d<=k; ++d ) { eval(i, d-1) = EvaluateDerivative(i, x, d); }
-  }
+  for( int i=0; i<=p; ++i ) { for( std::size_t d=1; d<=k; ++d ) { eval(i, d-1) = EvaluateDerivative(i, x, d); } }
 
   return eval;
 }

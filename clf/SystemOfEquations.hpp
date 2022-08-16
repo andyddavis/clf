@@ -7,7 +7,7 @@
 
 namespace clf {
 
-/// A system of equations with the form \f$\mathcal{L}(u(x), x) - f(x) = 0\f$, where \f$\Omega \subseteq \mathbb{R}^{d}\f$ and \f$u(x) = \Phi(x)^{\top} c\f$.
+/// A system of equations with the form \f$\mathcal{L}(u(\cdot), x) - f(x) = 0\f$, where \f$\Omega \subseteq \mathbb{R}^{d}\f$ and \f$u(x) = \Phi(x)^{\top} c\f$.
 /**
    Let \f$u: \Omega \mapsto \mathbb{R}^{m}\f$, where \f$\Omega \subseteq \mathbb{R}^{d}\f$. The system of equations is composed of two parts. First, \f$\mathcal{L}(u(x), x)\f$ is the operator and, second, \f$f(x)\f$ is the right hand side.
    <B>Configuration Parameters:</B>
@@ -51,7 +51,7 @@ public:
      This must be implemented, the default implementation throws and exception.
      @param[in] u The function \f$u\f$
      @param[in] x The location \f$x\f$
-     @param[in] coeff The coefficients \f$c\f$ that define the location function 
+     @param[in] coeff The coefficients \f$c\f$ that define the local function 
      \return The operator evaluation  \f$\mathcal{L}(u(x), x)\f$
    */
   virtual Eigen::VectorXd Operator(std::shared_ptr<LocalFunction> const& u, Eigen::VectorXd const& x, Eigen::VectorXd const& coeff) const;
@@ -94,7 +94,7 @@ public:
      @param[in] wieghts The weights for the sum
      \return The operator Hessian \f$\sum_{i=1}^{m} w_i \nabla_{c}^2 \mathcal{L}_i(u(x; c), x)\f$
    */
-  Eigen::MatrixXd HessianWRTCoefficientsFD(std::shared_ptr<LocalFunction> const& u, Eigen::VectorXd const& x, Eigen::VectorXd const& coef, Eigen::VectorXd const& weightsf) const;
+  Eigen::MatrixXd HessianWRTCoefficientsFD(std::shared_ptr<LocalFunction> const& u, Eigen::VectorXd const& x, Eigen::VectorXd const& coef, Eigen::VectorXd const& weights) const;
 
   /// The input dimension \f$d\f$
   const std::size_t indim;
@@ -102,7 +102,7 @@ public:
   /// The output dimension \f$m\f$
   const std::size_t outdim;
 
-private:
+protected:
 
   ///The parameters for this system of equations
   std::shared_ptr<const Parameters> para;
@@ -112,6 +112,8 @@ private:
 
   /// The default value for the finite diference order
   inline static std::size_t orderFD_DEFAULT = 8;
+
+private:
 };
 
 } // namespace clf 

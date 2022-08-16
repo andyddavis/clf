@@ -45,7 +45,9 @@ void clf::python::CostFunctionWrapper(pybind11::module& mod) {
 
   py::class_<DenseCostFunction, std::shared_ptr<DenseCostFunction>, CostFunction<Eigen::MatrixXd> > dense(mod, "DenseCostFunction");
   dense.def(py::init<DensePenaltyFunctions const&>());
+  dense.def(py::init<std::shared_ptr<DensePenaltyFunction> const&>());
 
   py::class_<SparseCostFunction, std::shared_ptr<SparseCostFunction>, CostFunction<Eigen::SparseMatrix<double> > > sparse(mod, "SparseCostFunction");
   sparse.def(py::init<SparsePenaltyFunctions const&>());
+  sparse.def(py::init<std::shared_ptr<SparsePenaltyFunction> const&>());
 }

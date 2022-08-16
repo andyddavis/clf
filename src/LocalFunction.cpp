@@ -33,3 +33,6 @@ Eigen::VectorXd LocalFunction::Evaluate(Eigen::VectorXd const& x, Eigen::VectorX
   assert(coeff.size()==NumCoefficients());
   return featureMatrix->ApplyTranspose(x, coeff);
 }
+
+void LocalFunction::Derivative(std::shared_ptr<Point> const& x, Eigen::VectorXd const& coeff, std::size_t const q) const {
+}

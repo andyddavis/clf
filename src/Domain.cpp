@@ -2,6 +2,8 @@
 
 #include "clf/CLFExceptions.hpp"
 
+#include "clf/FiniteDifference.hpp"
+
 using namespace clf;
 
 Domain::Domain(std::size_t const dim, std::shared_ptr<const Parameters> const& para) :
@@ -20,8 +22,13 @@ bool Domain::CheckInside(Eigen::VectorXd const& x) const {
 }
 
 Eigen::VectorXd Domain::MapToHypercube(Eigen::VectorXd const& x) const {
-  throw exceptions::NotImplemented("Domain::MapToHypercube");
-  return Eigen::VectorXd();
+  if( map ) { return map->first.asDiagonal()*x + map->second; }
+  return x;
+}
+
+Eigen::VectorXd Domain::MapToHypercubeJacobian() const {
+  if( map ) { return map->first; }
+  return Eigen::VectorXd::Ones(dim);
 }
 
 Domain::SampleFailure::SampleFailure(std::size_t const nproposals) :

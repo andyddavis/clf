@@ -30,6 +30,15 @@ public:
     for( auto it=penaltyFunctions.begin()+1; it!=penaltyFunctions.end(); ++it ) { assert(penaltyFunctions[0]->indim==(*it)->indim); }
   }
 
+  /**
+     @param[in] penaltyFunction The penalty function \f$c_0: \mathbb{R}^{d} \mapsto \mathbb{R}^{n_i}\f$
+   */
+  inline CostFunction(std::shared_ptr<PenaltyFunction<MatrixType> > const& penaltyFunction) :
+    numPenaltyFunctions(1),
+    numTerms(penaltyFunction->outdim),
+    penaltyFunctions(PenaltyFunctions<MatrixType>(1, penaltyFunction))
+  {}
+
   virtual ~CostFunction() = default;
 
   /// Return a vector \f$c \in \mathbb{R}^{m}\f$ such that the \f$i^{\text{th}}\f$ entry is \f$c_i(\beta)\f$
@@ -191,6 +200,11 @@ public:
   */
   DenseCostFunction(DensePenaltyFunctions const& penaltyFunctions);
 
+  /**
+     @param[in] penaltyFunction The penalty function \f$c_0: \mathbb{R}^{d} \mapsto \mathbb{R}^{n_i}\f$
+  */
+  DenseCostFunction(std::shared_ptr<DensePenaltyFunction> const& penaltyFunction);
+
   virtual ~DenseCostFunction() = default; 
 
   /// Compute the Jacobian of the penalty functions \f$\nabla_{\beta} c \in \mathbb{R}^{\bar{n} \times d}\f$
@@ -219,6 +233,11 @@ public:
      @param[in] penaltyFuncs A vector of penalty functions such that the \f$i^{\text{th}}\f$ entry is \f$c_i: \mathbb{R}^{d} \mapsto \mathbb{R}^{n_i}\f$
   */
   SparseCostFunction(SparsePenaltyFunctions const& penaltyFunctions);
+
+  /**
+     @param[in] penaltyFunction The penalty function \f$c_0: \mathbb{R}^{d} \mapsto \mathbb{R}^{n_i}\f$
+  */
+  SparseCostFunction(std::shared_ptr<SparsePenaltyFunction> const& penaltyFunction);
 
   virtual ~SparseCostFunction() = default; 
 

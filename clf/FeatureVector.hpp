@@ -54,7 +54,40 @@ public:
    */
   Eigen::VectorXd Evaluate(Eigen::VectorXd const& x) const;
 
+   /// Evaluate the basis vector derivative
+  /**
+     \f{equation*}{
+     \frac{\partial^{\vert B \vert}}{\prod_{i=1}^{\vert B \vert} \partial x_{B_i}} \phi(F(x)) = \frac{\partial^{\vert B \vert}}{\prod_{i=1}^{\vert B \vert} \partial x_{B_i}} \begin{bmatrix}
+     \phi_{0}(F(x)) \\
+     \vdots \\
+     \phi_{q}(F(x)) 
+     \end{bmatrix} = \frac{\partial^{\vert B \vert}}{\prod_{i=1}^{\vert B \vert} \partial x_{B_i}} \begin{bmatrix}
+     \prod_{j=1}^{d} \varphi_{\alpha_{0,j}}(F_j(x)) \\
+     \vdots \\
+     \prod_{j=1}^{d} \varphi_{\alpha_{q,j}}(F_j(x)) 
+     \end{bmatrix},
+     \f}
+     @param[in] x The point where we want to evaluate the basis vector 
+     \return The derivative of the basis vector \f$\frac{\partial^{\vert B \vert}}{\prod_{i=1}^{\vert B \vert} \partial x_{B_i}} \phi(F(x))\f$
+   */
+  Eigen::VectorXd Derivative(Eigen::VectorXd const& x, std::vector<std::size_t> const& B) const;
+
 private:
+
+  /// Evaluate the basis functions \f$\varphi_j(y_i)\f$
+  /**
+     @param[in] x The point where we want to evaluate the basis vector 
+     \return The \f$i^{\text{th}}\f$ entry is a vector such that the \f$j^{\text{th}}\f$ component is \f$\varphi_j(y_i)\f$ for \f$j \in \{0,\, ...,\, \max{(\alpha_{:,j})} \}\f$
+   */
+  std::vector<Eigen::VectorXd> BasisEvaluation(Eigen::VectorXd const& x) const;
+
+  /// Evaluate the basis function derivatives \f$\frac{\partial^{k}}{\partial x^{k}} \varphi_j(y_i)\f$
+  /**
+     @param[in] x The point where we want to evaluate the basis vector 
+     @param[in] count The maximum derivative order for each dimension
+     \return The \f$i^{\text{th}}\f$ entry is a vector such that the \f$(j, k)^{\text{th}}\f$ component is \f$\frac{\partial^k}{\partial y_j^k}\varphi_j(y_i)\f$ for \f$j \in \{0,\, ...,\, \max{(\alpha_{:,j})} \}\f$ and \f$k \in \{1,\, ...,\, K_d\}\f$
+   */
+  std::vector<Eigen::MatrixXd> BasisDerivatives(Eigen::VectorXd const& x, Eigen::VectorXi const& count) const;
 
   /// The multi-index set that defines this feature vector
   std::shared_ptr<const MultiIndexSet> set;
