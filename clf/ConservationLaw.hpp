@@ -48,6 +48,42 @@ public:
    */
   double FluxDivergenceFD(std::shared_ptr<LocalFunction> const &u, Eigen::VectorXd const &x, Eigen::VectorXd const &coeff) const;
 
+  /// Compute the gradient of the flux divergence \f$\nabla_{c} ( \nabla_x \cdot F(u(\cdot), x) )\f$ with respect to the coefficients
+  /**
+     @param[in] u The function \f$u\f$
+     @param[in] x The location \f$x\f$
+     @param[in] coeff The coefficients \f$c\f$ that define the location function 
+     \return The gradient of the flux divergence \f$\nabla_{c} ( \nabla_x \cdot F(u(\cdot), x) )\f$ with respect to the coefficients
+   */
+  virtual Eigen::VectorXd FluxDivergence_GradientWRTCoefficients(std::shared_ptr<LocalFunction> const &u, Eigen::VectorXd const &x, Eigen::VectorXd const &coeff) const;
+
+  /// Compute the gradient of the flux divergence \f$\nabla_{c} ( \nabla_x \cdot F(u(\cdot), x) )\f$ with respect to the coefficients using finite difference
+  /**
+     @param[in] u The function \f$u\f$
+     @param[in] x The location \f$x\f$
+     @param[in] coeff The coefficients \f$c\f$ that define the location function 
+     \return The gradient of the flux divergence \f$\nabla_{c} ( \nabla_x \cdot F(u(\cdot), x) )\f$ with respect to the coefficients
+   */
+  Eigen::VectorXd FluxDivergence_GradientWRTCoefficientsFD(std::shared_ptr<LocalFunction> const &u, Eigen::VectorXd const &x, Eigen::VectorXd const &coeff) const;
+
+  /// Compute the Hessian of the flux divergence \f$H_{c} ( \nabla_x \cdot F(u(\cdot), x) )\f$ with respect to the coefficients
+  /**
+     @param[in] u The function \f$u\f$
+     @param[in] x The location \f$x\f$
+     @param[in] coeff The coefficients \f$c\f$ that define the location function 
+     \return The Hessian of the flux divergence \f$H_{c} ( \nabla_x \cdot F(u(\cdot), x) )\f$ with respect to the coefficients
+   */
+  virtual Eigen::MatrixXd FluxDivergence_HessianWRTCoefficients(std::shared_ptr<LocalFunction> const &u, Eigen::VectorXd const &x, Eigen::VectorXd const &coeff) const;
+
+  /// Compute the Hessian of the flux divergence \f$H_{c} ( \nabla_x \cdot F(u(\cdot), x) )\f$ with respect to the coefficients using finite difference
+  /**
+     @param[in] u The function \f$u\f$
+     @param[in] x The location \f$x\f$
+     @param[in] coeff The coefficients \f$c\f$ that define the location function 
+     \return The Hessian of the flux divergence \f$H_{c} ( \nabla_x \cdot F(u(\cdot), x) )\f$ with respect to the coefficients
+   */
+  Eigen::MatrixXd FluxDivergence_HessianWRTCoefficientsFD(std::shared_ptr<LocalFunction> const &u, Eigen::VectorXd const &x, Eigen::VectorXd const &coeff) const;
+
   /// Evaluate the operator \f$\nabla \cdot F(u(\cdot), x)\f$. given the function \f$u\f$ and at the location \f$x\f$.
   /**
      @param[in] u The function \f$u\f$
@@ -56,6 +92,16 @@ public:
      \return The operator evaluation  \f$\mathcal{L}(u(x), x)\f$
    */
   virtual Eigen::VectorXd Operator(std::shared_ptr<LocalFunction> const& u, Eigen::VectorXd const& x, Eigen::VectorXd const& coeff) const final override;
+
+   /// Compute the Jacobian of the operator with respect to the cofficients \f$c\f$, \f$\nabla_{c} \mathcal{L}(u(x; c), x)\f$ given the function \f$u\f$ and at the location \f$x\f$.
+  /**
+     Defaults to approximating the Jacobian with finite difference (see SystemOfEquations::JacobianWRTCoefficientsFD)
+     @param[in] u The function \f$u\f$
+     @param[in] x The location \f$x\f$
+     @param[in] coeff The coefficients \f$c\f$ that define the location function 
+     \return The operator Jacobian \f$\nabla_{c} \mathcal{L}(u(x; c), x)\f$
+   */
+  virtual Eigen::MatrixXd JacobianWRTCoefficients(std::shared_ptr<LocalFunction> const& u, Eigen::VectorXd const& x, Eigen::VectorXd const& coeff) const final override;
   
 private:
 };

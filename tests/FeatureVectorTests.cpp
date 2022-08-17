@@ -61,11 +61,14 @@ protected:
     EXPECT_EQ(eval.size(), expected.size());
     EXPECT_NEAR((eval-expected).norm(), 0.0, 1.0e-13);
 
+    const Eigen::MatrixXi id = Eigen::MatrixXi::Identity(dim, dim);
+    const Eigen::MatrixXd derivs = vec->Derivative(x, id);
     for( std::size_t i=0; i<dim; ++i ) {
       Eigen::VectorXi counts = Eigen::VectorXi::Zero(dim);
       counts(i) = 1;
       const Eigen::VectorXd deriv = vec->Derivative(x, counts);
       const Eigen::VectorXd derivFD = DerivativeFD(vec, x, counts);
+      EXPECT_NEAR((derivs.col(i)-deriv).norm(), 0.0, 1.0e-10);
       EXPECT_NEAR((deriv-derivFD).norm(), 0.0, 1.0e-10);
     }
 

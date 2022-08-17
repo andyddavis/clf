@@ -37,11 +37,42 @@ protected:
     const Eigen::VectorXd flux = system->Flux(func, x, coeff);
     EXPECT_EQ(flux.size(), indim);
     const double eval = func->Evaluate(x, coeff) [0];
-    const Eigen::VectorXd expectedFlux = 0.5*eval*eval*vel;
+    Eigen::VectorXd expectedFlux(indim);
+    expectedFlux(0) = eval;
+    expectedFlux.tail(indim-1) = 0.5*eval*eval*vel;
     EXPECT_NEAR((flux-expectedFlux).norm(), 0.0, 1.0e-14);
+
+    // flux divergence
+    const double div = system->FluxDivergence(func, x, coeff);
+    const double divFD = system->FluxDivergenceFD(func, x, coeff);
+    EXPECT_NEAR(div, divFD, 1.0e-12);
+
+    const Eigen::VectorXd divGradWRTc = system->FluxDivergence_GradientWRTCoefficients(func, x, coeff);
+    EXPECT_EQ(divGradWRTc.size(), coeff.size());
+    const Eigen::VectorXd divGradWRTcFD = system->FluxDivergence_GradientWRTCoefficientsFD(func, x, coeff);
+    EXPECT_EQ(divGradWRTcFD.size(), coeff.size());
+    EXPECT_NEAR((divGradWRTc-divGradWRTcFD).norm(), 0.0, 1.0e-12);
+
+    const Eigen::MatrixXd divHessWRTc = system->FluxDivergence_HessianWRTCoefficients(func, x, coeff);
+    EXPECT_EQ(divHessWRTc.rows(), coeff.size());
+    EXPECT_EQ(divHessWRTc.cols(), coeff.size());
+    const Eigen::MatrixXd divHessWRTcFD = system->FluxDivergence_HessianWRTCoefficientsFD(func, x, coeff);
+    EXPECT_EQ(divHessWRTcFD.rows(), coeff.size());
+    EXPECT_EQ(divHessWRTcFD.cols(), coeff.size());
+    EXPECT_NEAR((divHessWRTc-divHessWRTcFD).norm(), 0.0, 1.0e-10);
 
     // compute the divergence of the flux (the operator)
     const Eigen::VectorXd op = system->Operator(func, x, coeff);
+    EXPECT_EQ(op.size(), 1);
+    EXPECT_NEAR(std::abs(op(0)-div), 0.0, 1.0e-12);
+    
+    const Eigen::MatrixXd jac = system->JacobianWRTCoefficients(func, x, coeff);
+    EXPECT_EQ(jac.rows(), 1);
+    EXPECT_EQ(jac.cols(), coeff.size());
+    const Eigen::MatrixXd jacFD = system->JacobianWRTCoefficientsFD(func, x, coeff);
+    EXPECT_EQ(jacFD.rows(), 1);
+    EXPECT_EQ(jacFD.cols(), coeff.size());
+    EXPECT_NEAR((jac-jacFD).norm()/jac.norm(), 0.0, 1.0e-12);    
   }
   
   /// The input dimension
@@ -55,12 +86,12 @@ protected:
 };
 
 TEST_F(BurgersEquationTests, ConstantVelocity) {
-  vel = 2.5*Eigen::VectorXd::Ones(indim);
+  vel = 2.5*Eigen::VectorXd::Ones(indim-1);
   system = std::make_shared<BurgersEquation>(indim, 2.5);
 }
 
 TEST_F(BurgersEquationTests, NonConstantVelocity) {
-  vel = Eigen::VectorXd::Random(indim);
+  vel = Eigen::VectorXd::Random(indim-1);
   system = std::make_shared<BurgersEquation>(vel);
 }
 

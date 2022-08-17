@@ -14,7 +14,7 @@ protected:
   virtual inline void SetUp() override {
     basis = std::make_shared<LegendrePolynomials>();
 
-    const double delta = 0.1;
+    const double delta = 0.6;
     const Eigen::VectorXd xbar = Eigen::VectorXd::Random(indim);
     domain = std::make_shared<Hypercube>(xbar-Eigen::VectorXd::Constant(indim, delta), xbar+Eigen::VectorXd::Constant(indim, delta));
   }
@@ -25,14 +25,16 @@ protected:
    */
   inline void TestDerivatives(std::vector<std::shared_ptr<const FeatureVector> > const& vecs) {
     {
-      Eigen::VectorXi count = Eigen::VectorXi::Zero(indim);
-      for( std::size_t i=0; i<2; ++i ) { ++count(rand()%indim); }
+      Eigen::MatrixXi count = Eigen::MatrixXi::Zero(indim, 2);
+      for( std::size_t i=0; i<count.cols(); ++i ) {
+	for( std::size_t j=0; j<2; ++j ) { ++count(rand()%indim, i); }
+      }
       auto linOper = std::make_shared<LinearDifferentialOperator>(count, outdim);
       TestDerivatives(linOper, vecs);
     }
     
     {
-      std::vector<Eigen::VectorXi> counts(outdim);
+      std::vector<Eigen::MatrixXi> counts(outdim);
       for( std::size_t i=0; i<outdim; ++i ) {
 	counts[i] = Eigen::VectorXi::Zero(indim);
 	for( std::size_t j=0; j<2; ++j ) { ++counts[i](rand()%(indim-1)); }
@@ -62,16 +64,20 @@ protected:
 
     const Eigen::VectorXd jac = domain->MapToHypercubeJacobian();
 
-    const Eigen::VectorXd output = mat->ApplyTranspose(x, coeff, linOper);
-    EXPECT_EQ(output.size(), outdim);
-    Eigen::VectorXd expected(outdim);
+    const Eigen::MatrixXd output = mat->ApplyTranspose(x, coeff, linOper);
+
+    EXPECT_EQ(output.rows(), outdim);
+    EXPECT_EQ(output.cols(), linOper->NumOperators());
+    Eigen::MatrixXd expected(outdim, linOper->NumOperators());
     std::size_t start = 0;
     for( std::size_t i=0; i<outdim; ++i ) {
-      const Eigen::VectorXd eval = vecs[i]->Derivative(y, linOper->Counts(i).first, jac);
-      expected(i) = eval.dot(coeff.segment(start, vecs[i]->NumBasisFunctions()));
+      for( std::size_t j=0; j<linOper->NumOperators(); ++j ) {
+	const Eigen::VectorXd eval = vecs[i]->Derivative(y, linOper->Counts(i).first.col(j), jac);
+	expected(i, j) = eval.dot(coeff.segment(start, vecs[i]->NumBasisFunctions()));
+      }
       start += vecs[i]->NumBasisFunctions();
     }
-    EXPECT_NEAR((output-expected).norm(), 0.0, 1.0e-14);
+    EXPECT_NEAR((output-expected).norm()/output.norm(), 0.0, 1.0e-14);
   }
   
   /// The input dimension

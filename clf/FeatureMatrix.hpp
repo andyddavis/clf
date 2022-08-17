@@ -7,8 +7,8 @@
 
 namespace clf {
 
-  /// Forward declaration of clf::LocalFunction
-  class LocalFunction;
+/// Forward declaration of clf::LocalFunction
+class LocalFunction;
 
 /// A matrix of basis function \f$\Phi: \mathcal{B} \mapsto \mathbb{R}^{\bar{q} \times m}\f$.
 /**
@@ -79,7 +79,7 @@ public:
      @param[in] linOper The linear differential operator we are applying to each row of the feature matrix transpose
      \return The feature matrix transpose applied to the coefficients \f$\Phi(x)^{\top} c\f$
   */
-  Eigen::VectorXd ApplyTranspose(Eigen::VectorXd const& x, Eigen::VectorXd const& coeff, std::shared_ptr<LinearDifferentialOperator> const& linOper) const;
+  Eigen::MatrixXd ApplyTranspose(Eigen::VectorXd const& x, Eigen::VectorXd const& coeff, std::shared_ptr<LinearDifferentialOperator> const& linOper) const;
 
   /// Apply a linear differential operator to the feature matrix transpose applied to coefficients \f$L \Phi(x)^{\top} c\f$
   /**

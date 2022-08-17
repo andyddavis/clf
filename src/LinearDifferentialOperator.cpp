@@ -2,25 +2,28 @@
 
 using namespace clf;
 
-LinearDifferentialOperator::LinearDifferentialOperator(Eigen::VectorXi const& counts, std::size_t const outdim) :
-  indim(counts.size()), outdim(outdim),
+LinearDifferentialOperator::LinearDifferentialOperator(Eigen::MatrixXi const& counts, std::size_t const outdim) :
+  indim(counts.rows()), outdim(outdim),
   counts(std::vector<CountPair>(1, CountPair(counts, outdim)))
 {}
 
-LinearDifferentialOperator::LinearDifferentialOperator(std::vector<Eigen::VectorXi> const& counts) :
-  indim(counts[0].size()), outdim(counts.size()),
+LinearDifferentialOperator::LinearDifferentialOperator(std::vector<Eigen::MatrixXi> const& counts) :
+  indim(counts[0].rows()), outdim(counts.size()),
   counts(ComputeCountPairs(counts))
 {}
 
 LinearDifferentialOperator::LinearDifferentialOperator(std::vector<CountPair> const& counts) :
-  indim(counts[0].first.size()), outdim(ComputeOutputDimension(counts)),
+  indim(counts[0].first.rows()), outdim(ComputeOutputDimension(counts)),
   counts(counts)
 {}
 
-std::vector<LinearDifferentialOperator::CountPair> LinearDifferentialOperator::ComputeCountPairs(std::vector<Eigen::VectorXi> const& counts) {
+std::size_t LinearDifferentialOperator::NumOperators() const { return counts[0].first.cols(); }
+
+std::vector<LinearDifferentialOperator::CountPair> LinearDifferentialOperator::ComputeCountPairs(std::vector<Eigen::MatrixXi> const& counts) {
   std::vector<CountPair> pairs(counts.size());
   for( std::size_t i=0; i<counts.size(); ++i ) {
-    assert(counts[0].size()==counts[i].size());
+    assert(counts[0].cols()==counts[i].cols());
+    assert(counts[0].rows()==counts[i].rows());
     pairs[i] = CountPair(counts[i], 1);
   }
   return pairs;
@@ -29,7 +32,8 @@ std::vector<LinearDifferentialOperator::CountPair> LinearDifferentialOperator::C
 std::size_t LinearDifferentialOperator::ComputeOutputDimension(std::vector<CountPair> const& counts) {
   std::size_t dim = 0;
   for( const auto& it : counts ) {
-    assert(counts[0].first.size()==it.first.size());
+    assert(counts[0].first.cols()==it.first.cols());
+    assert(counts[0].first.rows()==it.first.rows());
     dim += it.second;
   }
   return dim;

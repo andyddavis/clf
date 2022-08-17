@@ -105,7 +105,7 @@ public:
      @param[in] linOper We are applying this differential operator
      \return The local function derivative \f$L u(x; c) \in \mathbb{R}^{m}\f$
   */
-  Eigen::VectorXd Derivative(Eigen::VectorXd const& x, Eigen::VectorXd const& coeff, std::shared_ptr<LinearDifferentialOperator> const& linOper) const;
+  Eigen::MatrixXd Derivative(Eigen::VectorXd const& x, Eigen::VectorXd const& coeff, std::shared_ptr<LinearDifferentialOperator> const& linOper) const;
 
   /// The feature matrix \f$\Phi(x)\f$ that defines this local function
   std::shared_ptr<const FeatureMatrix> featureMatrix;

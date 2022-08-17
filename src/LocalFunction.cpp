@@ -34,7 +34,7 @@ Eigen::VectorXd LocalFunction::Evaluate(Eigen::VectorXd const& x, Eigen::VectorX
   return featureMatrix->ApplyTranspose(x, coeff);
 }
 
-Eigen::VectorXd LocalFunction::Derivative(Eigen::VectorXd const& x, Eigen::VectorXd const& coeff, std::shared_ptr<LinearDifferentialOperator> const& linOper) const {
+Eigen::MatrixXd LocalFunction::Derivative(Eigen::VectorXd const& x, Eigen::VectorXd const& coeff, std::shared_ptr<LinearDifferentialOperator> const& linOper) const {
   assert(x.size()==InputDimension());
   assert(coeff.size()==NumCoefficients());
   assert(linOper->outdim==OutputDimension());

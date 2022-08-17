@@ -78,9 +78,9 @@ Eigen::VectorXd FeatureMatrix::ApplyTranspose(Eigen::VectorXd const& x, Eigen::V
   return output;
 }
 
-Eigen::VectorXd FeatureMatrix::ApplyTranspose(Eigen::VectorXd const& x, Eigen::VectorXd const& coeff, std::shared_ptr<LinearDifferentialOperator> const& linOper) const {
+Eigen::MatrixXd FeatureMatrix::ApplyTranspose(Eigen::VectorXd const& x, Eigen::VectorXd const& coeff, std::shared_ptr<LinearDifferentialOperator> const& linOper) const {
   assert(coeff.size()==numBasisFunctions);
-  Eigen::VectorXd output(numFeatureVectors);
+  Eigen::MatrixXd output(numFeatureVectors, linOper->NumOperators());
 
   // the jacobian of the coordinate transformation
   const std::optional<Eigen::VectorXd> y = LocalCoordinate(x);
@@ -89,16 +89,16 @@ Eigen::VectorXd FeatureMatrix::ApplyTranspose(Eigen::VectorXd const& x, Eigen::V
   LinearDifferentialOperator::CountPair oper = linOper->Counts(0);
   std::size_t count = 0, start = 0, diff = oper.second;
   for( const auto& it : featureVectors ) {
-    Eigen::VectorXd phi = it.first->Derivative((y? *y : x), oper.first, jac);
+    Eigen::MatrixXd phi = it.first->Derivative((y? *y : x), oper.first, jac).transpose();
     for( std::size_t i=0; i<it.second; ++i ) {
-      output(count) = phi.dot(coeff.segment(start, phi.size()));
+      output.row(count) = phi*coeff.segment(start, it.first->NumBasisFunctions());
        
       ++count;
       start += it.first->NumBasisFunctions();
       if( diff<=count && count!=numFeatureVectors ) {
       	oper = linOper->Counts(count);
 	diff += oper.second;
-      	phi = it.first->Derivative((y? *y : x), oper.first, jac);
+      	phi = it.first->Derivative((y? *y : x), oper.first, jac).transpose();
       }
     }
   }

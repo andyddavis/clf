@@ -25,7 +25,7 @@ Eigen::VectorXd SystemOfEquations::Operator(std::shared_ptr<LocalFunction> const
   return Eigen::VectorXd();
 }
 
-Eigen::MatrixXd SystemOfEquations::JacobianWRTCoefficients(std::shared_ptr<LocalFunction> const& u, Eigen::VectorXd const& x, Eigen::VectorXd const& coeff) const { return JacobianWRTCoefficients(u, x, coeff); }
+Eigen::MatrixXd SystemOfEquations::JacobianWRTCoefficients(std::shared_ptr<LocalFunction> const& u, Eigen::VectorXd const& x, Eigen::VectorXd const& coeff) const { return JacobianWRTCoefficientsFD(u, x, coeff); }
 
 Eigen::MatrixXd SystemOfEquations::JacobianWRTCoefficientsFD(std::shared_ptr<LocalFunction> const& u, Eigen::VectorXd const& x, Eigen::VectorXd const& coeff) const {
   const double delta = para->Get<double>("DeltaFD", deltaFD_DEFAULT);

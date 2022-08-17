@@ -71,7 +71,7 @@ public:
      @param[in] counts The number of times we are differentiating with respect to each index
      \return The derivative of the basis vector \f$\frac{\partial^{\vert B \vert}}{\prod_{i=1}^{\vert B \vert} \partial x_{B_i}} \phi(F(x))\f$
    */
-  Eigen::VectorXd Derivative(Eigen::VectorXd const& x, Eigen::VectorXi const& counts) const;
+  Eigen::MatrixXd Derivative(Eigen::VectorXd const& x, Eigen::MatrixXi const& counts) const;
 
   /// Evaluate the basis vector derivative
   /**
@@ -91,7 +91,7 @@ public:
      @param[in] jac The jacobian of the coordinate transformation
      \return The derivative of the basis vector \f$\frac{\partial^{\vert B \vert}}{\prod_{i=1}^{\vert B \vert} \partial x_{B_i}} \phi(F(x))\f$
    */
-  Eigen::VectorXd Derivative(Eigen::VectorXd const& x, Eigen::VectorXi const& counts, std::optional<Eigen::VectorXd> const& jac) const;
+  Eigen::MatrixXd Derivative(Eigen::VectorXd const& x, Eigen::MatrixXi const& counts, std::optional<Eigen::VectorXd> const& jac) const;
 private:
 
   /// Evaluate the basis functions \f$\varphi_j(y_i)\f$

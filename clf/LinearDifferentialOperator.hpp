@@ -24,21 +24,21 @@ Applying the differential operator to a function \f$u: \Omega \mapsto \mathbb{R}
 class LinearDifferentialOperator {
 public:
 
-  /// First: The number of components this operator is applied to, Second: A vector whose length is the input dimension and the \f$i^{\text{th}}\f$ component is the number of times we are taking the derivative with respect to the \f$i^{\text{th}}\f$ input
-  typedef std::pair<Eigen::VectorXi, std::size_t> CountPair;
+  /// First: The number of components this operator is applied to, Second: Each columin has length equal to the input dimension and the \f$i^{\text{th}}\f$ component is the number of times we are taking the derivative with respect to the \f$i^{\text{th}}\f$ input. Each column corresponds to a different differential operator.
+  typedef std::pair<Eigen::MatrixXi, std::size_t> CountPair;
 
   /// Apply the same linear differential operator too all components
   /**
      @param[in] counts A vector whose length is the input dimension and the \f$i^{\text{th}}\f$ component is the number of times we are taking the derivative with respect to the \f$i^{\text{th}}\f$ input.
      @param[in] outdim The number of components of the linear differential operator
    */
-  LinearDifferentialOperator(Eigen::VectorXi const& counts, std::size_t const outdim);
+  LinearDifferentialOperator(Eigen::MatrixXi const& counts, std::size_t const outdim);
 
   /// Apply the a different linear differential operator to all components
   /**
      @param[in] counts The counts for each component
    */
-  LinearDifferentialOperator(std::vector<Eigen::VectorXi> const& counts);
+  LinearDifferentialOperator(std::vector<Eigen::MatrixXi> const& counts);
 
   /// Apply the a different linear differential operator to some components
   /**
@@ -47,6 +47,12 @@ public:
   LinearDifferentialOperator(std::vector<CountPair> const& counts);
 
   virtual ~LinearDifferentialOperator() = default;
+
+  /// The number of differential operators defined by this object
+  /**
+     \return The number of columns in each <tt>first</tt> of clf::LinearDifferentialOperator. 
+   */
+  std::size_t NumOperators() const;
 
   ///  A vector whose length is the input dimension and the \f$i^{\text{th}}\f$ component is the number of times we are taking the derivative with respect to the \f$i^{\text{th}}\f$ input.
   /**
@@ -66,7 +72,7 @@ private:
      @param[in] counts The counts for each component
      \return The count pairs for each component
    */
-  static std::vector<CountPair> ComputeCountPairs(std::vector<Eigen::VectorXi> const& counts);
+  static std::vector<CountPair> ComputeCountPairs(std::vector<Eigen::MatrixXi> const& counts);
 
   /// Compute the output dimension
   /**

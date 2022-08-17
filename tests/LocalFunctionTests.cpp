@@ -28,12 +28,17 @@ TEST(LocalFunctionTests, Construction) {
   const Eigen::VectorXd x = xbar + delta*Eigen::VectorXd::Random(indim);
   const Eigen::VectorXd coeff = Eigen::VectorXd::Random(func.NumCoefficients());
   const Eigen::VectorXd eval = func.Evaluate(x, coeff);
+  EXPECT_EQ(eval.size(), outdim);
   EXPECT_NEAR((eval-mat->ApplyTranspose(x, coeff)).norm(), 0.0, 1.0e-14);
 
-  Eigen::VectorXi counts = Eigen::VectorXi::Zero(indim);
-  for( std::size_t i=0; i<3; ++i ) { ++counts(rand()%(indim-1)); }
+  Eigen::MatrixXi counts = Eigen::MatrixXi::Zero(indim, 2);
+  for( std::size_t i=0; i<counts.cols(); ++i ) {
+    for( std::size_t j=0; j<3; ++j ) { ++counts(rand()%(indim-1), i); }
+  }
   auto linOp = std::make_shared<LinearDifferentialOperator>(counts, outdim);
-  const Eigen::VectorXd diff = func.Derivative(x, coeff, linOp);
+  const Eigen::MatrixXd diff = func.Derivative(x, coeff, linOp);
+  EXPECT_EQ(diff.rows(), outdim);
+  EXPECT_EQ(diff.cols(), counts.cols());
   EXPECT_NEAR((diff-mat->ApplyTranspose(x, coeff, linOp)).norm(), 0.0, 1.0e-14);
 
   for( std::size_t i=0; i<10; ++i ) { EXPECT_TRUE(domain->Inside(func.SampleDomain())); }

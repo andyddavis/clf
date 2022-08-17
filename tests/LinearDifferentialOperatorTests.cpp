@@ -7,25 +7,31 @@ using namespace clf;
 TEST(LinearDifferentialOperator, AllSame) {
   std::size_t indim = 8;
   std::size_t outdim = 5;
-  Eigen::VectorXi counts = Eigen::VectorXi::Zero(indim);
-  for( std::size_t i=0; i<9; ++i ) { ++counts(rand()%(indim-1)); }
+  Eigen::MatrixXi counts = Eigen::MatrixXi::Zero(indim, 3);
+  for( std::size_t i=0; i<counts.cols(); ++i ) {
+    for( std::size_t j=0; j<9; ++j ) { ++counts(rand()%(indim-1), i); }
+  }
   
   auto linOp = std::make_shared<LinearDifferentialOperator>(counts, outdim);
   EXPECT_EQ(linOp->outdim, outdim);
   EXPECT_EQ(linOp->indim, indim);
+  EXPECT_EQ(linOp->NumOperators(), counts.cols());
 
   for( std::size_t i=0; i<outdim; ++i ) {
     const LinearDifferentialOperator::CountPair C = linOp->Counts(i);
     EXPECT_EQ(C.second, outdim);
-    EXPECT_EQ(C.first.size(), indim);
-    for( std::size_t j=0; j<indim; ++j ) { EXPECT_EQ(C.first(j), counts(j)); }
+    EXPECT_EQ(C.first.rows(), indim);
+    EXPECT_EQ(C.first.cols(), counts.cols());
+    for( std::size_t s=0; s<counts.cols(); ++s ) {
+      for( std::size_t j=0; j<indim; ++j ) { EXPECT_EQ(C.first(j, s), counts(j, s)); }
+    }
   }
 }
 
 TEST(LinearDifferentialOperator, AllDifferent) {
   std::size_t indim = 8;
   std::size_t outdim = 5;
-  std::vector<Eigen::VectorXi> counts(outdim);
+  std::vector<Eigen::MatrixXi> counts(outdim);
   for( std::size_t i=0; i<outdim; ++i ) {
     counts[i] = Eigen::VectorXi::Zero(indim);
     for( std::size_t j=0; j<9; ++j ) { ++counts[i](rand()%(indim-1)); }
@@ -34,6 +40,7 @@ TEST(LinearDifferentialOperator, AllDifferent) {
   auto linOp = std::make_shared<LinearDifferentialOperator>(counts);
   EXPECT_EQ(linOp->outdim, outdim);
   EXPECT_EQ(linOp->indim, indim);
+  EXPECT_EQ(linOp->NumOperators(), 1);
 
   for( std::size_t i=0; i<outdim; ++i ) {
     const LinearDifferentialOperator::CountPair C = linOp->Counts(i);
@@ -55,6 +62,7 @@ TEST(LinearDifferentialOperator, Mixed) {
   auto linOp = std::make_shared<LinearDifferentialOperator>(counts);
   EXPECT_EQ(linOp->outdim, outdim);
   EXPECT_EQ(linOp->indim, indim);
+  EXPECT_EQ(linOp->NumOperators(), 1);
 
   std::size_t c = 0;
   for( std::size_t i=0; i<counts.size(); ++i ) {
