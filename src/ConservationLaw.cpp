@@ -14,7 +14,7 @@ Eigen::VectorXd ConservationLaw::Operator(std::shared_ptr<LocalFunction> const& 
 
 Eigen::MatrixXd ConservationLaw::JacobianWRTCoefficients(std::shared_ptr<LocalFunction> const& u, Eigen::VectorXd const& x, Eigen::VectorXd const& coeff) const { return FluxDivergence_GradientWRTCoefficients(u, x, coeff).transpose(); }
 
-Eigen::MatrixXd ConservationLaw::HessianWRTCoefficients(std::shared_ptr<LocalFunction> const& u, Eigen::VectorXd const& x, Eigen::VectorXd const& coeff, Eigen::VectorXd const& weights) const { return FluxDivergence_HessianWRTCoefficients(u, x, coeff); }
+Eigen::MatrixXd ConservationLaw::HessianWRTCoefficients(std::shared_ptr<LocalFunction> const& u, Eigen::VectorXd const& x, Eigen::VectorXd const& coeff, Eigen::VectorXd const& weights) const { return weights(0)*FluxDivergence_HessianWRTCoefficients(u, x, coeff); }
 
 double ConservationLaw::FluxDivergence(std::shared_ptr<LocalFunction> const &u, Eigen::VectorXd const &x, Eigen::VectorXd const &coeff) const { return FluxDivergenceFD(u, x, coeff); }
 
