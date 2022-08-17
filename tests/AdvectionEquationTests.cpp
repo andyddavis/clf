@@ -81,7 +81,7 @@ protected:
     const Eigen::MatrixXd hessFD = system->HessianWRTCoefficientsFD(func, x, coeff, weights);
     EXPECT_EQ(hessFD.rows(), coeff.size());
     EXPECT_EQ(hessFD.cols(), coeff.size());
-    EXPECT_NEAR(hessFD.norm(), 0.0, 1.0e-7);
+    EXPECT_NEAR(hessFD.norm(), 0.0, 1.0e-10);
   }
 
   /// The input dimension

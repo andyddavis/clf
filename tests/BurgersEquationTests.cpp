@@ -72,7 +72,16 @@ protected:
     const Eigen::MatrixXd jacFD = system->JacobianWRTCoefficientsFD(func, x, coeff);
     EXPECT_EQ(jacFD.rows(), 1);
     EXPECT_EQ(jacFD.cols(), coeff.size());
-    EXPECT_NEAR((jac-jacFD).norm()/jac.norm(), 0.0, 1.0e-12);    
+    EXPECT_NEAR((jac-jacFD).norm()/jac.norm(), 0.0, 1.0e-12);
+
+    const Eigen::VectorXd weights = Eigen::VectorXd::Random(1);
+    const Eigen::MatrixXd hess = system->HessianWRTCoefficients(func, x, coeff, weights);
+    EXPECT_EQ(hess.rows(), coeff.size());
+    EXPECT_EQ(hess.cols(), coeff.size());
+    const Eigen::MatrixXd hessFD = system->HessianWRTCoefficientsFD(func, x, coeff, weights);
+    EXPECT_EQ(hessFD.rows(), coeff.size());
+    EXPECT_EQ(hessFD.cols(), coeff.size());
+    EXPECT_NEAR((hess-hessFD).norm(), 0.0, 1.0e-10);
   }
   
   /// The input dimension
