@@ -61,8 +61,7 @@ Eigen::VectorXd FeatureMatrix::ApplyTranspose(Eigen::VectorXd const& x, Eigen::V
   assert(coeff.size()==numBasisFunctions);
   Eigen::VectorXd output(numFeatureVectors);
 
-  std::size_t count = 0;
-  std::size_t start = 0;
+  std::size_t count = 0, start = 0;
   const std::optional<Eigen::VectorXd> y = LocalCoordinate(x);
   for( const auto& it : featureVectors ) {
     const Eigen::VectorXd phi = it.first->Evaluate((y? *y : x));
@@ -77,6 +76,39 @@ Eigen::VectorXd FeatureMatrix::ApplyTranspose(Eigen::VectorXd const& x, Eigen::V
   assert(start==numBasisFunctions);
 
   return output;
+}
+
+Eigen::VectorXd FeatureMatrix::ApplyTranspose(Eigen::VectorXd const& x, Eigen::VectorXd const& coeff, std::shared_ptr<LinearDifferentialOperator> const& linOper) const {
+  assert(coeff.size()==numBasisFunctions);
+  Eigen::VectorXd output(numFeatureVectors);
+
+  // the jacobian of the coordinate transformation
+  const std::optional<Eigen::VectorXd> y = LocalCoordinate(x);
+  const std::optional<Eigen::VectorXd> jac = LocalCoordinateJacobian();
+
+  LinearDifferentialOperator::CountPair oper = linOper->Counts(0);
+  std::size_t count = 0, start = 0, diff = oper.second;
+  for( const auto& it : featureVectors ) {
+    Eigen::VectorXd phi = it.first->Derivative((y? *y : x), oper.first, jac);
+    for( std::size_t i=0; i<it.second; ++i ) {
+      output(count) = phi.dot(coeff.segment(start, phi.size()));
+       
+      ++count;
+      start += it.first->NumBasisFunctions();
+      if( diff<=count && count!=numFeatureVectors ) {
+      	oper = linOper->Counts(count);
+	diff += oper.second;
+      	phi = it.first->Derivative((y? *y : x), oper.first, jac);
+      }
+    }
+  }
+
+  return output;
+}
+
+std::optional<Eigen::VectorXd> FeatureMatrix::LocalCoordinateJacobian() const {
+  if( domain ) { return domain->MapToHypercubeJacobian(); }
+  return std::nullopt;
 }
 
 std::optional<Eigen::VectorXd> FeatureMatrix::LocalCoordinate(Eigen::VectorXd const& x) const {

@@ -54,7 +54,7 @@ public:
    */
   Eigen::VectorXd Evaluate(Eigen::VectorXd const& x) const;
 
-   /// Evaluate the basis vector derivative
+  /// Evaluate the basis vector derivative
   /**
      \f{equation*}{
      \frac{\partial^{\vert B \vert}}{\prod_{i=1}^{\vert B \vert} \partial x_{B_i}} \phi(F(x)) = \frac{\partial^{\vert B \vert}}{\prod_{i=1}^{\vert B \vert} \partial x_{B_i}} \begin{bmatrix}
@@ -68,10 +68,30 @@ public:
      \end{bmatrix},
      \f}
      @param[in] x The point where we want to evaluate the basis vector 
+     @param[in] counts The number of times we are differentiating with respect to each index
      \return The derivative of the basis vector \f$\frac{\partial^{\vert B \vert}}{\prod_{i=1}^{\vert B \vert} \partial x_{B_i}} \phi(F(x))\f$
    */
-  Eigen::VectorXd Derivative(Eigen::VectorXd const& x, std::vector<std::size_t> const& B) const;
+  Eigen::VectorXd Derivative(Eigen::VectorXd const& x, Eigen::VectorXi const& counts) const;
 
+  /// Evaluate the basis vector derivative
+  /**
+     \f{equation*}{
+     \frac{\partial^{\vert B \vert}}{\prod_{i=1}^{\vert B \vert} \partial x_{B_i}} \phi(F(x)) = \frac{\partial^{\vert B \vert}}{\prod_{i=1}^{\vert B \vert} \partial x_{B_i}} \begin{bmatrix}
+     \phi_{0}(F(x)) \\
+     \vdots \\
+     \phi_{q}(F(x)) 
+     \end{bmatrix} = \frac{\partial^{\vert B \vert}}{\prod_{i=1}^{\vert B \vert} \partial x_{B_i}} \begin{bmatrix}
+     \prod_{j=1}^{d} \varphi_{\alpha_{0,j}}(F_j(x)) \\
+     \vdots \\
+     \prod_{j=1}^{d} \varphi_{\alpha_{q,j}}(F_j(x)) 
+     \end{bmatrix},
+     \f}
+     @param[in] x The point where we want to evaluate the basis vector 
+     @param[in] counts The number of times we are differentiating with respect to each index
+     @param[in] jac The jacobian of the coordinate transformation
+     \return The derivative of the basis vector \f$\frac{\partial^{\vert B \vert}}{\prod_{i=1}^{\vert B \vert} \partial x_{B_i}} \phi(F(x))\f$
+   */
+  Eigen::VectorXd Derivative(Eigen::VectorXd const& x, Eigen::VectorXi const& counts, std::optional<Eigen::VectorXd> const& jac) const;
 private:
 
   /// Evaluate the basis functions \f$\varphi_j(y_i)\f$

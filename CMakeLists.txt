@@ -76,6 +76,8 @@ set(CLF_SOURCE
     src/Domain.cpp
     src/Hypercube.cpp
 
+    src/LinearDifferentialOperator.cpp
+
     src/FeatureVector.cpp
     src/FeatureMatrix.cpp
 
@@ -84,7 +86,7 @@ set(CLF_SOURCE
 
     src/LocalFunction.cpp
     src/CoupledLocalFunctions.cpp
-
+   
     src/SystemOfEquations.cpp
     src/IdentityModel.cpp
     src/LinearModel.cpp
@@ -184,6 +186,8 @@ set(TEST_SOURCE
 
     tests/DomainTests.cpp
     tests/HypercubeTests.cpp
+
+    tests/LinearDifferentialOperatorTests.cpp	
 
     tests/FeatureVectorTests.cpp
     tests/FeatureMatrixTests.cpp

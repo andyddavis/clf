@@ -98,14 +98,14 @@ public:
    */
   Eigen::VectorXd Evaluate(std::shared_ptr<Point> const& x, Eigen::VectorXd const& coeff) const;
 
-  /// Compuate the derivative \f$\frac{\partial^{q}}{\partial x_i^{q}} u(x; c) \in \mathbb{R}^{m}\f$ at a point \f$x \in \mathcal{B}\f$ given coefficients \f$c \in \mathbb{R}^{\bar{q}}\f$
+  /// Compuate the derivative \f$L u(x; c) \in \mathbb{R}^{m}\f$ at a point \f$x \in \mathcal{B}\f$ given coefficients \f$c \in \mathbb{R}^{\bar{q}}\f$ and a linear differential operator (see clf::LinearDifferentialOperator) \f$L\f$
   /**
      @param[in] x The location where we want to evaluate the location function 
      @param[in] coeff The coefficients \f$c \in \mathbb{R}^{\bar{q}}\f$ that define this location function 
-     @param[in] q We are computing the \f$q^{\text{th}}\f$ derivative
-     \return The local function derivative \f$\frac{\partial^{q}}{\partial x_i^{q}} u(x; c) \in \mathbb{R}^{m}\f$
+     @param[in] linOper We are applying this differential operator
+     \return The local function derivative \f$L u(x; c) \in \mathbb{R}^{m}\f$
   */
-  void Derivative(std::shared_ptr<Point> const& x, Eigen::VectorXd const& coeff, std::size_t const q) const;
+  Eigen::VectorXd Derivative(Eigen::VectorXd const& x, Eigen::VectorXd const& coeff, std::shared_ptr<LinearDifferentialOperator> const& linOper) const;
 
   /// The feature matrix \f$\Phi(x)\f$ that defines this local function
   std::shared_ptr<const FeatureMatrix> featureMatrix;

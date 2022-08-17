@@ -19,7 +19,7 @@ void clf::python::FeatureMatrixWrapper(py::module& mod) {
 
   mat.def("GetFeatureVector", &FeatureMatrix::GetFeatureVector);
   mat.def("InputDimension", &FeatureMatrix::InputDimension);
-  mat.def("ApplyTranspose", &FeatureMatrix::ApplyTranspose);
+  mat.def("ApplyTranspose", static_cast<Eigen::VectorXd (FeatureMatrix::*)(Eigen::VectorXd const&, Eigen::VectorXd const&) const>(&FeatureMatrix::ApplyTranspose));
   mat.def_readonly("numBasisFunctions", &FeatureMatrix::numBasisFunctions);
   mat.def_readonly("numFeatureVectors", &FeatureMatrix::numFeatureVectors);
 }

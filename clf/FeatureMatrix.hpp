@@ -1,6 +1,8 @@
 #ifndef FEATUREMATRIX_HPP_
 #define FEATUREMATRIX_HPP_
 
+#include "clf/LinearDifferentialOperator.hpp"
+
 #include "clf/FeatureVector.hpp"
 
 namespace clf {
@@ -70,12 +72,36 @@ public:
   */
   Eigen::VectorXd ApplyTranspose(Eigen::VectorXd const& x, Eigen::VectorXd const& coeff) const;
 
+  /// Apply a linear differential opeartor to the feature matrix transpose and then to coefficients \f$L(\Phi(x)^{\top} c)\f$
+  /**
+     @param[in] x The point \f$x\f$ where we are evaluating the feature matrix 
+     @param[in] coeff The coefficients \f$c\f$
+     @param[in] linOper The linear differential operator we are applying to each row of the feature matrix transpose
+     \return The feature matrix transpose applied to the coefficients \f$\Phi(x)^{\top} c\f$
+  */
+  Eigen::VectorXd ApplyTranspose(Eigen::VectorXd const& x, Eigen::VectorXd const& coeff, std::shared_ptr<LinearDifferentialOperator> const& linOper) const;
+
+  /// Apply a linear differential operator to the feature matrix transpose applied to coefficients \f$L \Phi(x)^{\top} c\f$
+  /**
+     @param[in] x The point \f$x\f$ where we are evaluating the feature matrix 
+     @param[in] coeff The coefficients \f$c\f$
+     @param[in] diffOperator The linear differential operator
+     \return A linear differential operator applied to the feature matrix transpose applied to coefficients \f$L \Phi(x)^{\top} c\f$
+  */
+  //Eigen::VectorXd ApplyTranspose(Eigen::VectorXd const& x, Eigen::VectorXd const& coeff) const;
+
   /// Transform a point into local coordinates
   /**
      @param[in] x A point in the global coordinate system 
      \return A point in the local coordinate system, if FeatureMatrix::domain is std::nullptr then return std::nullopt
    */
   std::optional<Eigen::VectorXd> LocalCoordinate(Eigen::VectorXd const& x) const;
+
+  /// The Jacobian of the transformation into local coordinates
+  /**
+     \return The Jacobian of the transformation into local coordinates, if FeatureMatrix::domain is std::nullptr then return std::nullopt
+   */
+  std::optional<Eigen::VectorXd> LocalCoordinateJacobian() const;
 
   /// Get the \f$i^{\text{th}}\f$ feature vector 
   /**
