@@ -50,7 +50,7 @@ public:
      @param[in] x A point in the domain \f$x \in \Omega\f$
      \return A point in the hypercube \f$[-1, 1]^d\f$
    */
-  Eigen::VectorXd MapToHypercube(Eigen::VectorXd const& x) const;
+  virtual Eigen::VectorXd MapToHypercube(Eigen::VectorXd const& x) const;
 
   /// The Jacobian of the map to a subset of the hypercube \f$[-1, 1]\f$
   /**
@@ -80,7 +80,7 @@ public:
 
   /// Compute the distance between two points in the domain
   /**
-     Defaults to the 2-norm.
+     If the domain has a super-set then use the super-set distance by default. Otherwise, default to the 2-norm. 
      @param[in] x1 The first point
      @param[in] x2 The second point
      \return The distance between the two points
@@ -110,14 +110,14 @@ protected:
 
   /// A linear map to a subset of the hypercube \f$[-1, 1]\f$ defined by a diagonal matrix
   std::optional<std::pair<Eigen::VectorXd, Eigen::VectorXd> > map;
-  
-private:
 
   /// A domain that is a super set of this domain
   /**
      If this is the null pointer, then the domain has no super set and we don't need to check to make sure new points are contained inside this domain.
    */
   std::shared_ptr<Domain> super;
+  
+private:
 
   /// The maximum number of samples from the domain that clf::Domain::Sample() will propose before crashing. Proposed samples are rejected if they are not in the superset.
   inline static std::size_t maxProposedSamps_DEFAULT = 10000;

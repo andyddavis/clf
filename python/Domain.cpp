@@ -16,4 +16,6 @@ void clf::python::DomainWrapper(py::module& mod) {
   dom.def("Sample", &Domain::Sample);
   dom.def("Distance", &Domain::Distance);
   dom.def("SetSuperset", &Domain::SetSuperset);
+
+  dom.def_readonly("dim", &Domain::dim);
 }

@@ -73,7 +73,7 @@ protected:
     }
 
     Eigen::VectorXi counts = Eigen::VectorXi::Zero(dim);
-    for( std::size_t i=0; i<3; ++i ) { ++counts(rand()%(dim-1)); }
+    for( std::size_t i=0; i<2; ++i ) { ++counts(rand()%(dim-1)); }
     const Eigen::VectorXd deriv = vec->Derivative(x, counts);
     const Eigen::VectorXd derivFD = DerivativeFD(vec, x, counts);
     EXPECT_NEAR((deriv-derivFD).norm()/deriv.norm(), 0.0, 1.0e-6);

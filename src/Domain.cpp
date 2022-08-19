@@ -52,7 +52,10 @@ Eigen::VectorXd Domain::ProposeSample() {
   return Eigen::VectorXd();
 }
 
-double Domain::Distance(Eigen::VectorXd const& x1, Eigen::VectorXd const& x2) const { return (x1-x2).norm(); }
+double Domain::Distance(Eigen::VectorXd const& x1, Eigen::VectorXd const& x2) const {
+  if( super ) { return super->Distance(x1, x2); }
+  return (x1-x2).norm();
+}
 
 void Domain::SetSuperset(std::shared_ptr<Domain> const& supset) {
   assert(supset->dim==dim);

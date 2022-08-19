@@ -29,10 +29,9 @@ outdim = 1 # the output dimension
 
 Lx = 1.0 # x direction domain length
 Ly = 1.0 # y direction domain length
-nx = 10 # number of points in the x direction
-ny = 3 # number of points in the y direction
-dy = Ly/ny
-dx = Lx/nx
+npoints = 200 # number of support points
+dy = 2.0*Ly/np.sqrt(npoints)
+dx = 2.0*Lx/np.sqrt(npoints)
 
 para = clf.Parameters()
 para.Add("InputDimension", indim) 
@@ -47,24 +46,24 @@ leg = clf.LegendrePolynomials()
 # create the identity model 
 model = Model(para)
 
-# create the global domain
-globalDomain = clf.Hypercube(np.array([0.0, 0.0]), np.array([Lx, Ly]))
+# create the global domain with periodic boundary conditions in the spatial coordinate
+#globalDomain = clf.Hypercube(np.array([0.0, 0.0]), np.array([Lx, Ly]))
+globalDomain = clf.Hypercube(np.array([0.0, 0.0]), np.array([Lx, Ly]), [False, True])
 
 # create the point cloud
 cloud = clf.PointCloud(globalDomain)
-for i in range(nx):
-    for j in range(ny):
-        cloud.AddPoint(clf.Point([dx/2.0+i*dx, dy/2.0+j*dy]))
-assert(cloud.NumPoints()==nx*ny)
+cloud.AddPoints(npoints)
+assert(cloud.NumPoints()==npoints)
 
 domains = [None]*cloud.NumPoints()
 funcs = [None]*cloud.NumPoints()
 coeffs = [None]*cloud.NumPoints()
 resids = [None]*cloud.NumPoints()
 delta = np.array([dx/2.0, dy/2.0])
-!for ind in range(cloud.NumPoints()):
+for ind in range(cloud.NumPoints()):
     # create the local domain 
     domains[ind] = clf.Hypercube(cloud.Get(ind).x-delta, cloud.Get(ind).x+delta)
+    domains[ind].SetSuperset(globalDomain)
 
     # create the local polynomial
     funcs[ind] = clf.LocalFunction(multiSet, leg, domains[ind], para)
@@ -90,7 +89,12 @@ expected = np.zeros((n, n))
 for i in range(n):
     for j in range(n):
         pnt = [xvec[i], yvec[j]]
-        ind, _ = cloud.ClosestPoint(pnt)
+        ind, dist = cloud.ClosestPoint(pnt)
+        if dist+1.0e-10<np.linalg.norm(pnt-cloud.Get(ind).x):
+            print('point:', pnt)
+            print('local coordinate:', domains[ind].MapToHypercube(pnt))
+            print('point in cloud:', cloud.Get(ind).x)
+            print()
         fx[i, j] = funcs[ind].Evaluate(pnt, coeffs[ind]) [0]
         expected[i, j] = model.RightHandSide(pnt) [0]
         
@@ -102,7 +106,7 @@ pc = ax.pcolor(X, Y, fx.T, cmap='plasma_r', vmin=-1.0, vmax=1.0)
 for i in range(cloud.NumPoints()):
     ax.plot(cloud.Get(i).x[0], cloud.Get(i).x[1], 'o', color='#252525', markersize=5)
     for j in range(resids[i].NumLocalPoints()):
-        ax.plot(resids[i].GetPoint(j).x[0], resids[i].GetPoint(j).x[1], 's', color='#252525', markersize=2)
+        ax.plot(resids[i].GetPoint(j).x[0], resids[i].GetPoint(j).x[1], 's', color='#252525', markersize=2, alpha=0.25)
 cbar = plt.colorbar(pc)
 ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
@@ -110,7 +114,7 @@ ax.yaxis.set_ticks_position('left')
 ax.xaxis.set_ticks_position('bottom')
 ax.set_xlabel(r'$x_0$')
 ax.set_ylabel(r'$x_1$')
-plt.savefig('figures/fig_multiple-polynomials-grid-result.png', format='png')
+plt.savefig('figures/fig_multiple-polynomials-random-result.png', format='png')
 plt.close(fig)
 
 fig = plt.figure()
@@ -123,5 +127,5 @@ ax.yaxis.set_ticks_position('left')
 ax.xaxis.set_ticks_position('bottom')
 ax.set_xlabel(r'$x_0$')
 ax.set_ylabel(r'$x_1$')
-plt.savefig('figures/fig_multiple-polynomials-grid-expected.png', format='png')
+plt.savefig('figures/fig_multiple-polynomials-random-expected.png', format='png')
 plt.close(fig)

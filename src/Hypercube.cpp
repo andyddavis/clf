@@ -21,6 +21,14 @@ Hypercube::Hypercube(double const left, double const right, std::size_t const di
   ComputeMapToHypercube();
 }
 
+Hypercube::Hypercube(std::vector<bool> const& periodic, double const left, double const right, std::shared_ptr<const Parameters> const& para) :
+  Domain(periodic.size(), para), periodic(periodic)
+{
+  assert(left<right);
+  sampler.emplace_back(left, right);
+  ComputeMapToHypercube();
+}
+
 Hypercube::Hypercube(std::shared_ptr<const Parameters> const& para) :
   Domain(para->Get<std::size_t>("InputDimension"), para)
 {
@@ -37,8 +45,37 @@ Hypercube::Hypercube(std::shared_ptr<const Parameters> const& para) :
   ComputeMapToHypercube();
 }
 
+Hypercube::Hypercube( std::vector<bool> const& periodic, std::shared_ptr<const Parameters> const& para) :
+  Domain(periodic.size(), para), periodic(periodic)
+{
+  std::optional<double> left = para->OptionallyGet<double>("LeftBoundary");
+  std::optional<double> right = para->OptionallyGet<double>("RightBoundary");
+  
+  if( (bool)left && (bool)right ) {
+    assert((*left)<(*right));
+    sampler.emplace_back(*left, *right);
+  } else {
+    sampler.emplace_back(0.0, 1.0);
+  }
+  
+  ComputeMapToHypercube();
+}
+
 Hypercube::Hypercube(Eigen::VectorXd const& left, Eigen::VectorXd const& right, std::shared_ptr<const Parameters> const& para) :
   Domain(left.size(), para)
+{
+  assert(left.size()==dim); assert(right.size()==dim);
+  sampler.reserve(dim);
+  for( std::size_t i=0; i<dim; ++i ) {
+    assert(left(i)<right(i));
+    sampler.emplace_back(left(i), right(i));
+  }
+
+  ComputeMapToHypercube();
+}
+
+Hypercube::Hypercube(Eigen::VectorXd const& left, Eigen::VectorXd const& right, std::vector<bool> const& periodic, std::shared_ptr<const Parameters> const& para) :
+  Domain(left.size(), para), periodic(periodic)
 {
   assert(left.size()==dim); assert(right.size()==dim);
   sampler.reserve(dim);
@@ -66,7 +103,25 @@ double Hypercube::RightBoundary(std::size_t const ind) const { return sampler[st
 
 bool Hypercube::CheckInside(Eigen::VectorXd const& x) const {
   assert(x.size()==dim);
+
+  // check if we have a hypercube as a super set
+  auto hypersuper = std::dynamic_pointer_cast<Hypercube>(super);
+  
   for( std::size_t i=0; i<dim; ++i ) {
+    if( periodic && periodic->at(i) ) { continue; }
+
+    if( hypersuper && hypersuper->Periodic(i) ) {
+      const double length = hypersuper->RightBoundary(i) - hypersuper->LeftBoundary(i);
+      assert(length>0.0);
+
+      const double boundl = LeftBoundary(i), boundr = RightBoundary(i);
+
+      double check = x(i);
+      while( check>boundr ) { check -= length; }
+      while( check<boundl ) { check += length; }
+      if( check<boundl || check>boundr ) { return false; } else { continue; }
+    }
+
     if( x(i)<LeftBoundary(i) || x(i)>RightBoundary(i) ) { return false; }
   }
   
@@ -94,5 +149,99 @@ void Hypercube::ComputeMapToHypercube() {
 Eigen::VectorXd Hypercube::ProposeSample() {
   Eigen::VectorXd samp(dim);
   for( std::size_t i=0; i<dim; ++i ) { samp(i) = sampler[std::min(i, sampler.size()-1)](gen); }
+
+  // check if we have a hypercube as a super set
+  auto hypersuper = std::dynamic_pointer_cast<Hypercube>(super);
+  if( hypersuper ) {
+    const std::optional<Eigen::VectorXd> s = hypersuper->MapPeriodic(samp);
+    if( s ) { return *s; }
+  }
+
   return samp;
+}
+
+double Hypercube::Distance(Eigen::VectorXd const& x1, Eigen::VectorXd const& x2) const {
+  // we have a super set, use that distance
+  if( super ) { return super->Distance(x1, x2); }
+
+  // this is not a periodic domain
+  if( !periodic ) { return (x1-x2).norm(); }
+
+  // compute the distance in a periodic domain
+  double dist = 0.0;
+  for( std::size_t i=0; i<dim; ++i ) {
+    double diff;
+    if( periodic->at(i) ) {
+      const double mn = std::min(x1(i), x2(i)), mx = std::max(x1(i), x2(i));
+      diff = std::min(mx-mn, RightBoundary(i)-mx+mn-LeftBoundary(i));
+      assert(diff>-1.0e-10);
+    } else {
+      diff = x1(i)-x2(i);
+    }
+    dist += diff*diff;
+  }
+  return std::sqrt(dist);
+}
+
+double Hypercube::MapPeriodicCoordinate(std::size_t const ind, double x) const {
+  if( !Periodic(ind) ) { return x; }
+
+  const double l = LeftBoundary(ind), r = RightBoundary(ind);
+  const double length = r-l; assert(length>0.0);
+  while( x<l ) { x += length; }
+  while( x>r ) { x -= length; }
+  return x;
+}
+
+bool Hypercube::Periodic(std::size_t const ind) const {
+  if( periodic ) { return periodic->at(ind); }
+  return false;
+}
+
+bool Hypercube::Periodic() const {
+  if( !periodic ) { return false; }
+  return std::find(periodic->begin(), periodic->end(), true)!=periodic->end();
+}
+
+std::optional<Eigen::VectorXd> Hypercube::MapPeriodic(Eigen::VectorXd const& x) const {
+  // check if we have a hypercube as a super set
+  auto hypersuper = std::dynamic_pointer_cast<Hypercube>(super);
+
+  const bool periodic = Periodic();
+
+  // if the domain is not periodic and the super set is not valid or not periodic
+  if( !periodic && ( !hypersuper || !hypersuper->Periodic() ) ) { return std::nullopt; }
+
+  Eigen::VectorXd y(dim);
+  for( std::size_t i=0; i<dim; ++i ) {
+    // if the domain is periodic, then map into the coordinate
+    if( periodic ) {
+      y(i) = MapPeriodicCoordinate(i, x(i));
+      continue;
+    }
+
+    y(i) = x(i);
+
+    if( hypersuper->Periodic(i) ) {
+      // if it is inside 
+      const double boundl = LeftBoundary(i), boundr = RightBoundary(i);
+      if( boundl<y(i) && y(i)<boundr ) {  continue; }
+      
+      // center and length
+      const double length = hypersuper->RightBoundary(i)-hypersuper->LeftBoundary(i), center = (boundr+boundl)/2.0;
+      
+      while( std::abs(y(i)-center)>length/2.0 ) { y(i) += ( y(i)<center? length : -length ); }
+    }
+  }
+  
+  return y;
+}
+
+Eigen::VectorXd Hypercube::MapToHypercube(Eigen::VectorXd const& x) const {
+  const std::optional<Eigen::VectorXd> y = MapPeriodic(x);
+  if( y ) {
+    std::cout << "point: " << x.transpose() << std::endl;
+    std::cout << "wrapped coordinate: " << y->transpose() << std::endl;
+  }
+  return Domain::MapToHypercube((y? *y : x));
 }

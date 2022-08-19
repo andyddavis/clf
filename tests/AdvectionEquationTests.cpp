@@ -49,7 +49,7 @@ protected:
     EXPECT_EQ(divGradWRTc.size(), coeff.size());
     const Eigen::VectorXd divGradWRTcFD = system->FluxDivergence_GradientWRTCoefficientsFD(func, x, coeff);
     EXPECT_EQ(divGradWRTcFD.size(), coeff.size());
-    EXPECT_NEAR((divGradWRTc-divGradWRTcFD).norm(), 0.0, 1.0e-12);
+    EXPECT_NEAR((divGradWRTc-divGradWRTcFD).norm(), 0.0, 1.0e-10);
 
     const Eigen::MatrixXd divHessWRTc = system->FluxDivergence_HessianWRTCoefficients(func, x, coeff);
     EXPECT_EQ(divHessWRTc.rows(), coeff.size());
@@ -58,7 +58,7 @@ protected:
     const Eigen::MatrixXd divHessWRTcFD = system->FluxDivergence_HessianWRTCoefficientsFD(func, x, coeff);
     EXPECT_EQ(divHessWRTcFD.rows(), coeff.size());
     EXPECT_EQ(divHessWRTcFD.cols(), coeff.size());
-    EXPECT_NEAR(divHessWRTcFD.norm(), 0.0, 1.0e-12);
+    EXPECT_NEAR(divHessWRTcFD.norm(), 0.0, 1.0e-11);
 
     // compute the divergence of the flux (the operator)
     const Eigen::VectorXd op = system->Operator(func, x, coeff);
