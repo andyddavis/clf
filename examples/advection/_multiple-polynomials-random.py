@@ -47,7 +47,6 @@ leg = clf.LegendrePolynomials()
 model = Model(para)
 
 # create the global domain with periodic boundary conditions in the spatial coordinate
-#globalDomain = clf.Hypercube(np.array([0.0, 0.0]), np.array([Lx, Ly]))
 globalDomain = clf.Hypercube(np.array([0.0, 0.0]), np.array([Lx, Ly]), [False, True])
 
 # create the point cloud

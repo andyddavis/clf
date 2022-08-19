@@ -64,9 +64,15 @@ public:
   public:
 
     /**
+       @param[in] funcName The function that triggered this exception
        @param[in] nproposals The number of proposals before we gave up
      */
-    SampleFailure(std::size_t const nproposals);
+    SampleFailure(std::string const& funcName, std::size_t const nproposals);
+
+    /**
+       @param[in] error A description of what went wrong with the sampling
+     */
+    SampleFailure(std::string const& error);
 
     virtual ~SampleFailure() = default;
   private:
@@ -78,7 +84,13 @@ public:
    */
   Eigen::VectorXd Sample();
 
-  /// Compute the distance between two points in the domain
+  /// Generate a sample on the boundary of the domain
+  /**
+     \return A point on the domain boundary
+   */
+  Eigen::VectorXd SampleBoundary();
+
+/// Compute the distance between two points in the domain
   /**
      If the domain has a super-set then use the super-set distance by default. Otherwise, default to the 2-norm. 
      @param[in] x1 The first point
@@ -104,6 +116,12 @@ protected:
      \return A point in the domain
    */
   virtual Eigen::VectorXd ProposeSample();
+
+  /// Generate a sample on the domain boundary
+  /**
+     \return A point on the domain boundary
+   */
+  virtual Eigen::VectorXd ProposeBoundarySample();
 
   /// The parameters for this domain
   std::shared_ptr<const Parameters> para;

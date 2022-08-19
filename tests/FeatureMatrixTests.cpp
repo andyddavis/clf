@@ -77,7 +77,7 @@ protected:
       }
       start += vecs[i]->NumBasisFunctions();
     }
-    EXPECT_NEAR((output-expected).norm()/output.norm(), 0.0, 1.0e-14);
+    EXPECT_NEAR((output-expected).norm()/output.norm(), 0.0, 1.0e-12);
   }
   
   /// The input dimension

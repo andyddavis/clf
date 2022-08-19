@@ -43,7 +43,7 @@ protected:
     // flux divergence
     const double div = system->FluxDivergence(func, x, coeff);
     const double divFD = system->FluxDivergenceFD(func, x, coeff);
-    EXPECT_NEAR(div, divFD, 1.0e-12);
+    EXPECT_NEAR(div, divFD, 1.0e-10);
 
     const Eigen::VectorXd divGradWRTc = system->FluxDivergence_GradientWRTCoefficients(func, x, coeff);
     EXPECT_EQ(divGradWRTc.size(), coeff.size());

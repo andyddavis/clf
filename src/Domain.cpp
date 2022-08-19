@@ -31,8 +31,12 @@ Eigen::VectorXd Domain::MapToHypercubeJacobian() const {
   return Eigen::VectorXd::Ones(dim);
 }
 
-Domain::SampleFailure::SampleFailure(std::size_t const nproposals) :
-  std::logic_error("CLF Error: Domain::Sample did not propose a valid sample in " + std::to_string(nproposals) + " proposals.")
+Domain::SampleFailure::SampleFailure(std::string const& funcName, std::size_t const nproposals) :
+  std::logic_error("CLF Error: " + funcName + " did not propose a valid sample in " + std::to_string(nproposals) + " proposals.")
+{}
+
+Domain::SampleFailure::SampleFailure(std::string const& error) :
+  std::logic_error("CLF Error: " + error)
 {}
 
 Eigen::VectorXd Domain::Sample() {
@@ -41,7 +45,19 @@ Eigen::VectorXd Domain::Sample() {
     const std::size_t maxProposed = para->Get<std::size_t>("MaximumProposedSamples", maxProposedSamps_DEFAULT);
     std::size_t nproposed = 0;
     while( !super->Inside(x) && ++nproposed<maxProposed ) { x = ProposeSample(); }
-    if( nproposed>=maxProposed ) { throw SampleFailure(nproposed); }
+    if( nproposed>=maxProposed ) { throw SampleFailure("Domain::Sample", nproposed); }
+  }
+
+  return x;
+}
+
+Eigen::VectorXd Domain::SampleBoundary() {
+  Eigen::VectorXd x = ProposeBoundarySample();
+  if( super ) {
+    const std::size_t maxProposed = para->Get<std::size_t>("MaximumProposedSamples", maxProposedSamps_DEFAULT);
+    std::size_t nproposed = 0;
+    while( !super->Inside(x) && ++nproposed<maxProposed ) { x = ProposeBoundarySample(); }
+    if( nproposed>=maxProposed ) { throw SampleFailure("Domain::SampleBoundary", nproposed); }
   }
 
   return x;
@@ -49,6 +65,11 @@ Eigen::VectorXd Domain::Sample() {
 
 Eigen::VectorXd Domain::ProposeSample() {
   throw exceptions::NotImplemented("Domain::ProposeSample");
+  return Eigen::VectorXd();
+}
+
+Eigen::VectorXd Domain::ProposeBoundarySample() {
+  throw exceptions::NotImplemented("Domain::ProposeBoundarySample");
   return Eigen::VectorXd();
 }
 

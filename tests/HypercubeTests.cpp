@@ -48,6 +48,11 @@ protected:
       const Eigen::VectorXd samp = dom->Sample();
       EXPECT_EQ(samp.size(), dim);
       EXPECT_TRUE(dom->Inside(samp));
+
+      const Eigen::VectorXd sampBoundary = dom->SampleBoundary();
+      EXPECT_EQ(sampBoundary.size(), dim);
+      EXPECT_TRUE(dom->Inside(sampBoundary));
+      EXPECT_NEAR(std::min((sampBoundary-left).array().abs().minCoeff(), (sampBoundary-right).array().abs().minCoeff()), 0.0, 1.0e-14);
     }
   }
 
@@ -112,6 +117,27 @@ protected:
     auto checkDom = std::make_shared<Hypercube>(left, right);
     EXPECT_FALSE(checkDom->Inside(x1));
     EXPECT_TRUE(checkDom->Inside(*y));
+
+    for( std::size_t i=0; i<10; ++i ) {
+      const Eigen::VectorXd x = dom->Sample();
+      EXPECT_EQ(x.size(), dim);
+      EXPECT_TRUE(dom->Inside(x));
+
+
+      try {
+	const Eigen::VectorXd sampBoundary = dom->SampleBoundary();
+	
+	EXPECT_EQ(sampBoundary.size(), dim);
+	EXPECT_TRUE(dom->Inside(sampBoundary));
+	EXPECT_NEAR(std::min((sampBoundary-left).array().abs().minCoeff(), (sampBoundary-right).array().abs().minCoeff()), 0.0, 1.0e-14);
+      } catch( Domain::SampleFailure const& exc ) {
+	const std::string expected = "CLF Error: Tried to sample from the boundary of a clf::Hypercube but all coordinate directions are periodic. There is no boundary.";
+	const std::string err = exc.what();
+	EXPECT_TRUE(err==expected);
+	EXPECT_TRUE(std::find(periodic.begin(), periodic.end(), false)==periodic.end());
+	EXPECT_TRUE(dom->Periodic());
+      }
+    }
   }
 
   /// The parameters that define the domain
@@ -227,6 +253,12 @@ TEST_F(HypercubeTests, Superset) {
     x = dom->Sample();
     EXPECT_TRUE(super->Inside(x));
     EXPECT_TRUE(dom->Inside(x));
+
+    const Eigen::VectorXd sampBoundary = dom->SampleBoundary();
+    EXPECT_EQ(sampBoundary.size(), dim);
+    EXPECT_TRUE(dom->Inside(sampBoundary));
+    EXPECT_NEAR(std::min((sampBoundary-Eigen::VectorXd::Constant(dim, left0)).array().abs().minCoeff(), (sampBoundary-Eigen::VectorXd::Constant(dim, right0)).array().abs().minCoeff()), 0.0, 1.0e-14);
+    EXPECT_TRUE(super->Inside(sampBoundary));
   }
 
   auto badDomain = std::make_shared<Hypercube>(10.0, 20.0, dim);
@@ -368,11 +400,19 @@ TEST_F(HypercubeTests, PeriodicSuperset) {
 
   auto superNonPeriodic = std::make_shared<Hypercube>(left1, right1, dim);
   CheckDomain(superNonPeriodic, Eigen::VectorXd::Constant(dim, left1), Eigen::VectorXd::Constant(dim, right1));
-  for( std::size_t i=0; i<10; ++i ) {
+  for( std::size_t i=0; i<25; ++i ) {
     x = dom->Sample();
     EXPECT_TRUE(super->Inside(x));
     EXPECT_TRUE(superNonPeriodic->Inside(x));
     EXPECT_TRUE(dom->Inside(x));
+
+    const Eigen::VectorXd sampBoundary = dom->SampleBoundary();
+    EXPECT_EQ(sampBoundary.size(), dim);
+    EXPECT_TRUE(dom->Inside(sampBoundary));
+    const Eigen::VectorXd mappedBoundary = dom->MapToHypercube(sampBoundary);
+    EXPECT_NEAR(std::min((mappedBoundary+Eigen::VectorXd::Ones(dim)).array().abs().minCoeff(), (mappedBoundary-Eigen::VectorXd::Ones(dim)).array().abs().minCoeff()), 0.0, 1.0e-14);
+    EXPECT_TRUE(super->Inside(sampBoundary));
+    EXPECT_TRUE(superNonPeriodic->Inside(x));
   }
 }
   

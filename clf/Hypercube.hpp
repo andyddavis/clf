@@ -154,6 +154,12 @@ protected:
    */
   virtual Eigen::VectorXd ProposeSample() final override;
 
+  /// Generate a sample on the domain boundary
+  /**
+     \return A point on the domain boundary
+   */
+  virtual Eigen::VectorXd ProposeBoundarySample() final override;
+
 private:
 
   /// Create a random number generator
@@ -185,6 +191,12 @@ private:
      If <tt>std::nullopt</tt>, then no boundary is periodic.
    */
   std::optional<std::vector<bool> > periodic;
+
+  /// Are any of the boundaries periodic?
+  const bool hasPeriodicBoundary = false;
+
+  /// Are any of the boundaries not periodic?
+  const bool hasNonPeriodicBoundary = true;
 };
   
 } // namespace clf
