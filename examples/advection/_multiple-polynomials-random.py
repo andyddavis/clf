@@ -90,11 +90,6 @@ for i in range(n):
     for j in range(n):
         pnt = [xvec[i], yvec[j]]
         ind, dist = cloud.ClosestPoint(pnt)
-        if dist+1.0e-10<np.linalg.norm(pnt-cloud.Get(ind).x):
-            print('point:', pnt)
-            print('local coordinate:', domains[ind].MapToHypercube(pnt))
-            print('point in cloud:', cloud.Get(ind).x)
-            print()
         fx[i, j] = funcs[ind].Evaluate(pnt, coeffs[ind]) [0]
         expected[i, j] = model.RightHandSide(pnt) [0]
         

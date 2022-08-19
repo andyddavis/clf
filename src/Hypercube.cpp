@@ -239,9 +239,5 @@ std::optional<Eigen::VectorXd> Hypercube::MapPeriodic(Eigen::VectorXd const& x) 
 
 Eigen::VectorXd Hypercube::MapToHypercube(Eigen::VectorXd const& x) const {
   const std::optional<Eigen::VectorXd> y = MapPeriodic(x);
-  if( y ) {
-    std::cout << "point: " << x.transpose() << std::endl;
-    std::cout << "wrapped coordinate: " << y->transpose() << std::endl;
-  }
   return Domain::MapToHypercube((y? *y : x));
 }
