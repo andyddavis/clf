@@ -61,3 +61,33 @@ Eigen::MatrixXd  ConservationLaw::FluxDivergence_HessianWRTCoefficientsFD(std::s
 
   return hess;
 }
+
+Eigen::MatrixXd ConservationLaw::Flux_JacobianWRTCoefficients(std::shared_ptr<LocalFunction> const &u, Eigen::VectorXd const &x, Eigen::VectorXd const &coeff) const { return Flux_JacobianWRTCoefficientsFD(u, x, coeff); }
+
+Eigen::MatrixXd ConservationLaw::Flux_JacobianWRTCoefficientsFD(std::shared_ptr<LocalFunction> const &u, Eigen::VectorXd const &x, Eigen::VectorXd const &coeff) const {
+  const double delta = para->Get<double>("DeltaFD", deltaFD_DEFAULT);
+  const Eigen::VectorXd weights = FiniteDifference::Weights(para->Get<std::size_t>("OrderFD", orderFD_DEFAULT));
+
+  Eigen::MatrixXd jac(indim, coeff.size());
+  Eigen::VectorXd coeffCopy = coeff; // need to copy to get ride of const
+  for( std::size_t i=0; i<coeff.size(); ++i ) {
+    jac.col(i) = FiniteDifference::Derivative<Eigen::VectorXd>(i, delta, weights, coeffCopy, [this, &u, &x](Eigen::VectorXd const& coeff) { return this->Flux(u, x, coeff); });
+  }
+  
+  return jac;
+}
+
+Eigen::MatrixXd ConservationLaw::Flux_HessianWRTCoefficients(std::shared_ptr<LocalFunction> const &u, Eigen::VectorXd const &x, Eigen::VectorXd const &coeff, Eigen::VectorXd const& weights) const { return Flux_HessianWRTCoefficientsFD(u, x, coeff, weights); }
+
+Eigen::MatrixXd ConservationLaw::Flux_HessianWRTCoefficientsFD(std::shared_ptr<LocalFunction> const &u, Eigen::VectorXd const &x, Eigen::VectorXd const &coeff, Eigen::VectorXd const& weights) const {
+  const double delta = para->Get<double>("DeltaFD", deltaFD_DEFAULT);
+  const Eigen::VectorXd weightsFD = FiniteDifference::Weights(para->Get<std::size_t>("OrderFD", orderFD_DEFAULT));
+
+  Eigen::MatrixXd hess = Eigen::MatrixXd::Zero(coeff.size(), coeff.size());
+  Eigen::VectorXd coeffCopy = coeff; // need to copy to get ride of const
+  for( std::size_t i=0; i<coeff.size(); ++i ) {
+    hess.row(i) = ( FiniteDifference::Derivative<Eigen::MatrixXd>(i, delta, weightsFD, coeffCopy, [this, &u, &x](Eigen::VectorXd const& coeff) { return this->Flux_JacobianWRTCoefficients(u, x, coeff); }).array().colwise()*weights.array() ).matrix().colwise().sum();
+  }
+  
+  return hess;
+}

@@ -33,6 +33,25 @@ public:
    */
   virtual Eigen::VectorXd Flux(std::shared_ptr<LocalFunction> const &u, Eigen::VectorXd const &x, Eigen::VectorXd const &coeff) const override;
 
+  /// Compute the Jacobian of the flux \f$\nabla_{c} F(u(\cdot), x) )\f$ with respect to the coefficients
+  /**
+     @param[in] u The function \f$u\f$
+     @param[in] x The location \f$x\f$
+     @param[in] coeff The coefficients \f$c\f$ that define the location function 
+     \return The Jacobian of the flux \f$\nabla_{c} F(u(\cdot), x)\f$ with respect to the coefficients
+   */
+  virtual Eigen::MatrixXd Flux_JacobianWRTCoefficients(std::shared_ptr<LocalFunction> const &u, Eigen::VectorXd const &x, Eigen::VectorXd const &coeff) const final override;
+
+   /// Compute the weighted sum of the Hessian of each component of the flux \f$\sum_{i=1}^{d} w_i\nabla^2_{c} F_i(u(\cdot), x) )\f$ with respect to the coefficients
+  /**
+     @param[in] u The function \f$u\f$
+     @param[in] x The location \f$x\f$
+     @param[in] coeff The coefficients \f$c\f$ that define the location function 
+     @param[in] weights The weights \f$w\f$
+     \return The weighted sum of the Hessian of each component of the flux \f$\sum_{i=1}^{d} w_i\nabla^2_{c} F_i(u(\cdot), x) )\f$ with respect to the coefficients
+   */
+  virtual Eigen::MatrixXd Flux_HessianWRTCoefficients(std::shared_ptr<LocalFunction> const &u, Eigen::VectorXd const &x, Eigen::VectorXd const &coeff, Eigen::VectorXd const& weights) const final override;
+  
   /// Compute the divergence of the flux \f$\nabla \cdot F(u(\cdot), x)\f$
   /**
      @param[in] u The function \f$u\f$

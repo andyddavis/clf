@@ -79,3 +79,26 @@ Eigen::MatrixXd BurgersEquation::FluxDivergence_HessianWRTCoefficients(std::shar
   for( std::size_t i=1; i<indim; ++i ) { hess += phi*phiDeriv.row(i); }
   return hess + hess.transpose();
 }
+
+Eigen::MatrixXd BurgersEquation::Flux_JacobianWRTCoefficients(std::shared_ptr<LocalFunction> const &u, Eigen::VectorXd const &x, Eigen::VectorXd const &coeff) const {
+  const std::optional<Eigen::VectorXd> y = u->featureMatrix->LocalCoordinate(x);
+  Eigen::VectorXd phi = u->featureMatrix->Begin()->first->Evaluate((y? *y : x));
+  
+  Eigen::MatrixXd jac(indim, coeff.size());
+  jac.row(0) = phi;
+
+  if( constantVel ) { phi *= (*constantVel)*phi.dot(coeff); }  
+  jac.block(1, 0, indim-1, coeff.size()).rowwise() = phi.transpose();
+  if( vel ) { jac.block(1, 0, indim-1, coeff.size()).array().colwise() *= phi.dot(coeff)*vel->array(); }
+
+  return jac;
+}
+
+Eigen::MatrixXd BurgersEquation::Flux_HessianWRTCoefficients(std::shared_ptr<LocalFunction> const &u, Eigen::VectorXd const &x, Eigen::VectorXd const &coeff, Eigen::VectorXd const& weights) const {
+  const std::optional<Eigen::VectorXd> y = u->featureMatrix->LocalCoordinate(x);
+  const Eigen::VectorXd phi = u->featureMatrix->Begin()->first->Evaluate((y? *y : x));
+  
+  if( constantVel ) { return (*constantVel)*weights.tail(indim-1).sum()*phi*phi.transpose(); }  
+  assert(vel);
+  return (vel->array()*weights.tail(indim-1).array()).sum()*phi*phi.transpose();
+}

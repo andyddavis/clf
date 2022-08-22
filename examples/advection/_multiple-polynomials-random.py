@@ -29,9 +29,11 @@ outdim = 1 # the output dimension
 
 Lx = 1.0 # x direction domain length
 Ly = 1.0 # y direction domain length
-npoints = 200 # number of support points
+npoints = 20 # number of support points
 dy = 2.0*Ly/np.sqrt(npoints)
 dx = 2.0*Lx/np.sqrt(npoints)
+
+print(dx, dy)
 
 para = clf.Parameters()
 para.Add("InputDimension", indim) 

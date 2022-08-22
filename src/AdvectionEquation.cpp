@@ -58,3 +58,19 @@ Eigen::VectorXd AdvectionEquation::FluxDivergence_GradientWRTCoefficients(std::s
 }
 
 Eigen::MatrixXd AdvectionEquation::FluxDivergence_HessianWRTCoefficients(std::shared_ptr<LocalFunction> const &u, Eigen::VectorXd const &x, Eigen::VectorXd const &coeff) const { return Eigen::MatrixXd::Zero(coeff.size(), coeff.size()); }
+
+Eigen::MatrixXd AdvectionEquation::Flux_JacobianWRTCoefficients(std::shared_ptr<LocalFunction> const &u, Eigen::VectorXd const &x, Eigen::VectorXd const &coeff) const {
+  const std::optional<Eigen::VectorXd> y = u->featureMatrix->LocalCoordinate(x);
+  Eigen::VectorXd phi = u->featureMatrix->Begin()->first->Evaluate((y? *y : x));
+  
+  Eigen::MatrixXd jac(indim, coeff.size());
+  jac.row(0) = phi;
+
+  if( constantVel ) { phi *= (*constantVel); }  
+  jac.block(1, 0, indim-1, coeff.size()).rowwise() = phi.transpose();
+  if( vel ) { jac.block(1, 0, indim-1, coeff.size()).array().colwise() *= vel->array(); }
+
+  return jac;
+}
+
+Eigen::MatrixXd AdvectionEquation::Flux_HessianWRTCoefficients(std::shared_ptr<LocalFunction> const &u, Eigen::VectorXd const &x, Eigen::VectorXd const &coeff, Eigen::VectorXd const& weights) const { return Eigen::MatrixXd::Zero(coeff.size(), coeff.size()); }
