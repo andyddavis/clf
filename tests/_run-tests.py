@@ -26,6 +26,8 @@ from CoupledLocalFunctionsTests import *
 from SystemOfEquationsTests import *
 from IdentityModelTests import *
 from LinearModelTests import *
+from AdvectionEquationTests import *
+from BurgersEquationTests import *
 
 from PenaltyFunctionTests import *
 from CostFunctionTests import *

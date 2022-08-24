@@ -29,6 +29,9 @@ PYBIND11_MODULE(PyCoupledLocalFunctions, module) {
   clf::python::SystemOfEquationsWrapper(module);
   clf::python::IdentityModelWrapper(module);
   clf::python::LinearModelWrapper(module);
+  clf::python::ConservationLawWrapper(module);
+  clf::python::AdvectionEquationWrapper(module);
+  clf::python::BurgersEquationWrapper(module);
 
   clf::python::PenaltyFunctionWrapper(module);
   clf::python::CostFunctionWrapper(module);

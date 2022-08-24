@@ -90,6 +90,24 @@ void IdentityModelWrapper(pybind11::module& mod);
  */
 void LinearModelWrapper(pybind11::module& mod);
 
+/// Python wrapper for clf::ConservationLaw
+/**
+   @param[in] mod The python module
+ */
+void ConservationLawWrapper(pybind11::module& mod);
+
+/// Python wrapper for clf::AdvectionEquation
+/**
+   @param[in] mod The python module
+ */
+void AdvectionEquationWrapper(pybind11::module& mod);
+
+/// Python wrapper for clf::BurgersEquation
+/**
+   @param[in] mod The python module
+ */
+void BurgersEquationWrapper(pybind11::module& mod);
+
 /// Python wrapper for clf::PenaltyFunction and its children
 /**
    @param[in] mod The python module

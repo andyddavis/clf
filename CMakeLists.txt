@@ -129,6 +129,9 @@ if( CLF_USE_PYTHON )
 	python/SystemOfEquations.cpp
 	python/IdentityModel.cpp
 	python/LinearModel.cpp
+	python/ConservationLaw.cpp
+	python/AdvectionEquation.cpp
+	python/BurgersEquation.cpp
 
 	python/PenaltyFunction.cpp
 	python/CostFunction.cpp

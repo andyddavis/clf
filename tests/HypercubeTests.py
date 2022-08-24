@@ -186,7 +186,7 @@ class TestHypercube(unittest.TestCase):
         sup = clf.Hypercube(left1, right1, dim)
         dom.SetSuperset(sup)
 
-        check = random.randint(0, dim)
+        check = random.randint(0, dim-1)
         x = np.array([0.0]*dim)
         x[check] = -5.0
         self.assertFalse(sup.Inside(x))
