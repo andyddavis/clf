@@ -142,6 +142,7 @@ if( CLF_USE_PYTHON )
 	python/PointCloud.cpp
 	
 	python/LocalResidual.cpp
+	python/ConservationLawWeakFormResidual.cpp
     )
 endif()
 

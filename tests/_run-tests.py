@@ -38,6 +38,7 @@ from PointTests import *
 from PointCloudTests import *
 
 from LocalResidualTests import *
+from ConservationLawWeakFormResidualTests import *
 
 class TestCLFInstall(unittest.TestCase):
     """! Test the python installation

@@ -144,6 +144,12 @@ void PointCloudWrapper(pybind11::module& mod);
  */
 void LocalResidualWrapper(pybind11::module& mod);
 
+/// Python wrapper for clf::ConservationLaw
+/**
+   @param[in] mod The python module
+ */
+void ConservationLawWeakFormResidualWrapper(pybind11::module& mod);
+
 } // namespace python 
 } // namespace clf
 

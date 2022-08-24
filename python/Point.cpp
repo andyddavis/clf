@@ -1,6 +1,7 @@
 #include "clf/python/Pybind11Wrappers.hpp"
 
 #include <pybind11/eigen.h>
+#include <pybind11/stl.h>
 
 #include "clf/Point.hpp"
 
@@ -12,5 +13,6 @@ void clf::python::PointWrapper(py::module& mod) {
   point.def(py::init<Eigen::VectorXd const&>());
 
   point.def_readonly("x", &Point::x);
+  point.def_readonly("normal", &Point::normal);
   point.def_readonly("id", &Point::id);
 }

@@ -42,4 +42,5 @@ PYBIND11_MODULE(PyCoupledLocalFunctions, module) {
   clf::python::PointCloudWrapper(module);
 
   clf::python::LocalResidualWrapper(module);
+  clf::python::ConservationLawWeakFormResidualWrapper(module);
 }

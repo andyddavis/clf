@@ -14,7 +14,7 @@ class ConservationLawWeakFormResidualTests : public::testing::Test {
 protected:
   /// Tear down the tests
   virtual void TearDown() override {
-    const std::size_t numPoints = 100;
+    const std::size_t numPoints = 25;
     
     auto para = std::make_shared<Parameters>();
     para->Add("NumPoints", numPoints);
@@ -34,7 +34,7 @@ protected:
     
     auto resid = std::make_shared<ConservationLawWeakFormResidual>(func, system, vec, para);
     EXPECT_EQ(resid->indim, func->NumCoefficients());
-    EXPECT_EQ(resid->outdim, func->NumCoefficients());
+    EXPECT_EQ(resid->outdim, vec->NumBasisFunctions());
     EXPECT_EQ(resid->NumBoundaryPoints(), numPoints);
     EXPECT_EQ(resid->NumPoints(), numPoints);
     

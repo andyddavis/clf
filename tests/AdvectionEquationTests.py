@@ -11,10 +11,12 @@ class TestAdvectionEquation(unittest.TestCase):
     """! Test the advection equation (clf::AdvectionEquation) python interface"""
 
     def setUp(self):
+        """! Set up the tests"""
         ## The input dimension
         self.indim = 4
 
     def tearDown(self):
+        """! Run the test"""
         self.assertEqual(self.system.indim, self.indim)
         self.assertEqual(self.system.outdim, 1)
 

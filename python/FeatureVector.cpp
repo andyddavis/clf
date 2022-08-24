@@ -1,6 +1,7 @@
 #include "clf/python/Pybind11Wrappers.hpp"
 
 #include <pybind11/eigen.h>
+#include <pybind11/stl.h>
 
 #include "clf/LocalFunction.hpp"
 
@@ -15,4 +16,6 @@ void clf::python::FeatureVectorWrapper(py::module& mod) {
   vec.def("InputDimension", &FeatureVector::InputDimension);
   vec.def("NumBasisFunctions", &FeatureVector::NumBasisFunctions);
   vec.def("Evaluate", &FeatureVector::Evaluate);
+  vec.def("Derivative", static_cast<Eigen::MatrixXd (FeatureVector::*)(Eigen::VectorXd const&, Eigen::MatrixXi const&) const>(&FeatureVector::Derivative));
+  vec.def("Derivative", static_cast<Eigen::MatrixXd (FeatureVector::*)(Eigen::VectorXd const&, Eigen::MatrixXi const&, std::optional<Eigen::VectorXd> const&) const>(&FeatureVector::Derivative));
 }
