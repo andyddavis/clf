@@ -97,6 +97,7 @@ set(CLF_SOURCE
     src/LevenbergMarquardt.cpp
 
     src/LocalResidual.cpp
+    src/ConservationLawWeakFormResidual.cpp
 
     src/Point.cpp	
 
@@ -206,7 +207,8 @@ set(TEST_SOURCE
     tests/LevenbergMarquardtTests.cpp
 
     tests/LocalResidualTests.cpp
-
+    tests/ConservationLawWeakFormResidualTests.cpp
+    
     tests/PointTests.cpp
 
     tests/PointCloudTests.cpp

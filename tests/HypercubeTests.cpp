@@ -49,10 +49,12 @@ protected:
       EXPECT_EQ(samp.size(), dim);
       EXPECT_TRUE(dom->Inside(samp));
 
-      const Eigen::VectorXd sampBoundary = dom->SampleBoundary();
-      EXPECT_EQ(sampBoundary.size(), dim);
-      EXPECT_TRUE(dom->Inside(sampBoundary));
-      EXPECT_NEAR(std::min((sampBoundary-left).array().abs().minCoeff(), (sampBoundary-right).array().abs().minCoeff()), 0.0, 1.0e-14);
+      const std::pair<Eigen::VectorXd, Eigen::VectorXd> sampBoundary = dom->SampleBoundary();
+      EXPECT_EQ(sampBoundary.first.size(), dim);
+      EXPECT_EQ(sampBoundary.second.size(), dim);
+      EXPECT_TRUE(dom->Inside(sampBoundary.first));
+      EXPECT_NEAR(std::min((sampBoundary.first-left).array().abs().minCoeff(), (sampBoundary.first-right).array().abs().minCoeff()), 0.0, 1.0e-14);
+      EXPECT_NEAR(sampBoundary.second.norm(), 1.0, 1.0e-14);
     }
   }
 
@@ -125,11 +127,13 @@ protected:
 
 
       try {
-	const Eigen::VectorXd sampBoundary = dom->SampleBoundary();
+	const std::pair<Eigen::VectorXd, Eigen::VectorXd> sampBoundary = dom->SampleBoundary();
 	
-	EXPECT_EQ(sampBoundary.size(), dim);
-	EXPECT_TRUE(dom->Inside(sampBoundary));
-	EXPECT_NEAR(std::min((sampBoundary-left).array().abs().minCoeff(), (sampBoundary-right).array().abs().minCoeff()), 0.0, 1.0e-14);
+	EXPECT_EQ(sampBoundary.first.size(), dim);
+	EXPECT_EQ(sampBoundary.second.size(), dim);
+	EXPECT_TRUE(dom->Inside(sampBoundary.first));
+	EXPECT_NEAR(std::min((sampBoundary.first-left).array().abs().minCoeff(), (sampBoundary.first-right).array().abs().minCoeff()), 0.0, 1.0e-14);
+	EXPECT_NEAR(sampBoundary.second.norm(), 1.0, 1.0e-14);
       } catch( Domain::SampleFailure const& exc ) {
 	const std::string expected = "CLF Error: Tried to sample from the boundary of a clf::Hypercube but all coordinate directions are periodic. There is no boundary.";
 	const std::string err = exc.what();
@@ -254,11 +258,11 @@ TEST_F(HypercubeTests, Superset) {
     EXPECT_TRUE(super->Inside(x));
     EXPECT_TRUE(dom->Inside(x));
 
-    const Eigen::VectorXd sampBoundary = dom->SampleBoundary();
-    EXPECT_EQ(sampBoundary.size(), dim);
-    EXPECT_TRUE(dom->Inside(sampBoundary));
-    EXPECT_NEAR(std::min((sampBoundary-Eigen::VectorXd::Constant(dim, left0)).array().abs().minCoeff(), (sampBoundary-Eigen::VectorXd::Constant(dim, right0)).array().abs().minCoeff()), 0.0, 1.0e-14);
-    EXPECT_TRUE(super->Inside(sampBoundary));
+    const std::pair<Eigen::VectorXd, Eigen::VectorXd> sampBoundary = dom->SampleBoundary();
+    EXPECT_EQ(sampBoundary.first.size(), dim);
+    EXPECT_TRUE(dom->Inside(sampBoundary.first));
+    EXPECT_NEAR(std::min((sampBoundary.first-Eigen::VectorXd::Constant(dim, left0)).array().abs().minCoeff(), (sampBoundary.first-Eigen::VectorXd::Constant(dim, right0)).array().abs().minCoeff()), 0.0, 1.0e-14);
+    EXPECT_TRUE(super->Inside(sampBoundary.first));
   }
 
   auto badDomain = std::make_shared<Hypercube>(10.0, 20.0, dim);
@@ -406,12 +410,12 @@ TEST_F(HypercubeTests, PeriodicSuperset) {
     EXPECT_TRUE(superNonPeriodic->Inside(x));
     EXPECT_TRUE(dom->Inside(x));
 
-    const Eigen::VectorXd sampBoundary = dom->SampleBoundary();
-    EXPECT_EQ(sampBoundary.size(), dim);
-    EXPECT_TRUE(dom->Inside(sampBoundary));
-    const Eigen::VectorXd mappedBoundary = dom->MapToHypercube(sampBoundary);
+    const std::pair<Eigen::VectorXd, Eigen::VectorXd> sampBoundary = dom->SampleBoundary();
+    EXPECT_EQ(sampBoundary.first.size(), dim);
+    EXPECT_TRUE(dom->Inside(sampBoundary.first));
+    const Eigen::VectorXd mappedBoundary = dom->MapToHypercube(sampBoundary.first);
     EXPECT_NEAR(std::min((mappedBoundary+Eigen::VectorXd::Ones(dim)).array().abs().minCoeff(), (mappedBoundary-Eigen::VectorXd::Ones(dim)).array().abs().minCoeff()), 0.0, 1.0e-14);
-    EXPECT_TRUE(super->Inside(sampBoundary));
+    EXPECT_TRUE(super->Inside(sampBoundary.first));
     EXPECT_TRUE(superNonPeriodic->Inside(x));
   }
 }

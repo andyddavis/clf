@@ -51,12 +51,12 @@ Eigen::VectorXd Domain::Sample() {
   return x;
 }
 
-Eigen::VectorXd Domain::SampleBoundary() {
-  Eigen::VectorXd x = ProposeBoundarySample();
+std::pair<Eigen::VectorXd, Eigen::VectorXd> Domain::SampleBoundary() {
+  std::pair<Eigen::VectorXd, Eigen::VectorXd> x = ProposeBoundarySample();
   if( super ) {
     const std::size_t maxProposed = para->Get<std::size_t>("MaximumProposedSamples", maxProposedSamps_DEFAULT);
     std::size_t nproposed = 0;
-    while( !super->Inside(x) && ++nproposed<maxProposed ) { x = ProposeBoundarySample(); }
+    while( !super->Inside(x.first) && ++nproposed<maxProposed ) { x = ProposeBoundarySample(); }
     if( nproposed>=maxProposed ) { throw SampleFailure("Domain::SampleBoundary", nproposed); }
   }
 
@@ -68,9 +68,9 @@ Eigen::VectorXd Domain::ProposeSample() {
   return Eigen::VectorXd();
 }
 
-Eigen::VectorXd Domain::ProposeBoundarySample() {
+std::pair<Eigen::VectorXd, Eigen::VectorXd> Domain::ProposeBoundarySample() {
   throw exceptions::NotImplemented("Domain::ProposeBoundarySample");
-  return Eigen::VectorXd();
+  return std::pair<Eigen::VectorXd, Eigen::VectorXd>();
 }
 
 double Domain::Distance(Eigen::VectorXd const& x1, Eigen::VectorXd const& x2) const {

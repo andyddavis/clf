@@ -21,8 +21,32 @@ public:
 
   virtual ~PointCloud() = default;
 
-  /// The number of points in the point cloud \f$n\f$ 
+  /// The number of points in the point cloud \f$n\f$
+  /**
+     \return The number of points in the point cloud \f$n\f$ 
+   */
   std::size_t NumPoints() const;
+
+  /// The number of boundary points in the point cloud \f$n\f$
+  /**
+     \return The number of boundary points in the point cloud \f$n\f$ 
+  */
+  std::size_t NumBoundaryPoints() const;
+
+  /// Add a new boundary point to the point cloud 
+  /**
+     @param[in] point We want to add this point to the boundary point cloud
+   */
+  void AddBoundaryPoint(std::shared_ptr<Point> const& point);
+
+  /// Add a new boundary point to the point cloud by sampling the domain
+  void AddBoundaryPoint();
+
+  /// Add multiple new boundary points to the point cloud by sampling the domain
+  /**
+     @parma[in] n The number of points to add (defaults to 1)
+   */
+  void AddBoundaryPoints(std::size_t const n = 1);
 
   /// Add a new point to the point cloud 
   /**
@@ -45,6 +69,13 @@ public:
      \return The \f$i^{\text{th}}\f$ point
    */
   std::shared_ptr<Point> Get(std::size_t const ind) const;
+
+  /// Get the \f$i^{\text{th}}\f$ boundary point
+  /**
+     @param[in] ind The index of the boundary point we want 
+     \return The \f$i^{\text{th}}\f$ boundary point
+   */
+  std::shared_ptr<Point> GetBoundary(std::size_t const ind) const;
 
   /// Get the point with a given global id (see clf::Point::id)
   /**
@@ -79,8 +110,19 @@ public:
 
 private:
 
+  /// Get the index of a point given its global ID
+  /**
+     @param[in] id The point's global ID
+     \return The index in the point cloud
+   */
   std::size_t IndexFromID(std::size_t const id) const;
 
+  /// Add a point to the neighbor list 
+  /**
+     @param[in] id The ID of the point 
+     @param[in] neigh The ID of the neighbor 
+     @param[in] dist The distance between them
+   */
   void UpdateNeighbors(std::size_t const id, std::size_t const neigh, double const dist) const;
 
   /// The domain containing the points
@@ -91,6 +133,9 @@ private:
 
   /// A vector of points 
   std::vector<std::shared_ptr<Point> > points;
+
+  /// A vector of points on the boundary
+  std::vector<std::shared_ptr<Point> > boundaryPoints;
 
   /// The <tt>std::unordered_map</tt> needs a hash to have a std::pair<std::size_t, std::size_t></tt> as a key
   struct PairHash {

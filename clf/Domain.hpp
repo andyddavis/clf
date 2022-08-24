@@ -86,9 +86,9 @@ public:
 
   /// Generate a sample on the boundary of the domain
   /**
-     \return A point on the domain boundary
+     \return First: A point on the domain boundary, Second: The outward pointing normal vector
    */
-  Eigen::VectorXd SampleBoundary();
+  std::pair<Eigen::VectorXd, Eigen::VectorXd> SampleBoundary();
 
 /// Compute the distance between two points in the domain
   /**
@@ -119,9 +119,9 @@ protected:
 
   /// Generate a sample on the domain boundary
   /**
-     \return A point on the domain boundary
+     \return First: A point on the domain boundary, Second: The outward pointing normal vector
    */
-  virtual Eigen::VectorXd ProposeBoundarySample();
+  virtual std::pair<Eigen::VectorXd, Eigen::VectorXd> ProposeBoundarySample();
 
   /// The parameters for this domain
   std::shared_ptr<const Parameters> para;

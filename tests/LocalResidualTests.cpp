@@ -8,8 +8,6 @@
 #include "clf/LegendrePolynomials.hpp"
 #include "clf/LocalResidual.hpp"
 
-using namespace clf;
-
 namespace clf { 
 namespace tests {
 
@@ -71,12 +69,16 @@ protected:
     EXPECT_NEAR(hessFD.norm(), 0.0, 1.0e-10);
   }
 
+  /// The input dimension
   const std::size_t indim = 3;
-  
+
+  /// The output dimension
   const std::size_t outdim = 2;
 
+  /// The matrix that defines the model
   Eigen::MatrixXd mat;
 
+  /// The matrix the system of equation whose residual we are checking
   std::shared_ptr<SystemOfEquations> system;
 
 };

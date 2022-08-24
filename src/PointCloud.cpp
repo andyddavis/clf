@@ -8,6 +8,8 @@ PointCloud::PointCloud(std::shared_ptr<Domain> const& domain) :
 
 std::size_t PointCloud::NumPoints() const { return points.size(); }
 
+std::size_t PointCloud::NumBoundaryPoints() const { return boundaryPoints.size(); }
+
 void PointCloud::AddPoint(std::shared_ptr<Point> const& point) { 
   if( points.size()==0 ) {
     points.push_back(point);
@@ -25,6 +27,31 @@ void PointCloud::AddPoint(std::shared_ptr<Point> const& point) {
   }
 }
 
+void PointCloud::AddBoundaryPoint(std::shared_ptr<Point> const& point) {
+  assert(point->normal);
+  if( boundaryPoints.size()==0 ) {
+    boundaryPoints.push_back(point);
+    return;
+  }
+
+  assert(point->x.size()==boundaryPoints[0]->x.size());
+
+  auto it = std::upper_bound(boundaryPoints.begin(), boundaryPoints.end(), point, [](std::shared_ptr<Point> const& p1, std::shared_ptr<Point> const& p2) { return p1->id<=p2->id; });
+
+  if( it==boundaryPoints.end() ) {
+    boundaryPoints.push_back(point);
+  } else if( (*it)->id!=point->id ) {
+    boundaryPoints.insert(it, point);
+  }
+}
+
+void PointCloud::AddBoundaryPoint() {
+  assert(domain);
+  AddBoundaryPoint(std::make_shared<Point>(domain->SampleBoundary()));
+}
+
+void PointCloud::AddBoundaryPoints(std::size_t const n) { for( std::size_t i=0; i<n; ++i ) { AddBoundaryPoint(); } }
+
 void PointCloud::AddPoint() {
   assert(domain);
   AddPoint(std::make_shared<Point>(domain->Sample()));  
@@ -35,6 +62,11 @@ void PointCloud::AddPoints(std::size_t const n) { for( std::size_t i=0; i<n; ++i
 std::shared_ptr<Point> PointCloud::Get(std::size_t const ind) const { 
   assert(ind<points.size()); 
   return points[ind];
+}
+
+std::shared_ptr<Point> PointCloud::GetBoundary(std::size_t const ind) const { 
+  assert(ind<boundaryPoints.size()); 
+  return boundaryPoints[ind];
 }
 
 std::size_t PointCloud::PairHash::operator()(std::pair<std::size_t, std::size_t> const& p) const {

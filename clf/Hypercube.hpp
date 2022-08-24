@@ -156,9 +156,9 @@ protected:
 
   /// Generate a sample on the domain boundary
   /**
-     \return A point on the domain boundary
+     \return First: A point on the domain boundary, Second: The outward pointing normal vector
    */
-  virtual Eigen::VectorXd ProposeBoundarySample() final override;
+  virtual std::pair<Eigen::VectorXd, Eigen::VectorXd> ProposeBoundarySample() final override;
 
 private:
 

@@ -169,7 +169,7 @@ Eigen::VectorXd Hypercube::ProposeSample() {
   return samp;
 }
 
-Eigen::VectorXd Hypercube::ProposeBoundarySample() {
+std::pair<Eigen::VectorXd, Eigen::VectorXd> Hypercube::ProposeBoundarySample() {
   // if ALL of the boundaries are periodic, this is a problem
   if( !hasNonPeriodicBoundary ) { throw SampleFailure("Tried to sample from the boundary of a clf::Hypercube but all coordinate directions are periodic. There is no boundary."); }
   
@@ -179,20 +179,24 @@ Eigen::VectorXd Hypercube::ProposeBoundarySample() {
   
   Eigen::VectorXd samp(dim);
   static std::uniform_real_distribution<double> dist(0.0, 1.0);
-  samp(ind) = (dist(gen)<0.5? LeftBoundary(ind) : RightBoundary(ind));
+  const bool left = dist(gen)<0.5;
+  samp(ind) = (left? LeftBoundary(ind) : RightBoundary(ind));
   for( std::size_t i=0; i<dim; ++i ) {
     if( i==ind ) { continue; }
     samp(i) = sampler[std::min(i, sampler.size()-1)](gen);
   }
 
+  Eigen::VectorXd normal = Eigen::VectorXd::Zero(dim);
+  normal(ind) = (left? -1.0 : 1.0);
+
   // check if we have a hypercube as a super set
   auto hypersuper = std::dynamic_pointer_cast<Hypercube>(super);
   if( hypersuper ) {
     const std::optional<Eigen::VectorXd> s = hypersuper->MapPeriodic(samp);
-    if( s ) { return *s; }
+    if( s ) { return std::pair<Eigen::VectorXd, Eigen::VectorXd>(*s, normal); }
   }
 
-  return samp;
+  return std::pair<Eigen::VectorXd, Eigen::VectorXd>(samp, normal);
 }
 
 double Hypercube::Distance(Eigen::VectorXd const& x1, Eigen::VectorXd const& x2) const {

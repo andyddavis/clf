@@ -105,6 +105,13 @@ TEST(PointCloudTests, DomainCheck) {
   cloud.AddPoints(n);
   EXPECT_EQ(cloud.NumPoints(), 2*n);
 
+  cloud.AddBoundaryPoints(n);
+  EXPECT_EQ(cloud.NumBoundaryPoints(), n);
+  EXPECT_EQ(cloud.NumPoints(), 2*n);
+  cloud.AddBoundaryPoint(cloud.GetBoundary(0));
+  EXPECT_EQ(cloud.NumBoundaryPoints(), n);
+  EXPECT_EQ(cloud.NumPoints(), 2*n);
+
   for( std::size_t i=0; i<cloud.NumPoints(); ++i ) {
     // find the nearest neighbors
     std::vector<std::size_t> neighbors = cloud.NearestNeighbors(i, numNeighs);
