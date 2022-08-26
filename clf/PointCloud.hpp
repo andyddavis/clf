@@ -108,6 +108,18 @@ public:
    */
   std::vector<std::size_t> NearestNeighbors(std::size_t const ind, std::size_t const k) const;
 
+  /// Get an iterator to the first point
+  /**
+     \return An iterator to the first point
+   */
+  std::vector<std::shared_ptr<Point> >::const_iterator Begin() const;
+
+  /// Get an iterator to the end of the points vector
+  /**
+     \return An iterator to the end of the points vector
+   */
+  std::vector<std::shared_ptr<Point> >::const_iterator End() const;
+
 private:
 
   /// Get the index of a point given its global ID

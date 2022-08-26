@@ -5,13 +5,11 @@
 
 #include "clf/LocalFunction.hpp"
 
-#include "clf/BoundaryCondition.hpp"
+#include "clf/Residual.hpp"
 
 namespace clf {
 
 /// A function \f$u: \Omega \mapsto \mathbb{R}^{m}\f$, where \f$\Omega \subseteq \mathbb{R}^{d}\f$
-/**
-*/
 class CoupledLocalFunctions {
 public:
 
@@ -30,6 +28,9 @@ public:
   virtual ~CoupledLocalFunctions() = default;
 
   /// The number of local functions
+  /**
+     \return The number of local functions
+   */
   std::size_t NumLocalFunctions() const;
 
   /// Set boundary conditions
@@ -38,23 +39,31 @@ public:
      @param[in] func A function that return <tt>true</tt> if the proposed point is on the boundary where this condition is to be enforced, otherwise it returns <tt>false</tt>. The input to the function is a pair, the first vector is the point on the boundary and the second vector is the outward pointing normal.
      @param[in] numPoints The number of points to use enforce this boundary condition
    */
-  void SetBoundaryCondition(std::shared_ptr<SystemOfEquations> const& system, std::function<bool(std::pair<Eigen::VectorXd, Eigen::VectorXd> const&)> const& func, std::size_t const numPoints);
+  void AddBoundaryCondition(std::shared_ptr<SystemOfEquations> const& system, std::function<bool(std::pair<Eigen::VectorXd, Eigen::VectorXd> const&)> const& func, std::size_t const numPoints);
 
-  /// Remove all boundary conditions with a given ID
+  /// Remove all residuals with a given ID
   /**
      @param[in] systemID The ID of the system we are removing
    */
-  void RemoveBoundaryCondition(std::size_t const systemID);
+  void RemoveResidual(std::size_t const systemID);
 
-  /// The a vector of boundary conditions that are enforced at each local function
-  typedef std::vector<std::shared_ptr<BoundaryCondition> > BoundaryConditions;
+  /// The a vector of residuals that are enforced at each local function
+  typedef std::vector<std::shared_ptr<Residual> > Residuals;
 
-  /// Get the boundary conditions enforced at the \f$i^{\text{th}}\f$ local function
+  /// Get the residualss enforced at the \f$i^{\text{th}}\f$ local function
   /**
      @param[in] ind The index \f$i\f$
-     \return The boundary conditions enforced at the \f$i^{\text{th}}\f$ local function, returns <tt>std::nullopt</tt> if no boundary conditions are enforced at the \f$i^{\text{th}}\f$ point
+     \return The residuals enforced at the \f$i^{\text{th}}\f$ local function, returns <tt>std::nullopt</tt> if no residuals are enforced at the \f$i^{\text{th}}\f$ point
    */
-  std::optional<BoundaryConditions> GetBCs(std::size_t const ind) const;
+  std::optional<Residuals> GetResiduals(std::size_t const ind) const;
+
+  /// Add a residual to every local function; creates clf::LocalResidual
+  /**
+     If a local function already as a residual with this system, then do nothing to that local function
+     @param[in] system The system that defines the residual 
+     @param[in] para Options for clf::LocalResidual
+   */
+  void AddResidual(std::shared_ptr<SystemOfEquations> const& system, std::shared_ptr<const Parameters> const& para);
   
 private:
 
@@ -67,12 +76,11 @@ private:
   */
   std::shared_ptr<PointCloud> cloud;
 
-  /// A map from clf::Point::id to boundary conditions, not all points will have boundary conditions associated with them
-  std::unordered_map<std::size_t, BoundaryConditions> boundaryConditions;
+  /// A map from clf::Point::id to residuals, not all points will have boundary conditions associated with them
+  std::unordered_map<std::size_t, Residuals> residuals;
 
   /// A map from the clf::Point::id to the clf::LocalFunction associated with that support point
-  std::unordered_map<std::size_t, std::shared_ptr<LocalFunction> > functions;
-  
+  std::unordered_map<std::size_t, std::shared_ptr<LocalFunction> > functions;  
 };
   
 } // namespace clf

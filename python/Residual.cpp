@@ -10,4 +10,7 @@ void clf::python::ResidualWrapper(pybind11::module& mod) {
 
   resid.def("NumPoints", &Residual::NumPoints);
   resid.def("GetPoint", &Residual::GetPoint);
+  resid.def("NumBoundaryPoints", &Residual::NumBoundaryPoints);
+  resid.def("GetBoundaryPoint", &Residual::GetBoundaryPoint);
+  resid.def("SystemID", &Residual::SystemID);
 }

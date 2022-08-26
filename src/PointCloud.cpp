@@ -157,3 +157,7 @@ std::pair<std::size_t, double> PointCloud::ClosestPoint(Eigen::VectorXd const& x
 
   return std::pair<std::size_t, double>(ind, dist);
 }
+
+std::vector<std::shared_ptr<Point> >::const_iterator PointCloud::Begin() const { return points.begin(); }
+
+std::vector<std::shared_ptr<Point> >::const_iterator PointCloud::End() const { return points.end(); }

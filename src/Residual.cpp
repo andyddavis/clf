@@ -9,9 +9,20 @@ Residual::Residual(std::shared_ptr<PointCloud> const& cloud, std::shared_ptr<Loc
   system(system)
 {}
 
+Residual::Residual(std::shared_ptr<LocalFunction> const& func, std::shared_ptr<SystemOfEquations> const& system, std::shared_ptr<const Parameters> const& para) :
+  DensePenaltyFunction(func->NumCoefficients(), func->NumCoefficients(), para),
+  cloud(std::make_shared<PointCloud>()),
+  function(func),
+  system(system)
+{}
+
 std::size_t Residual::NumPoints() const { return cloud->NumPoints(); }
 
 std::shared_ptr<Point> Residual::GetPoint(std::size_t const ind) const { return cloud->Get(ind); }
+
+std::size_t Residual::NumBoundaryPoints() const { return cloud->NumBoundaryPoints(); }
+
+std::shared_ptr<Point> Residual::GetBoundaryPoint(std::size_t const ind) const { return cloud->GetBoundary(ind); }
 
 Eigen::VectorXd Residual::Evaluate(Eigen::VectorXd const& beta) {
   Eigen::VectorXd resid(outdim);
@@ -50,3 +61,4 @@ Eigen::MatrixXd Residual::Hessian(Eigen::VectorXd const& beta, Eigen::VectorXd c
 }
 
 std::size_t Residual::SystemID() const { return system->id; }
+

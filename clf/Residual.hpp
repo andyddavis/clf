@@ -20,6 +20,13 @@ public:
    */
   Residual(std::shared_ptr<PointCloud> const& cloud, std::shared_ptr<LocalFunction> const& func, std::shared_ptr<SystemOfEquations> const& system, std::shared_ptr<const Parameters> const& para);
 
+  /**
+     @param[in] func The local function defined in this domain
+     @param[in] system The system of equations that we want to locally satisfy
+     @param[in] para Parameters for the residual computation
+   */
+  Residual(std::shared_ptr<LocalFunction> const& func, std::shared_ptr<SystemOfEquations> const& system, std::shared_ptr<const Parameters> const& para);
+
   virtual ~Residual() = default;
 
   /// Get the ID of the system (see clf::SystemOfEquations::id)
@@ -41,19 +48,32 @@ public:
    */
   std::shared_ptr<Point> GetPoint(std::size_t const ind) const;
 
+  /// The number of Monte Carlo points on the boundary
+  /**
+     \return The number of Monte Carlo points on the boundary
+   */
+  std::size_t NumBoundaryPoints() const;
+
+  /// Get the \f$i^{\text{th}}\f$ boundary point
+  /**
+     @param[in] ind The index of the boundary point
+     \return The \f$i^{\text{th}}\f$ boundary point
+   */
+  std::shared_ptr<Point> GetBoundaryPoint(std::size_t const ind) const;
+
   /// Evaluate the residual
   /**
      @param[in] beta The coefficients for the local function
      \return The residual evaluated at each local point
    */
-  virtual Eigen::VectorXd Evaluate(Eigen::VectorXd const& beta) final override;
+  virtual Eigen::VectorXd Evaluate(Eigen::VectorXd const& beta) override;
 
     /// Evaluate the Jacobian
   /**
      @param[in] beta The coefficients for the local function
      \return The Jacobian evaluated at each local point
    */
-  virtual Eigen::MatrixXd Jacobian(Eigen::VectorXd const& beta) final override;
+  virtual Eigen::MatrixXd Jacobian(Eigen::VectorXd const& beta) override;
 
   /// Evaluate the weighted sum of the Hessians
   /**
@@ -61,7 +81,7 @@ public:
      @param[in] weights The weights for the weighted sum
      \return The weighted sum of the Hessian evaluated at each local point
    */
-  virtual Eigen::MatrixXd Hessian(Eigen::VectorXd const& beta, Eigen::VectorXd const& weights) final override;
+  virtual Eigen::MatrixXd Hessian(Eigen::VectorXd const& beta, Eigen::VectorXd const& weights) override;
   
 protected:
 
@@ -71,10 +91,10 @@ protected:
   /// The system of equations we want to locally satisfy
   std::shared_ptr<const SystemOfEquations> system;
 
-private:
-
   /// The local function \f$u\f$
   std::shared_ptr<LocalFunction> function;
+
+private:
   
 };
   

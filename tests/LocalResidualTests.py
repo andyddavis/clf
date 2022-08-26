@@ -26,7 +26,7 @@ class TestLocalResidual(unittest.TestCase):
         para = clf.Parameters()
         para.Add('InputDimension', self.indim)
         para.Add('OutputDimension', self.outdim)
-        para.Add("NumPoints", numPoints)
+        para.Add('NumLocalPoints', numPoints)
 
         maxOrder = 4
         multiSet = clf.MultiIndexSet(self.indim, maxOrder)

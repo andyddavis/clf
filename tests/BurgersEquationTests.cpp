@@ -68,7 +68,7 @@ protected:
     EXPECT_EQ(divGradWRTc.size(), coeff.size());
     const Eigen::VectorXd divGradWRTcFD = system->FluxDivergence_GradientWRTCoefficientsFD(func, x, coeff);
     EXPECT_EQ(divGradWRTcFD.size(), coeff.size());
-    EXPECT_NEAR((divGradWRTc-divGradWRTcFD).norm(), 0.0, 1.0e-10);
+    EXPECT_NEAR((divGradWRTc-divGradWRTcFD).norm(), 0.0, 1.0e-9);
 
     const Eigen::MatrixXd divHessWRTc = system->FluxDivergence_HessianWRTCoefficients(func, x, coeff);
     EXPECT_EQ(divHessWRTc.rows(), coeff.size());

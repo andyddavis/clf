@@ -20,4 +20,5 @@ void clf::python::SystemOfEquationsWrapper(py::module& mod) {
   sys.def("HessianWRTCoefficientsFD", &SystemOfEquations::HessianWRTCoefficientsFD);
   sys.def_readonly("indim", &SystemOfEquations::indim);
   sys.def_readonly("outdim", &SystemOfEquations::outdim);
+  sys.def_readonly("id", &SystemOfEquations::id);
 }
