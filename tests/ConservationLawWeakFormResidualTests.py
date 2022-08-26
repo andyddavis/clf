@@ -34,14 +34,14 @@ class TestConservationLawWeakFormResidual(unittest.TestCase):
         vec = clf.FeatureVector(multiSet, basis)
 
         resid = clf.ConservationLawWeakFormResidual(func, self.system, vec, para)
-        self.assertEqual(resid.indim, func.NumCoefficients())
-        self.assertEqual(resid.outdim, vec.NumBasisFunctions())
+        self.assertEqual(resid.InputDimension(), func.NumCoefficients())
+        self.assertEqual(resid.OutputDimension(), vec.NumBasisFunctions())
         self.assertEqual(resid.NumBoundaryPoints(), numPoints)
         self.assertEqual(resid.NumPoints(), numPoints)
 
         coeff = np.array([random.uniform(-1.0, 1.0) for i in range(func.NumCoefficients())])
 
-        expected = np.array([0.0]*resid.outdim)
+        expected = np.array([0.0]*resid.OutputDimension())
         for i in range(resid.NumBoundaryPoints()):
             pt = resid.GetBoundaryPoint(i)
             expected += vec.Evaluate(pt.x)*np.dot(pt.normal, self.system.Flux(func, pt.x, coeff))/resid.NumBoundaryPoints()
@@ -50,7 +50,7 @@ class TestConservationLawWeakFormResidual(unittest.TestCase):
             expected -= ( vec.Derivative(pt.x, np.identity(self.indim))@self.system.Flux(func, pt.x, coeff) + vec.Evaluate(pt.x)*self.system.RightHandSide(pt.x) )/resid.NumPoints()
 
         computed = resid.Evaluate(coeff)
-        self.assertEqual(len(computed), resid.outdim)
+        self.assertEqual(len(computed), resid.OutputDimension())
         self.assertAlmostEqual(np.linalg.norm(computed-expected), 0.0, places=10)
 
         jac = resid.Jacobian(coeff)
@@ -61,7 +61,7 @@ class TestConservationLawWeakFormResidual(unittest.TestCase):
         self.assertEqual(np.shape(jacFD)[1], func.NumCoefficients())
         self.assertAlmostEqual(np.linalg.norm(jac-jacFD), 0.0, places=8)
         
-        weights = np.array([random.uniform(-1.0, 1.0) for i in range(resid.outdim)])
+        weights = np.array([random.uniform(-1.0, 1.0) for i in range(resid.OutputDimension())])
         hess = resid.Hessian(coeff, weights)
         self.assertEqual(np.shape(hess)[0], func.NumCoefficients())
         self.assertEqual(np.shape(hess)[1], func.NumCoefficients())

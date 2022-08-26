@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
-#include "clf/LevenbergMarquardt.hpp"
+#include "clf/DenseLevenbergMarquardt.hpp"
+#include "clf/SparseLevenbergMarquardt.hpp"
 
 #include "TestPenaltyFunctions.hpp"
 

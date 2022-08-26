@@ -5,7 +5,6 @@ sys.path.insert(0, '/home/andy/Software/install/clf/lib/')
 import numpy as np
 
 import PyCoupledLocalFunctions as clf
-from Model import *
 
 # import plotting packages and set default figure options
 useserif = True # use a serif font with figures?
@@ -39,14 +38,15 @@ para = clf.Parameters()
 para.Add("InputDimension", indim) 
 para.Add("OutputDimension", outdim)
 para.Add("MaximumOrder", 10)
-para.Add("NumPoints", 75)
+para.Add("NumPoints", 1000)
 
 # create a total order multi-index set and the Legendre basis function
 multiSet = clf.MultiIndexSet(para)
 leg = clf.LegendrePolynomials()
 
 # create the identity model 
-model = Model(para)
+#model = Model(para)
+model = clf.AdvectionEquation(indim)
 
 # create the global domain with periodic boundary conditions in the spatial coordinate
 globalDomain = clf.Hypercube(np.array([0.0, 0.0]), np.array([Lx, Ly]), [False, True])
@@ -55,6 +55,9 @@ globalDomain = clf.Hypercube(np.array([0.0, 0.0]), np.array([Lx, Ly]), [False, T
 cloud = clf.PointCloud(globalDomain)
 cloud.AddPoints(npoints)
 assert(cloud.NumPoints()==npoints)
+
+# the feature vector that defines the test function
+vec = clf.FeatureVector(multiSet, leg)
 
 domains = [None]*cloud.NumPoints()
 funcs = [None]*cloud.NumPoints()
@@ -71,6 +74,7 @@ for ind in range(cloud.NumPoints()):
     
     # create the local residual
     resids[ind] = clf.LocalResidual(funcs[ind], model, para)
+    #resids[ind] = clf.ConservationLawWeakFormResidual(funcs[ind], model, vec, para)
     
     # create the optimizer
     lm = clf.DenseLevenbergMarquardt(clf.DenseCostFunction(resids[ind]), para)
@@ -101,8 +105,8 @@ ax = fig.add_subplot(111)
 pc = ax.pcolor(X, Y, fx.T, cmap='plasma_r', vmin=-1.0, vmax=1.0)
 for i in range(cloud.NumPoints()):
     ax.plot(cloud.Get(i).x[0], cloud.Get(i).x[1], 'o', color='#252525', markersize=5)
-    for j in range(resids[i].NumLocalPoints()):
-        ax.plot(resids[i].GetPoint(j).x[0], resids[i].GetPoint(j).x[1], 's', color='#252525', markersize=2, alpha=0.25)
+    #for j in range(resids[i].NumLocalPoints()):
+    #    ax.plot(resids[i].GetPoint(j).x[0], resids[i].GetPoint(j).x[1], 's', color='#252525', markersize=2, alpha=0.25)
 cbar = plt.colorbar(pc)
 ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)

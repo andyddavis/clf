@@ -15,8 +15,8 @@ class TestDensePenaltyFunction(unittest.TestCase):
     def tearDown(self):
         """! Compare the derivative information to finite difference approximations"""
         
-        self.assertEqual(self.func.indim, 3)
-        self.assertEqual(self.func.outdim, self.outdim)
+        self.assertEqual(self.func.InputDimension(), 3)
+        self.assertEqual(self.func.OutputDimension(), self.outdim)
 
         beta = np.array([random.uniform(-1.0, 1.0) for i in range(3)])
 
@@ -48,7 +48,7 @@ class TestDensePenaltyFunction(unittest.TestCase):
         # evaluate the cost function 
         beta = np.array([random.uniform(-1.0, 1.0) for i in range(3)])
         fx = self.func.Evaluate(beta)
-        self.assertEqual(len(fx), self.func.outdim);
+        self.assertEqual(len(fx), self.func.OutputDimension());
         self.assertAlmostEqual(fx[0], beta[0])
         self.assertAlmostEqual(fx[1], beta[0]*(1.0-beta[2]))
 
@@ -63,7 +63,7 @@ class TestDensePenaltyFunction(unittest.TestCase):
         # evaluate the cost function 
         beta = np.array([random.uniform(-1.0, 1.0) for i in range(3)])
         fx = self.func.Evaluate(beta)
-        self.assertEqual(len(fx), self.func.outdim);
+        self.assertEqual(len(fx), self.func.OutputDimension());
         self.assertAlmostEqual(fx[0], 1.0-beta[1])
         self.assertAlmostEqual(fx[1], 1.0-beta[1]+beta[2])
         self.assertAlmostEqual(fx[2], beta[2])
@@ -76,8 +76,8 @@ class TestSparsePenaltyFunction(unittest.TestCase):
     def tearDown(self):
         """! Compare the derivative information to finite difference approximations"""
                 
-        self.assertEqual(self.func.indim, 3)
-        self.assertEqual(self.func.outdim, self.outdim)
+        self.assertEqual(self.func.InputDimension(), 3)
+        self.assertEqual(self.func.OutputDimension(), self.outdim)
 
         beta = np.array([random.uniform(-1.0, 1.0) for i in range(3)])
 
@@ -109,7 +109,7 @@ class TestSparsePenaltyFunction(unittest.TestCase):
         # evaluate the cost function 
         beta = np.array([random.uniform(-1.0, 1.0) for i in range(3)])
         fx = self.func.Evaluate(beta)
-        self.assertEqual(len(fx), self.func.outdim);
+        self.assertEqual(len(fx), self.func.OutputDimension());
         self.assertAlmostEqual(fx[0], beta[0])
         self.assertAlmostEqual(fx[1], beta[0]*(1.0-beta[2]))
 
@@ -124,7 +124,7 @@ class TestSparsePenaltyFunction(unittest.TestCase):
         # evaluate the cost function 
         beta = np.array([random.uniform(-1.0, 1.0) for i in range(3)])
         fx = self.func.Evaluate(beta)
-        self.assertEqual(len(fx), self.func.outdim);
+        self.assertEqual(len(fx), self.func.OutputDimension());
         self.assertAlmostEqual(fx[0], 1.0-beta[1])
         self.assertAlmostEqual(fx[1], 1.0-beta[1]+beta[2])
         self.assertAlmostEqual(fx[2], beta[2])

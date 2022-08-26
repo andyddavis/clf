@@ -42,10 +42,4 @@ void clf::python::LevenbergMarquardtWrapper(pybind11::module& mod) {
   
   python::LevenbergMarquardtBaseWrapper<Eigen::MatrixXd>(mod, "DenseLevenbergMarquardtBase");
   python::LevenbergMarquardtBaseWrapper<Eigen::SparseMatrix<double> >(mod, "SparseLevenbergMarquardtBase");
-
-  py::class_<DenseLevenbergMarquardt, std::shared_ptr<DenseLevenbergMarquardt>, LevenbergMarquardt<Eigen::MatrixXd> > dense(mod, "DenseLevenbergMarquardt");
-  dense.def(py::init<std::shared_ptr<const DenseCostFunction> const&, std::shared_ptr<Parameters> const&>());
-
-  py::class_<SparseLevenbergMarquardt, std::shared_ptr<SparseLevenbergMarquardt>, LevenbergMarquardt<Eigen::SparseMatrix<double> > > sparse(mod, "SparseLevenbergMarquardt");
-  sparse.def(py::init<std::shared_ptr<const SparseCostFunction> const&, std::shared_ptr<Parameters> const&>());
 }

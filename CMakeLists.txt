@@ -66,8 +66,14 @@ set(CLF_SOURCE
 
     src/FiniteDifference.cpp
 
-    src/PenaltyFunction.cpp
-    src/CostFunction.cpp
+    src/DensePenaltyFunction.cpp
+    src/SparsePenaltyFunction.cpp
+    
+    src/DenseCostFunction.cpp
+    src/SparseCostFunction.cpp
+
+    src/DenseLevenbergMarquardt.cpp
+    src/SparseLevenbergMarquardt.cpp
 
     src/BasisFunctions.cpp
     src/OrthogonalPolynomials.cpp
@@ -94,9 +100,9 @@ set(CLF_SOURCE
     src/AdvectionEquation.cpp
     src/BurgersEquation.cpp
 
-    src/LevenbergMarquardt.cpp
-
+    src/Residual.cpp
     src/LocalResidual.cpp
+    src/BoundaryCondition.cpp
     src/ConservationLawWeakFormResidual.cpp
 
     src/Point.cpp	
@@ -108,6 +114,18 @@ set(CLF_SOURCE
 if( CLF_USE_PYTHON )
     set(CLF_SOURCE_PYTHON
 	python/Module.cpp
+
+	python/PenaltyFunction.cpp
+	python/DensePenaltyFunction.cpp
+	python/SparsePenaltyFunction.cpp
+	
+	python/CostFunction.cpp
+	python/DenseCostFunction.cpp
+	python/SparseCostFunction.cpp
+
+	python/LevenbergMarquardt.cpp
+	python/DenseLevenbergMarquardt.cpp
+	python/SparseLevenbergMarquardt.cpp
 
 	python/Parameters.cpp
 
@@ -133,14 +151,10 @@ if( CLF_USE_PYTHON )
 	python/AdvectionEquation.cpp
 	python/BurgersEquation.cpp
 
-	python/PenaltyFunction.cpp
-	python/CostFunction.cpp
-
-	python/LevenbergMarquardt.cpp
-
 	python/Point.cpp
 	python/PointCloud.cpp
 	
+	python/Residual.cpp
 	python/LocalResidual.cpp
 	python/ConservationLawWeakFormResidual.cpp
     )
@@ -211,6 +225,7 @@ set(TEST_SOURCE
     tests/LevenbergMarquardtTests.cpp
 
     tests/LocalResidualTests.cpp
+    tests/BoundaryConditionTests.cpp
     tests/ConservationLawWeakFormResidualTests.cpp
     
     tests/PointTests.cpp

@@ -102,6 +102,9 @@ public:
   /// The output dimension \f$m\f$
   const std::size_t outdim;
 
+  /// The (unique) ID of this system of equations
+  const std::size_t id;
+
 protected:
 
   ///The parameters for this system of equations
@@ -114,6 +117,10 @@ protected:
   inline static std::size_t orderFD_DEFAULT = 8;
 
 private:
+
+  /// The ID of this next constructed system of equations
+  static std::atomic<std::size_t> nextID;
+
 };
 
 } // namespace clf 

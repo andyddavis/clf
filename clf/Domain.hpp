@@ -90,6 +90,14 @@ public:
    */
   std::pair<Eigen::VectorXd, Eigen::VectorXd> SampleBoundary();
 
+  /// Generate a sample on a subset of boundary of the domain 
+  /**
+     Use a function to determine if the proposed point is on the subset of the boundary that we care about. For example, the function might indicate initial conditions or Dirichlet boundary conditions.
+     @param[in] func A function that return <tt>true</tt> if the proposed point is on the boundary subset that care about, otherwise it returns <tt>false</tt>. The input to the function is a pair, the first vector is the point on the boundary and the second vector is the outward pointing normal.
+     \return First: A point on the domain boundary, Second: The outward pointing normal vector
+   */
+  std::pair<Eigen::VectorXd, Eigen::VectorXd> SampleBoundary(std::function<bool(std::pair<Eigen::VectorXd, Eigen::VectorXd> const&)> const& func);
+
 /// Compute the distance between two points in the domain
   /**
      If the domain has a super-set then use the super-set distance by default. Otherwise, default to the 2-norm. 

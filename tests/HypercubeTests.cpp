@@ -55,6 +55,14 @@ protected:
       EXPECT_TRUE(dom->Inside(sampBoundary.first));
       EXPECT_NEAR(std::min((sampBoundary.first-left).array().abs().minCoeff(), (sampBoundary.first-right).array().abs().minCoeff()), 0.0, 1.0e-14);
       EXPECT_NEAR(sampBoundary.second.norm(), 1.0, 1.0e-14);
+
+      const std::pair<Eigen::VectorXd, Eigen::VectorXd> sampBoundarySubset = dom->SampleBoundary([this](std::pair<Eigen::VectorXd, Eigen::VectorXd> const& samp) {
+	    return samp.second(0)<0.0 && samp.second.tail(dim-1).norm()<1.0e-15; 
+	  } );
+      EXPECT_EQ(sampBoundarySubset.first.size(), dim);
+      EXPECT_EQ(sampBoundarySubset.second.size(), dim);
+      EXPECT_TRUE(dom->Inside(sampBoundarySubset.first));
+      EXPECT_NEAR(std::abs(sampBoundarySubset.first(0)-left(0)), 0.0, 1.0e-14);
     }
   }
 

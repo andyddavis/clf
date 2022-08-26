@@ -6,15 +6,17 @@
 
 using namespace clf;
 
+std::atomic<std::size_t> SystemOfEquations::nextID = 0;
+
 SystemOfEquations::SystemOfEquations(std::size_t const indim, std::size_t const outdim, std::shared_ptr<const Parameters> const& para) :
-  indim(indim), outdim(outdim),
+  indim(indim), outdim(outdim), id(nextID++),
   para(para)
 {
   assert(para);
 }
 
 SystemOfEquations::SystemOfEquations(std::shared_ptr<const Parameters> const& para) :
-  indim(para->Get<std::size_t>("InputDimension")), outdim(para->Get<std::size_t>("OutputDimension")),
+  indim(para->Get<std::size_t>("InputDimension")), outdim(para->Get<std::size_t>("OutputDimension")), id(nextID++),
   para(para)
 {}
 

@@ -1,7 +1,7 @@
 #ifndef COSTFUNCTION_HPP_
 #define COSTFUNCTION_HPP_
 
-#include "clf/PenaltyFunction.hpp"
+#include "clf/SparsePenaltyFunction.hpp"
 
 namespace clf {
 
@@ -27,7 +27,7 @@ public:
   {
     // make sure all of the penalty functions have the same input dimension 
     assert(penaltyFunctions.size()>0);
-    for( auto it=penaltyFunctions.begin()+1; it!=penaltyFunctions.end(); ++it ) { assert(penaltyFunctions[0]->indim==(*it)->indim); }
+    for( auto it=penaltyFunctions.begin()+1; it!=penaltyFunctions.end(); ++it ) { assert(penaltyFunctions[0]->InputDimension()==(*it)->InputDimension()); }
   }
 
   /**
@@ -35,7 +35,7 @@ public:
    */
   inline CostFunction(std::shared_ptr<PenaltyFunction<MatrixType> > const& penaltyFunction) :
     numPenaltyFunctions(1),
-    numTerms(penaltyFunction->outdim),
+    numTerms(penaltyFunction->OutputDimension()),
     penaltyFunctions(PenaltyFunctions<MatrixType>(1, penaltyFunction))
   {}
 
@@ -52,8 +52,8 @@ public:
     Eigen::VectorXd output(numTerms);
     std::size_t start = 0;
     for( const auto& it : penaltyFunctions ) {
-      output.segment(start, it->outdim) = it->Evaluate(beta);
-      start += it->outdim;
+      output.segment(start, it->OutputDimension()) = it->Evaluate(beta);
+      start += it->OutputDimension();
     }
     assert(start==numTerms);
 
@@ -64,7 +64,7 @@ public:
   /**
      \return The number of parameters \f$d\f$ for the cost function
    */
-  inline std::size_t InputDimension() const { return penaltyFunctions[0]->indim; } 
+  inline std::size_t InputDimension() const { return penaltyFunctions[0]->InputDimension(); } 
 
   /// Compute the Jacobian of the penalty functions \f$\nabla_{\beta} c \in \mathbb{R}^{\bar{n} \times d}\f$
   /**
@@ -156,8 +156,8 @@ public:
 
     std::size_t start = 0;
     for( const auto& it : penaltyFunctions ) { 
-      hess += it->Hessian(beta, cost.segment(start, it->outdim)); 
-      start += it->outdim;
+      hess += it->Hessian(beta, cost.segment(start, it->OutputDimension())); 
+      start += it->OutputDimension();
     }
 
     return 2.0*hess;
@@ -186,77 +186,9 @@ private:
    */
   static inline std::size_t NumTerms(PenaltyFunctions<MatrixType> const& penaltyFunctions) { 
     std::size_t num = 0; 
-    for( const auto& it : penaltyFunctions ) { num += it->outdim; }
+    for( const auto& it : penaltyFunctions ) { num += it->OutputDimension(); }
     return num;
   } 
-};
-
-/// A cost function (see clf::CostFunction) that can be minimized using the Levenberg Marquardt algorithm (see clf::LevenbergMarquardt) using dense matrices
-class DenseCostFunction : public CostFunction<Eigen::MatrixXd> {
-public:
-  
-  /**
-     @param[in] penaltyFuncs A vector of penalty functions such that the \f$i^{\text{th}}\f$ entry is \f$c_i: \mathbb{R}^{d} \mapsto \mathbb{R}^{n_i}\f$
-  */
-  DenseCostFunction(DensePenaltyFunctions const& penaltyFunctions);
-
-  /**
-     @param[in] penaltyFunction The penalty function \f$c_0: \mathbb{R}^{d} \mapsto \mathbb{R}^{n_i}\f$
-  */
-  DenseCostFunction(std::shared_ptr<DensePenaltyFunction> const& penaltyFunction);
-
-  virtual ~DenseCostFunction() = default; 
-
-  /// Compute the Jacobian of the penalty functions \f$\nabla_{\beta} c \in \mathbb{R}^{\bar{n} \times d}\f$
-  /**
-     The Jacobian of the penalty function is 
-     \f{equation*}{
-     \nabla_{\beta} c(\beta) = \begin{bmatrix}
-     \nabla_{\beta} c_0(\beta) \\
-     \vdots \\
-     \nabla_{\beta} c_m(\beta) 
-     \end{bmatrix}.
-     \f}
-     @param[in] beta The input parameters \f$\beta\f$
-     \return The Jacobian of the penalty function \f$\nabla_{\beta} c \in \mathbb{R}^{\bar{n} \times d}\f$
-  */
-  virtual Eigen::MatrixXd Jacobian(Eigen::VectorXd const& beta) const final override;
-
-private:
-};
-
-/// A cost function (see clf::CostFunction) that can be minimized using the Levenberg Marquardt algorithm (see clf::LevenbergMarquardt) using sparse matrices
-class SparseCostFunction : public CostFunction<Eigen::SparseMatrix<double> > {
-public:
-  
-  /**
-     @param[in] penaltyFuncs A vector of penalty functions such that the \f$i^{\text{th}}\f$ entry is \f$c_i: \mathbb{R}^{d} \mapsto \mathbb{R}^{n_i}\f$
-  */
-  SparseCostFunction(SparsePenaltyFunctions const& penaltyFunctions);
-
-  /**
-     @param[in] penaltyFunction The penalty function \f$c_0: \mathbb{R}^{d} \mapsto \mathbb{R}^{n_i}\f$
-  */
-  SparseCostFunction(std::shared_ptr<SparsePenaltyFunction> const& penaltyFunction);
-
-  virtual ~SparseCostFunction() = default; 
-
-  /// Compute the Jacobian of the penalty functions \f$\nabla_{\beta} c \in \mathbb{R}^{\bar{n} \times d}\f$
-  /**
-     The Jacobian of the penalty function is 
-     \f{equation*}{
-     \nabla_{\beta} c(\beta) = \begin{bmatrix}
-     \nabla_{\beta} c_0(\beta) \\
-     \vdots \\
-     \nabla_{\beta} c_m(\beta) 
-     \end{bmatrix}.
-     \f}
-     @param[in] beta The input parameters \f$\beta\f$
-     \return The Jacobian of the penalty function \f$\nabla_{\beta} c \in \mathbb{R}^{\bar{n} \times d}\f$
-  */
-  virtual Eigen::SparseMatrix<double> Jacobian(Eigen::VectorXd const& beta) const final override;
-
-private:
 };
 
 } // namespace clf 

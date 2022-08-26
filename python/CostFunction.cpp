@@ -37,17 +37,7 @@ void CostFunctionBaseWrapper(py::module& mod, std::string const& name) {
 } // namespace python
 } // namespace clf
 
-using namespace clf;
-  
 void clf::python::CostFunctionWrapper(pybind11::module& mod) {
-  python::CostFunctionBaseWrapper<Eigen::MatrixXd>(mod, "DenseCostFunctionBase");
-  python::CostFunctionBaseWrapper<Eigen::SparseMatrix<double> >(mod, "SparseCostFunctionBase");
-
-  py::class_<DenseCostFunction, std::shared_ptr<DenseCostFunction>, CostFunction<Eigen::MatrixXd> > dense(mod, "DenseCostFunction");
-  dense.def(py::init<DensePenaltyFunctions const&>());
-  dense.def(py::init<std::shared_ptr<DensePenaltyFunction> const&>());
-
-  py::class_<SparseCostFunction, std::shared_ptr<SparseCostFunction>, CostFunction<Eigen::SparseMatrix<double> > > sparse(mod, "SparseCostFunction");
-  sparse.def(py::init<SparsePenaltyFunctions const&>());
-  sparse.def(py::init<std::shared_ptr<SparsePenaltyFunction> const&>());
+  clf::python::CostFunctionBaseWrapper<Eigen::MatrixXd>(mod, "DenseCostFunctionBase");
+  clf::python::CostFunctionBaseWrapper<Eigen::SparseMatrix<double> >(mod, "SparseCostFunctionBase");
 }

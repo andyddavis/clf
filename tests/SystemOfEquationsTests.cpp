@@ -16,6 +16,10 @@ TEST(SystemOfEquationsTests, DefaultImplementation) {
   const std::size_t maxOrder = 4;
   
   SystemOfEquations sys(indim, outdim);
+  { // make sure the IDs are unique
+    SystemOfEquations sys1(indim, outdim);
+    EXPECT_NE(sys.id, sys1.id);
+  }
 
   const Eigen::VectorXd x = Eigen::VectorXd::Random(indim);
 

@@ -51,17 +51,25 @@ Eigen::VectorXd Domain::Sample() {
   return x;
 }
 
-std::pair<Eigen::VectorXd, Eigen::VectorXd> Domain::SampleBoundary() {
+std::pair<Eigen::VectorXd, Eigen::VectorXd> Domain::SampleBoundary(std::function<bool(std::pair<Eigen::VectorXd, Eigen::VectorXd> const&)> const& func) {
+  // propose a sample on the boundary
   std::pair<Eigen::VectorXd, Eigen::VectorXd> x = ProposeBoundarySample();
-  if( super ) {
-    const std::size_t maxProposed = para->Get<std::size_t>("MaximumProposedSamples", maxProposedSamps_DEFAULT);
-    std::size_t nproposed = 0;
-    while( !super->Inside(x.first) && ++nproposed<maxProposed ) { x = ProposeBoundarySample(); }
-    if( nproposed>=maxProposed ) { throw SampleFailure("Domain::SampleBoundary", nproposed); }
-  }
+
+  // make sure the sample is on the part of the boundary we care about
+  const std::size_t maxProposed = para->Get<std::size_t>("MaximumProposedSamples", maxProposedSamps_DEFAULT);
+  std::size_t nproposed = 0;
+  while( !func(x) && ++nproposed<maxProposed ) { x = ProposeBoundarySample(); }
+
+  // make sure the sample is in the superset 
+  if( super ) { while( !super->Inside(x.first) && ++nproposed<maxProposed ) { x = ProposeBoundarySample(); } }
+
+  // if we ran out of proposals, throw an exception
+  if( nproposed>=maxProposed ) { throw SampleFailure("Domain::SampleBoundary", nproposed); }
 
   return x;
 }
+
+std::pair<Eigen::VectorXd, Eigen::VectorXd> Domain::SampleBoundary() { return SampleBoundary([](std::pair<Eigen::VectorXd, Eigen::VectorXd> const& samp) { return true; }); }
 
 Eigen::VectorXd Domain::ProposeSample() {
   throw exceptions::NotImplemented("Domain::ProposeSample");

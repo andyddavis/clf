@@ -34,14 +34,14 @@ class TestLocalResidual(unittest.TestCase):
         func = clf.LocalFunction(multiSet, leg, domain, para)
 
         resid = clf.LocalResidual(func, self.system, para);
-        self.assertEqual(resid.indim, func.NumCoefficients())
-        self.assertEqual(resid.outdim, self.outdim*numPoints)
-        self.assertEqual(resid.NumLocalPoints(), numPoints)
+        self.assertEqual(resid.InputDimension(), func.NumCoefficients())
+        self.assertEqual(resid.OutputDimension(), self.outdim*numPoints)
+        self.assertEqual(resid.NumPoints(), numPoints)
 
-        coeff = [random.uniform(-1.0, 1.0) for i in range(resid.indim)]
+        coeff = [random.uniform(-1.0, 1.0) for i in range(resid.InputDimension())]
 
         fx = resid.Evaluate(coeff)
-        self.assertEqual(len(fx), resid.outdim)
+        self.assertEqual(len(fx), resid.OutputDimension())
         start = 0
         for i in range(numPoints):
             self.assertAlmostEqual(np.linalg.norm(fx[start:start+self.outdim]-self.mat@func.Evaluate(resid.GetPoint(i).x, coeff)), 0.0)
@@ -55,7 +55,7 @@ class TestLocalResidual(unittest.TestCase):
         self.assertEqual(np.shape(jacFD) [1], func.NumCoefficients())
         self.assertAlmostEqual(np.linalg.norm(jac-jacFD)/np.linalg.norm(jac), 0.0)
 
-        weights = [random.uniform(-1.0, 1.0) for i in range(resid.outdim)]
+        weights = [random.uniform(-1.0, 1.0) for i in range(resid.OutputDimension())]
         hess = resid.Hessian(coeff, weights)
         self.assertEqual(np.shape(hess) [0], func.NumCoefficients())
         self.assertEqual(np.shape(hess) [1], func.NumCoefficients())

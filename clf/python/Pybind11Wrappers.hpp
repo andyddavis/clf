@@ -114,17 +114,53 @@ void BurgersEquationWrapper(pybind11::module& mod);
  */
 void PenaltyFunctionWrapper(pybind11::module& mod);
 
+/// Python wrapper for clf::DensePenaltyFunction and its children
+/**
+   @param[in] mod The python module
+ */
+void DensePenaltyFunctionWrapper(pybind11::module& mod);
+
+/// Python wrapper for clf::SparsePenaltyFunction and its children
+/**
+   @param[in] mod The python module
+ */
+void SparsePenaltyFunctionWrapper(pybind11::module& mod);
+
 /// Python wrapper for clf::CostFunction and its children
 /**
    @param[in] mod The python module
  */
 void CostFunctionWrapper(pybind11::module& mod);
 
+/// Python wrapper for clf::DenseCostFunction and its children
+/**
+   @param[in] mod The python module
+ */
+void DenseCostFunctionWrapper(pybind11::module& mod);
+
+/// Python wrapper for clf::SparseCostFunction and its children
+/**
+   @param[in] mod The python module
+ */
+void SparseCostFunctionWrapper(pybind11::module& mod);
+
 /// Python wrapper for clf::LevenbergMarquardt and its children
 /**
    @param[in] mod The python module
  */
 void LevenbergMarquardtWrapper(pybind11::module& mod);
+
+/// Python wrapper for clf::DenseLevenbergMarquardt and its children
+/**
+   @param[in] mod The python module
+ */
+void DenseLevenbergMarquardtWrapper(pybind11::module& mod);
+
+/// Python wrapper for clf::SparseLevenbergMarquardt and its children
+/**
+   @param[in] mod The python module
+ */
+void SparseLevenbergMarquardtWrapper(pybind11::module& mod);
 
 /// Python wrapper for clf::Point
 /**
@@ -137,6 +173,12 @@ void PointWrapper(pybind11::module& mod);
    @param[in] mod The python module
  */
 void PointCloudWrapper(pybind11::module& mod);
+
+/// Python wrapper for clf::Residual
+/**
+   @param[in] mod The python module
+ */
+void ResidualWrapper(pybind11::module& mod);
 
 /// Python wrapper for clf::LocalResidual
 /**

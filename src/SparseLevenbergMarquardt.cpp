@@ -1,12 +1,6 @@
-#include "clf/LevenbergMarquardt.hpp"
+#include "clf/SparseLevenbergMarquardt.hpp"
 
 using namespace clf;
-
-DenseLevenbergMarquardt::DenseLevenbergMarquardt(std::shared_ptr<const CostFunction<Eigen::MatrixXd> > const& cost, std::shared_ptr<Parameters> const& para) :
-  LevenbergMarquardt<Eigen::MatrixXd>(cost, para)
-{}
-
-void DenseLevenbergMarquardt::AddScaledIdentity(double const scale, Eigen::MatrixXd& mat) const { mat += scale*Eigen::MatrixXd::Identity(mat.rows(), mat.cols()); }
 
 SparseLevenbergMarquardt::SparseLevenbergMarquardt(std::shared_ptr<const CostFunction<Eigen::SparseMatrix<double> > > const& cost, std::shared_ptr<Parameters> const& para) :
   LevenbergMarquardt<Eigen::SparseMatrix<double> >(cost, para)

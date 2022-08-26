@@ -33,14 +33,14 @@ protected:
     auto vec = std::make_shared<FeatureVector>(set, basis);
     
     auto resid = std::make_shared<ConservationLawWeakFormResidual>(func, system, vec, para);
-    EXPECT_EQ(resid->indim, func->NumCoefficients());
-    EXPECT_EQ(resid->outdim, vec->NumBasisFunctions());
+    EXPECT_EQ(resid->InputDimension(), func->NumCoefficients());
+    EXPECT_EQ(resid->OutputDimension(), vec->NumBasisFunctions());
     EXPECT_EQ(resid->NumBoundaryPoints(), numPoints);
     EXPECT_EQ(resid->NumPoints(), numPoints);
     
-    const Eigen::VectorXd coeff = Eigen::VectorXd::Random(resid->indim);
+    const Eigen::VectorXd coeff = Eigen::VectorXd::Random(resid->InputDimension());
     
-    Eigen::VectorXd expected = Eigen::VectorXd::Zero(resid->outdim);
+    Eigen::VectorXd expected = Eigen::VectorXd::Zero(resid->OutputDimension());
     for( std::size_t i=0; i<resid->NumBoundaryPoints(); ++i ) {
       auto pt = resid->GetBoundaryPoint(i);
       expected += vec->Evaluate(pt->x)*pt->normal->dot(system->Flux(func, pt->x, coeff))/resid->NumBoundaryPoints();
@@ -51,7 +51,7 @@ protected:
     }
     
     const Eigen::VectorXd eval = resid->Evaluate(coeff);
-    EXPECT_EQ(eval.size(), resid->outdim);
+    EXPECT_EQ(eval.size(), resid->OutputDimension());
     EXPECT_NEAR((eval-expected).norm(), 0.0, 1.0e-14);
     
     const Eigen::MatrixXd jac = resid->Jacobian(coeff);
@@ -62,7 +62,7 @@ protected:
     EXPECT_EQ(jacFD.cols(), func->NumCoefficients());
     EXPECT_NEAR((jac-jacFD).norm(), 0.0, 1.0e-10);
     
-    const Eigen::VectorXd weights = Eigen::VectorXd::Random(resid->outdim);
+    const Eigen::VectorXd weights = Eigen::VectorXd::Random(resid->OutputDimension());
     const Eigen::MatrixXd hess = resid->Hessian(coeff, weights);
     EXPECT_EQ(hess.rows(), func->NumCoefficients());
     EXPECT_EQ(hess.cols(), func->NumCoefficients());

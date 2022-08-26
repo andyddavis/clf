@@ -1,7 +1,7 @@
 #ifndef CONSERVATIONLAWWEAKFORMRESIDUAL_HPP_
 #define CONSERVATIONLAWWEAKFORMRESIDUAL_HPP_
 
-#include "clf/PenaltyFunction.hpp"
+#include "clf/DensePenaltyFunction.hpp"
 #include "clf/PointCloud.hpp"
 #include "clf/ConservationLaw.hpp"
 

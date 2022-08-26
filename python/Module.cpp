@@ -34,13 +34,21 @@ PYBIND11_MODULE(PyCoupledLocalFunctions, module) {
   clf::python::BurgersEquationWrapper(module);
 
   clf::python::PenaltyFunctionWrapper(module);
+  clf::python::DensePenaltyFunctionWrapper(module);
+  clf::python::SparsePenaltyFunctionWrapper(module);
+  
   clf::python::CostFunctionWrapper(module);
+  clf::python::DenseCostFunctionWrapper(module);
+  clf::python::SparseCostFunctionWrapper(module);
 
   clf::python::LevenbergMarquardtWrapper(module);
+  clf::python::DenseLevenbergMarquardtWrapper(module);
+  clf::python::SparseLevenbergMarquardtWrapper(module);
 
   clf::python::PointWrapper(module);
   clf::python::PointCloudWrapper(module);
 
+  clf::python::ResidualWrapper(module);
   clf::python::LocalResidualWrapper(module);
   clf::python::ConservationLawWeakFormResidualWrapper(module);
 }

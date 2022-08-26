@@ -1,7 +1,8 @@
 #ifndef TESTPENALTYFUNCTIONS_HPP_
 #define TESTPENALTYFUNCTIONS_HPP_
 
-#include "clf/PenaltyFunction.hpp"
+#include "clf/SparsePenaltyFunction.hpp"
+#include "clf/DensePenaltyFunction.hpp"
 
 namespace clf {
 namespace tests {

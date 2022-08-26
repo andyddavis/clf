@@ -33,14 +33,14 @@ protected:
     auto func = std::make_shared<LocalFunction>(set, basis, domain, outdim);
     
     LocalResidual resid(func, system, para);
-    EXPECT_EQ(resid.indim, func->NumCoefficients());
-    EXPECT_EQ(resid.outdim, outdim*numPoints);
-    EXPECT_EQ(resid.NumLocalPoints(), numPoints);
+    EXPECT_EQ(resid.InputDimension(), func->NumCoefficients());
+    EXPECT_EQ(resid.OutputDimension(), outdim*numPoints);
+    EXPECT_EQ(resid.NumPoints(), numPoints);
     
-    const Eigen::VectorXd coeff = Eigen::VectorXd::Random(resid.indim);
+    const Eigen::VectorXd coeff = Eigen::VectorXd::Random(resid.InputDimension());
     
     const Eigen::VectorXd eval = resid.Evaluate(coeff);
-    EXPECT_EQ(eval.size(), resid.outdim);
+    EXPECT_EQ(eval.size(), resid.OutputDimension());
     std::size_t start = 0;
     for( std::size_t i=0; i<numPoints; ++i ) {
       std::shared_ptr<Point> pnt = resid.GetPoint(i);
@@ -58,7 +58,7 @@ protected:
     EXPECT_EQ(jacFD.cols(), func->NumCoefficients());
     EXPECT_NEAR((jac-jacFD).norm()/jac.norm(), 0.0, 1.0e-10);
     
-    const Eigen::VectorXd weights = Eigen::VectorXd::Random(resid.outdim);
+    const Eigen::VectorXd weights = Eigen::VectorXd::Random(resid.OutputDimension());
     const Eigen::MatrixXd hess = resid.Hessian(coeff, weights);
     EXPECT_EQ(hess.rows(), func->NumCoefficients());
     EXPECT_EQ(hess.cols(), func->NumCoefficients());
