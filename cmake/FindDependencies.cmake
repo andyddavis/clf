@@ -12,16 +12,12 @@ macro(CLFDependency name)
             # build and re-check the build
             include(Build${name})
             set(CLF_BUILT_${name} ON)
+	    include(Check${name})
         endif()
     else()
         # build and check the build
         include(Build${name})
         set(CLF_BUILT_${name} ON)
-    endif()
-
-    # fail if we could not find this dependency
-    if( NOT ${${name}_COMPILES} )
-        message(FATAL_ERROR "\nCLF FAILED TO FIND OR BUILD ${name}\n")
     endif()
 
     # append the dependency information into the include directories and external libraries

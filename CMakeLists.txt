@@ -183,8 +183,8 @@ if( CLF_USE_PYTHON )
   #  PROPERTIES 
   #  CXX_STANDARD 17
   #  CXX_STANDARD_REQUIRED ON
-  #  SUFFIX ".cpython-310-x86_64-linux-gnu"
-  #  )
+  #  SUFFIX ".cpython-310-x86_64-linux-gnu.dylib"
+  #)
 endif()
 
 ###############################################

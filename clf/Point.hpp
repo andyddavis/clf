@@ -1,6 +1,9 @@
 #ifndef POINT_HPP_
 #define POINT_HPP_
 
+#include <optional>
+#include <atomic>
+
 #include <Eigen/Eigen>
 
 namespace clf {
