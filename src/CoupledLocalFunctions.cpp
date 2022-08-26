@@ -45,6 +45,9 @@ void CoupledLocalFunctions::SetBoundaryCondition(std::shared_ptr<SystemOfEquatio
   }
 }
 
+void CoupledLocalFunctions::RemoveBoundaryCondition(std::size_t const systemID) {
+}
+
 std::size_t CoupledLocalFunctions::NumLocalFunctions() const { return cloud->NumPoints(); }
 
 std::optional<CoupledLocalFunctions::BoundaryConditions> CoupledLocalFunctions::GetBCs(std::size_t const ind) const {

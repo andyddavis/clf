@@ -32,7 +32,7 @@ public:
   /// The number of local functions
   std::size_t NumLocalFunctions() const;
 
-  /// Set Dirichlet boundary conditions
+  /// Set boundary conditions
   /**
      @param[in] system The system that defines the boundary condition
      @param[in] func A function that return <tt>true</tt> if the proposed point is on the boundary where this condition is to be enforced, otherwise it returns <tt>false</tt>. The input to the function is a pair, the first vector is the point on the boundary and the second vector is the outward pointing normal.
@@ -40,8 +40,20 @@ public:
    */
   void SetBoundaryCondition(std::shared_ptr<SystemOfEquations> const& system, std::function<bool(std::pair<Eigen::VectorXd, Eigen::VectorXd> const&)> const& func, std::size_t const numPoints);
 
+  /// Remove all boundary conditions with a given ID
+  /**
+     @param[in] systemID The ID of the system we are removing
+   */
+  void RemoveBoundaryCondition(std::size_t const systemID);
+
+  /// The a vector of boundary conditions that are enforced at each local function
   typedef std::vector<std::shared_ptr<BoundaryCondition> > BoundaryConditions;
 
+  /// Get the boundary conditions enforced at the \f$i^{\text{th}}\f$ local function
+  /**
+     @param[in] ind The index \f$i\f$
+     \return The boundary conditions enforced at the \f$i^{\text{th}}\f$ local function, returns <tt>std::nullopt</tt> if no boundary conditions are enforced at the \f$i^{\text{th}}\f$ point
+   */
   std::optional<BoundaryConditions> GetBCs(std::size_t const ind) const;
   
 private:
