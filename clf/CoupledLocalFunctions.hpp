@@ -64,6 +64,22 @@ public:
      @param[in] para Options for clf::LocalResidual
    */
   void AddResidual(std::shared_ptr<SystemOfEquations> const& system, std::shared_ptr<const Parameters> const& para);
+
+  /// Minimize local residuals
+  void MinimizeResiduals();
+
+  /// Evaluate the coupled local function at a point
+  /**
+     @param[in] x The point where we are evaluating the local function
+     \return The evaluation of the local function
+   */
+  Eigen::VectorXd Evaluate(Eigen::VectorXd const& x) const;
+
+  /// Get the number of coefficients required to define the coupled local function
+  /**
+     \return The number of coefficients required to define the coupled local function
+   */
+  std::size_t NumCoefficients() const;
   
 private:
 
@@ -80,7 +96,13 @@ private:
   std::unordered_map<std::size_t, Residuals> residuals;
 
   /// A map from the clf::Point::id to the clf::LocalFunction associated with that support point
-  std::unordered_map<std::size_t, std::shared_ptr<LocalFunction> > functions;  
+  std::unordered_map<std::size_t, std::shared_ptr<LocalFunction> > functions;
+
+  /// The coefficients that define the coupled local function
+  /**
+     Initialize them to zero
+   */
+  Eigen::VectorXd coefficients;
 };
   
 } // namespace clf

@@ -53,7 +53,7 @@ enum Convergence {
    "MaximumCostFunctionEvaluations"   | <tt>std::size_t</tt> | <tt>10000</tt> | The maximum number of cost function evaluations (see clf::LevenbergMarquardt::maxCostEvals_DEFAULT). |
    "MaximumJacobianEvaluations"   | <tt>std::size_t</tt> | <tt>10000</tt> | The maximum number of cost function Jacobian evaluations (see clf::LevenbergMarquardt::maxJacEvals_DEFAULT). |
    "MaximumHessianEvaluations"   | <tt>std::size_t</tt> | <tt>10000</tt> | The maximum number of cost function Hessian evaluations (see clf::LevenbergMarquardt::maxHessEvals_DEFAULT). |
-   "FunctionTolerance"   | <tt>double</tt> | <tt>0.0</tt> | The tolerance for the cost function value (see clf::LevenbergMarquardt::functionTolerance_DEFAULT). |
+   "FunctionTolerance"   | <tt>double</tt> | <tt>1.0e-12</tt> | The tolerance for the cost function value (see clf::LevenbergMarquardt::functionTolerance_DEFAULT). |
    "GradientTolerance"   | <tt>double</tt> | <tt>1.0e-10</tt> | The tolerance for the cost function gradient value (see clf::LevenbergMarquardt::gradientTolerance_DEFAULT). |
    "GaussNewtonHessian"   | <tt>bool</tt> | <tt>false</tt> | Should we use the Gauss Newton approximation of the Hessian? |
    "InitialDamping"   | <tt>double</tt> | <tt>1.0</tt> | The value of the damping parameter at the first iteration (see clf::LevenbergMarquardt::initialDamping_DEFUALT)) |
@@ -106,7 +106,7 @@ public:
      @param[out] costVec The evaluation of the cost function at the optimal point
      \return First: Information about convergence or failure Second: The current cost
   */
-  inline std::pair<Optimization::Convergence, double> Minimize(Eigen::VectorXd& beta, Eigen::VectorXd& costVec) {
+  inline std::pair<Optimization::Convergence, double> Minimize(Eigen::Ref<Eigen::VectorXd> beta, Eigen::VectorXd& costVec) {
     assert(beta.size()==NumParameters());
 
     // reset the counters to zero 
@@ -219,7 +219,7 @@ private:
      @param[in, out] costVec The penalty function evaluations at beta
      \return First: Information about convergence or failure, Second: The current cost
    */
-  inline std::pair<Optimization::Convergence, double> Iteration(Eigen::VectorXd& beta, double const damping, double costVal, Eigen::VectorXd& costVec) {
+  inline std::pair<Optimization::Convergence, double> Iteration(Eigen::Ref<Eigen::VectorXd> beta, double const damping, double costVal, Eigen::VectorXd& costVec) {
     // compute the jacobian matrix
     MatrixType jac;
     Jacobian(beta, jac);
@@ -245,7 +245,7 @@ private:
      @param[in, out] costVec The penalty function evaluations at beta
      \return The new cost function evaluation
     */
-  inline double LineSearch(Eigen::VectorXd& beta, Eigen::VectorXd const& stepDir, double const costVal, Eigen::VectorXd& costVec) {
+  inline double LineSearch(Eigen::Ref<Eigen::VectorXd> beta, Eigen::VectorXd const& stepDir, double const costVal, Eigen::VectorXd& costVec) {
     double alpha = 1.0;
 
     // evalute the cost function
@@ -325,7 +325,7 @@ private:
   inline static std::size_t maxHessEvals_DEFAULT = 10000;
 
   /// The default tolerance for the cost function tolerance
-  inline static double functionTolerance_DEFAULT = 0.0;
+  inline static double functionTolerance_DEFAULT = 1.0e-12;
 
   /// The default tolerance for the cost function gradient tolerance
   inline static double gradientTolerance_DEFAULT = 1.0e-10;

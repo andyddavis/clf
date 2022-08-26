@@ -9,6 +9,7 @@ using namespace clf;
 
 TEST(LevenbergMarquardtTests, DenseMatrices) {
   auto para = std::make_shared<Parameters>();
+  para->Add("FunctionTolerance", 0.0); // require convergence by the gradient
 
   // create the example penalty functions
   auto func0 = std::make_shared<tests::DensePenaltyFunctionTest0>();
@@ -32,6 +33,7 @@ TEST(LevenbergMarquardtTests, DenseMatrices) {
 
 TEST(LevenbergMarquardtTests, SparseMatrices) {
   auto para = std::make_shared<Parameters>();
+  para->Add("FunctionTolerance", 0.0); // require convergence by the gradient
 
   // create the example penalty functions
   auto func0 = std::make_shared<tests::SparsePenaltyFunctionTest0>();

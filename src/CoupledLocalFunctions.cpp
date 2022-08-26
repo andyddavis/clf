@@ -3,6 +3,7 @@
 #include "clf/Hypercube.hpp"
 #include "clf/BoundaryCondition.hpp"
 #include "clf/LocalResidual.hpp"
+#include "clf/DenseLevenbergMarquardt.hpp"
 
 using namespace clf;
 
@@ -22,6 +23,8 @@ CoupledLocalFunctions::CoupledLocalFunctions(std::shared_ptr<MultiIndexSet> cons
     // add the function associated with this support point
     functions[pt->id] = std::make_shared<LocalFunction>(set, basis, localDomain, para);
   }
+
+  coefficients = Eigen::VectorXd::Zero(NumCoefficients()); 
 }
 
 void CoupledLocalFunctions::AddBoundaryCondition(std::shared_ptr<SystemOfEquations> const& system, std::function<bool(std::pair<Eigen::VectorXd, Eigen::VectorXd> const&)> const& func, std::size_t const numPoints) {
@@ -81,4 +84,43 @@ void CoupledLocalFunctions::AddResidual(std::shared_ptr<SystemOfEquations> const
 
     resids.insert(jt, std::make_shared<LocalResidual>(functions[(*it)->id], system, para));
   }
+}
+
+void CoupledLocalFunctions::MinimizeResiduals() {
+  std::size_t start = 0;
+  for( auto it=cloud->Begin(); it!=cloud->End(); ++it ) {
+    DensePenaltyFunctions resids(residuals[(*it)->id].begin(), residuals[(*it)->id].end());
+
+    auto lm = std::make_shared<DenseLevenbergMarquardt>(std::make_shared<DenseCostFunction>(resids));
+
+    auto func = functions[(*it)->id];
+    Eigen::VectorXd cost;
+    auto check = lm->Minimize(coefficients.segment(start, func->NumCoefficients()), cost);
+    assert(check.first>0);
+    start += func->NumCoefficients();
+  }
+
+  std::cout << coefficients.transpose() << std::endl << std::endl;
+}
+
+std::size_t CoupledLocalFunctions::NumCoefficients() const {
+  std::size_t num = 0;
+  for( auto it=functions.begin(); it!=functions.end(); ++it ) { num += it->second->NumCoefficients(); }
+  return num;
+}
+
+Eigen::VectorXd CoupledLocalFunctions::Evaluate(Eigen::VectorXd const& x) const {
+  std::pair<std::size_t, double> closest = cloud->ClosestPoint(x);
+  auto pnt = cloud->Get(closest.first);
+
+  std::size_t start = 0;
+  for( auto it=cloud->Begin(); it!=cloud->End(); ++it ) {
+    if( pnt->id==(*it)->id ) { break; }
+    
+    auto func = functions.at((*it)->id);
+    start += func->NumCoefficients();
+  }
+
+  auto func = functions.at(pnt->id);
+  return func->Evaluate(x, coefficients.segment(start, func->NumCoefficients()));
 }
